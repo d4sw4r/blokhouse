@@ -28,7 +28,7 @@ RUN go install github.com/a-h/templ/cmd/templ@latest
 RUN templ generate
 
 # compile application
-RUN go build -o /godocker
+RUN go build -o /godocker cmd/blokhouse/main.go
 
 ##
 ## STEP 2 - DEPLOY
