@@ -40,7 +40,7 @@ WORKDIR /
 COPY --from=build /godocker /godocker
 
 #copy static css,js,images into the container
-COPY static ./static
+# COPY static ./static
 
 EXPOSE 8080
 
