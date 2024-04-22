@@ -10,7 +10,7 @@ import (
 var testid = uuid.New()
 var storage = NewMemoryStorage()
 
-func CreateTest(t *testing.T) {
+func TestCreate(t *testing.T) {
 	asset := &models.Asset{Id: testid, Name: "test1"}
 	err := storage.Create(asset)
 	if err != nil {
@@ -18,7 +18,7 @@ func CreateTest(t *testing.T) {
 	}
 }
 
-func GetTest(t *testing.T) {
+func TestGet(t *testing.T) {
 	asset, err := storage.Get(testid)
 	if err != nil {
 		t.Error(err)
@@ -28,7 +28,7 @@ func GetTest(t *testing.T) {
 	}
 }
 
-func ListTest(t *testing.T) {
+func TestList(t *testing.T) {
 	asset, err := storage.List()
 	if err != nil {
 		t.Error(err)
@@ -39,7 +39,7 @@ func ListTest(t *testing.T) {
 
 }
 
-func DeleteTest(t *testing.T) {
+func TestDelete(t *testing.T) {
 	err := storage.Delete(testid)
 	if err != nil {
 		t.Error(err)
