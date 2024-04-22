@@ -2,9 +2,9 @@ package api
 
 import (
 	"crypto/subtle"
-	"net/http"
 
 	"github.com/d4sw4r/blokhouse/internal/service"
+	"github.com/d4sw4r/blokhouse/web"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -22,7 +22,7 @@ func NewServer(ListenAddr string, svc service.AssetSvc) Server {
 func (s Server) Start() error {
 	e := echo.New()
 	e.Use(bindApp(s.Svc))
-	e.GET("/", index)
+	e.GET("/", web.Index)
 	e.Use(echoprometheus.NewMiddleware("blockhouse"))
 	e.GET("/metrics", echoprometheus.NewHandler())
 	e.Use(middleware.Logger())
@@ -39,10 +39,6 @@ func (s Server) Start() error {
 	e.DELETE("/assets/:id", deleteAsset)
 
 	return e.Start(s.ListenAddr)
-}
-
-func index(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
 }
 
 func mySkipper(c echo.Context) bool {
