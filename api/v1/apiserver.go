@@ -10,16 +10,16 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-type ApiServer struct {
+type Server struct {
 	ListenAddr string
 	Svc        service.AssetSvc
 }
 
-func NewApiServer(ListenAddr string, svc service.AssetSvc) ApiServer {
-	return ApiServer{ListenAddr: ListenAddr, Svc: svc}
+func NewServer(ListenAddr string, svc service.AssetSvc) Server {
+	return Server{ListenAddr: ListenAddr, Svc: svc}
 }
 
-func (s ApiServer) Start() error {
+func (s Server) Start() error {
 	e := echo.New()
 	e.Use(bindApp(s.Svc))
 	e.GET("/", index)
