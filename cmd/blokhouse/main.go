@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/d4sw4r/blokhouse/api/v1"
 	"github.com/d4sw4r/blokhouse/internal/service"
 	"github.com/d4sw4r/blokhouse/internal/storage"
+	"github.com/d4sw4r/blokhouse/web"
 )
 
 func main() {
@@ -15,6 +15,6 @@ func main() {
 	slog.SetDefault(logger)
 	db := storage.NewMemoryStorage()
 	svc := service.NewAssetSvc(db)
-	s := api.NewServer(":9000", svc)
+	s := web.NewServer(":9000", svc)
 	log.Fatal(s.Start())
 }

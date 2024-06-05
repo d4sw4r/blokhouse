@@ -1,10 +1,11 @@
-package api
+package web
 
 import (
 	"crypto/subtle"
 
 	"github.com/d4sw4r/blokhouse/internal/service"
-	"github.com/d4sw4r/blokhouse/web"
+	api "github.com/d4sw4r/blokhouse/web/api/v1"
+	"github.com/d4sw4r/blokhouse/web/ui"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -21,8 +22,9 @@ func NewServer(ListenAddr string, svc service.AssetSvc) Server {
 
 func (s Server) Start() error {
 	e := echo.New()
+	api := api.NewAPI()
 	e.Use(bindApp(s.Svc))
-	e.GET("/", web.Index)
+	e.GET("/", ui.IndexHandler)
 	e.Use(echoprometheus.NewMiddleware("blockhouse"))
 	e.GET("/metrics", echoprometheus.NewHandler())
 	e.Use(middleware.Logger())
@@ -32,11 +34,11 @@ func (s Server) Start() error {
 	}))
 	e.Static("/static", "assets")
 
-	e.GET("/assets", listAssets)
-	e.POST("/assets", createAsset)
-	e.GET("/assets/:id", findAsset)
+	e.GET("/assets", api.ListAssets)
+	e.POST("/assets", api.CreateAsset)
+	e.GET("/assets/:id", api.FindAsset)
 	//e.PUT("/assets/:id", updateUser)
-	e.DELETE("/assets/:id", deleteAsset)
+	e.DELETE("/assets/:id", api.DeleteAsset)
 
 	return e.Start(s.ListenAddr)
 }

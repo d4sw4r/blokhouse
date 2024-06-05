@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func createAsset(c echo.Context) error {
+func (a API) CreateAsset(c echo.Context) error {
 	// lock.Lock()
 	// defer lock.Unlock()
 	s := c.Get("svc").(service.AssetSvc)
@@ -20,7 +20,7 @@ func createAsset(c echo.Context) error {
 
 }
 
-func findAsset(c echo.Context) error {
+func (a API) FindAsset(c echo.Context) error {
 	id := c.Param("id")
 	myid, err := uuid.Parse(id)
 	if err != nil {
@@ -34,7 +34,7 @@ func findAsset(c echo.Context) error {
 	return c.JSON(http.StatusOK, as)
 }
 
-func listAssets(c echo.Context) error {
+func (a API) ListAssets(c echo.Context) error {
 	// lock.Lock()
 	// defer lock.Unlock()
 	s := c.Get("svc").(service.AssetSvc)
@@ -42,7 +42,7 @@ func listAssets(c echo.Context) error {
 	return c.JSON(http.StatusOK, as)
 }
 
-func deleteAsset(c echo.Context) error {
+func (a API) DeleteAsset(c echo.Context) error {
 	id := c.Param("id")
 	myid, err := uuid.Parse(id)
 	if err != nil {
