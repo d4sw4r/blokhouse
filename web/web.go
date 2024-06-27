@@ -1,8 +1,6 @@
 package web
 
 import (
-	"crypto/subtle"
-
 	"github.com/d4sw4r/blokhouse/internal/service"
 	api "github.com/d4sw4r/blokhouse/web/api/v1"
 	"github.com/d4sw4r/blokhouse/web/ui"
@@ -61,14 +59,14 @@ func (s Server) Start() error {
 // 	return false
 // }
 
-func authMiddleware(username, password string, c echo.Context) (bool, error) {
-	// Be careful to use constant time comparison to prevent timing attacks
-	if subtle.ConstantTimeCompare([]byte(username), []byte("admin")) == 1 &&
-		subtle.ConstantTimeCompare([]byte(password), []byte("admin")) == 1 {
-		return true, nil
-	}
-	return false, nil
-}
+// func authMiddleware(username, password string, c echo.Context) (bool, error) {
+// 	// Be careful to use constant time comparison to prevent timing attacks
+// 	if subtle.ConstantTimeCompare([]byte(username), []byte("admin")) == 1 &&
+// 		subtle.ConstantTimeCompare([]byte(password), []byte("admin")) == 1 {
+// 		return true, nil
+// 	}
+// 	return false, nil
+// }
 
 func bindApp(svc service.AssetSvc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

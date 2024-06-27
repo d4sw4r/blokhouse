@@ -14,7 +14,10 @@ func (a API) CreateAsset(c echo.Context) error {
 	// defer lock.Unlock()
 	s := c.Get("svc").(service.AssetSvc)
 	as := models.Asset{Id: uuid.New(), Name: "myPc", Type: models.AssetType{Name: "PC"}}
-	s.Create(&as)
+	err := s.Create(&as)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusCreated, as)
 
