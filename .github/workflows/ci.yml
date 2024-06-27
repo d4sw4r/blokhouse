@@ -1,0 +1,84 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+      - name: Install templ runtime
+        run: go get github.com/a-h/templ/runtime
+      - name: Build templ
+        run: templ generate .
+      - name: golang-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.59
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Install templ runtime
+        run: go get github.com/a-h/templ/runtime
+
+      - name: Build templ
+        run: templ generate .
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v ./... -json > TestResults.json
+
+      - name: Upload Go test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-results
+          path: TestResults.json
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: install go mods
+        run: go mod download
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: install templ runtime
+        run: go get github.com/a-h/templ/runtime
+
+      - name: Build templ
+        run: templ generate .
+
+      - name: Build binary
+        run: go build -o blokhouse cmd/blokhouse/main.go

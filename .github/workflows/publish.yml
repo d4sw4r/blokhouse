@@ -1,18 +1,16 @@
-name: Build
+name: Publish
 
 on:
   workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron: "30 17 * * SUN"
-
-  workflow_run:
-    workflows: ["Test"]
-    types:
-      - completed
+  push:
+    tags:
+      - "**"
 
 jobs:
-  build:
+  build_publish:
     runs-on: ubuntu-latest
 
     steps:
