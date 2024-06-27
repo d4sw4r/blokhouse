@@ -6,6 +6,11 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron: "30 17 * * SUN"
 
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
+
 jobs:
   build:
     runs-on: ubuntu-latest
