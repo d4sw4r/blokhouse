@@ -24,6 +24,8 @@ RUN go mod download
 # download and install templ
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
+RUN go get github.com/a-h/templ/runtime
+
 # compile templates
 RUN templ generate
 
