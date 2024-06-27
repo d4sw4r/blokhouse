@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
-# USAGE: docker build -t godocker:multistage -f Dockerfile.multistage .
+# USAGE: docker build -t blokhouse:latest -f Dockerfile .
 
 ##
-## STEP 1 - BUILD
+## STEP 1 - BUILD APP
 ##
 
 # specify the base image to  be used for the application, alpine or ubuntu
@@ -31,7 +31,7 @@ RUN templ generate
 RUN go build -o /godocker cmd/blokhouse/main.go
 
 ##
-## STEP 2 - DEPLOY
+## STEP 2 - BUILD CONTAINER
 ##
 FROM scratch
 

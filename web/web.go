@@ -24,31 +24,42 @@ func (s Server) Start() error {
 	e := echo.New()
 	api := api.NewAPI()
 	e.Use(bindApp(s.Svc))
-	e.GET("/", ui.IndexHandler)
+	e.GET("/", ui.HandlerIndex)
+	e.GET("/dashboard", ui.HandlerDashboard)
+	e.GET("/discovery", ui.HandlerDiscovery)
+	e.GET("/asset", ui.HandlerAssets)
 	e.Use(echoprometheus.NewMiddleware("blockhouse"))
 	e.GET("/metrics", echoprometheus.NewHandler())
 	e.Use(middleware.Logger())
-	e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
-		Validator: authMiddleware,
-		Skipper:   mySkipper,
-	}))
+	// e.Use(middleware.BasicAuthWithConfig(middleware.BasicAuthConfig{
+	// 	Validator: authMiddleware,
+	// 	Skipper:   mySkipper,
+	// }))
 	e.Static("/static", "assets")
+	g := e.Group("/api")
 
-	e.GET("/assets", api.ListAssets)
-	e.POST("/assets", api.CreateAsset)
-	e.GET("/assets/:id", api.FindAsset)
+	g.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		if username == "admin" && password == "admin123" {
+			return true, nil
+		}
+		return false, nil
+	}))
+
+	e.GET("/api/v1/assets", api.ListAssets)
+	e.POST("/api/v1/assets", api.CreateAsset)
+	e.GET("/api/v1/assets/:id", api.FindAsset)
 	//e.PUT("/assets/:id", updateUser)
-	e.DELETE("/assets/:id", api.DeleteAsset)
+	e.DELETE("/api/v1/assets/:id", api.DeleteAsset)
 
 	return e.Start(s.ListenAddr)
 }
 
-func mySkipper(c echo.Context) bool {
-	if c.Path() == "/" || c.Path() == "/static/*" {
-		return true
-	}
-	return false
-}
+// func mySkipper(c echo.Context) bool {
+// 	if c.Path() == "/" || c.Path() == "/static/*" {
+// 		return true
+// 	}
+// 	return false
+// }
 
 func authMiddleware(username, password string, c echo.Context) (bool, error) {
 	// Be careful to use constant time comparison to prevent timing attacks

@@ -13,7 +13,7 @@ func (a API) CreateAsset(c echo.Context) error {
 	// lock.Lock()
 	// defer lock.Unlock()
 	s := c.Get("svc").(service.AssetSvc)
-	as := models.Asset{Id: uuid.New(), Name: "myPc"}
+	as := models.Asset{Id: uuid.New(), Name: "myPc", Type: models.AssetType{Name: "PC"}}
 	s.Create(&as)
 
 	return c.JSON(http.StatusCreated, as)
@@ -35,8 +35,6 @@ func (a API) FindAsset(c echo.Context) error {
 }
 
 func (a API) ListAssets(c echo.Context) error {
-	// lock.Lock()
-	// defer lock.Unlock()
 	s := c.Get("svc").(service.AssetSvc)
 	as, _ := s.List()
 	return c.JSON(http.StatusOK, as)
