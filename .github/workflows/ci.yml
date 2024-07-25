@@ -58,6 +58,12 @@ jobs:
           name: Test-results
           path: TestResults.json
 
+      - name: Annotate tests
+        if: always()
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: TestResults.json
+
   build:
     needs: test
     runs-on: ubuntu-latest
