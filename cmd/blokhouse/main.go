@@ -15,6 +15,6 @@ func main() {
 	slog.SetDefault(logger)
 	db := storage.NewMemoryStorage()
 	svc := service.NewAssetSvc(db)
-	s := web.NewServer("localhost:9000", svc)
+	s := web.NewServer(":8080", svc)
 	log.Fatal(s.Start())
 }
