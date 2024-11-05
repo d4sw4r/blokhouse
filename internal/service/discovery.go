@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/d4sw4r/blokhouse/internal/models"
@@ -27,9 +28,8 @@ func (s DiscoverySvc) Discover() {
 		fmt.Print(err)
 		os.Exit(1)
 	}
-	targets := []models.DiscoveryTarget{}
+
 	for _, h := range hosts {
-		targets = append(targets, models.DiscoveryTarget{Name: h.Hostname, IP: h.IP.String(), Mac: h.MAC})
 		assettype := models.AssetType{Id: 6, Name: h.MAC}
 		asset := models.Asset{
 			Id:   uuid.New(),
@@ -37,7 +37,10 @@ func (s DiscoverySvc) Discover() {
 			IP:   h.IP.String(),
 			Type: assettype,
 		}
-		s.DB.Create(&asset)
+		err := s.DB.Create(&asset)
+		if err != nil {
+			slog.Warn("could not store in database")
+		}
 	}
 
 }
