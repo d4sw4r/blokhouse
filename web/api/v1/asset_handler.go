@@ -12,7 +12,7 @@ import (
 func (a API) CreateAsset(c echo.Context) error {
 	// lock.Lock()
 	// defer lock.Unlock()
-	s := c.Get("svc").(service.AssetSvc)
+	s := c.Get("assetsvc").(service.AssetSvc)
 	as := models.Asset{Id: uuid.New(), Name: "myPc", Type: models.AssetType{Name: "PC"}}
 	err := s.Create(&as)
 	if err != nil {
@@ -29,7 +29,7 @@ func (a API) FindAsset(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s := c.Get("svc").(service.AssetSvc)
+	s := c.Get("assetsvc").(service.AssetSvc)
 	as, err := s.Get(myid)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (a API) FindAsset(c echo.Context) error {
 }
 
 func (a API) ListAssets(c echo.Context) error {
-	s := c.Get("svc").(service.AssetSvc)
+	s := c.Get("assetsvc").(service.AssetSvc)
 	as, _ := s.List()
 	return c.JSON(http.StatusOK, as)
 }
@@ -49,7 +49,7 @@ func (a API) DeleteAsset(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s := c.Get("svc").(service.AssetSvc)
+	s := c.Get("assetsvc").(service.AssetSvc)
 	err = s.Delete(myid)
 	if err != nil {
 		return err

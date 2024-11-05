@@ -9,15 +9,15 @@ templ Asset(data []*models.Asset) {
     <thead>
       <tr>
         <th>Name</th>
-        <th>Job</th>
+        <th>IP</th>
         <th>Asset Type</th>
       </tr>
     </thead>
     <tbody>
     for _, value := range data{
         <tr>
-        <td>{value.Id.String()}</td>
         <td>{value.Name}</td>
+        <td>{value.IP}</td>
         <td>{value.Type.Name}</td>
       </tr>
     }

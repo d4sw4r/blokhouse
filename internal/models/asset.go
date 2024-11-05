@@ -5,6 +5,7 @@ import "github.com/google/uuid"
 type Asset struct {
 	Id   uuid.UUID
 	Name string
+	IP   string
 
 	Type AssetType
 }

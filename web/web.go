@@ -10,8 +10,9 @@ import (
 )
 
 type Server struct {
-	ListenAddr string
-	Svc        service.AssetSvc
+	ListenAddr   string
+	Svc          service.AssetSvc
+	DiscoverySvc service.DiscoverySvc
 }
 
 func NewServer(ListenAddr string, svc service.AssetSvc) Server {
@@ -21,10 +22,11 @@ func NewServer(ListenAddr string, svc service.AssetSvc) Server {
 func (s Server) Start() error {
 	e := echo.New()
 	api := api.NewAPI()
-	e.Use(bindApp(s.Svc))
+	e.Use(bindApp(s.Svc, s.DiscoverySvc))
 	e.GET("/", ui.HandlerIndex)
 	e.GET("/dashboard", ui.HandlerDashboard)
 	e.GET("/discovery", ui.HandlerDiscovery)
+	e.GET("/settings", ui.HandlerSettings)
 	e.GET("/asset", ui.HandlerAssets)
 	e.Use(echoprometheus.NewMiddleware("blockhouse"))
 	e.GET("/metrics", echoprometheus.NewHandler())
@@ -68,10 +70,11 @@ func (s Server) Start() error {
 // 	return false, nil
 // }
 
-func bindApp(svc service.AssetSvc) echo.MiddlewareFunc {
+func bindApp(assetsvc service.AssetSvc, discoverysvc service.DiscoverySvc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("svc", svc)
+			c.Set("assetsvc", assetsvc)
+			c.Set("discoverysvc", discoverysvc)
 			return next(c)
 		}
 	}

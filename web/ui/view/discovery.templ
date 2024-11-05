@@ -1,26 +1,28 @@
 package ui
 
-templ Discovery() {
-	@template() {
-		<div class="flex flex-col">
-			<div class="form-control w-52">
-				<label class="cursor-pointer label">
-					<span class="label-text">Remember me</span>
-					<input type="checkbox" class="toggle toggle-primary" checked/>
-				</label>
-			</div>
-			<div class="form-control w-52">
-				<label class="cursor-pointer label">
-					<span class="label-text">Remember me</span>
-					<input type="checkbox" class="toggle toggle-secondary" checked/>
-				</label>
-			</div>
-			<div class="form-control w-52">
-				<label class="cursor-pointer label">
-					<span class="label-text">Remember me</span>
-					<input type="checkbox" class="toggle toggle-accent" checked/>
-				</label>
-			</div>
-		</div>
-	}
+import "github.com/d4sw4r/blokhouse/internal/models"
+
+templ Discovery(hosts []models.DiscoveryTarget) {
+    @template(){
+    <div class="overflow-x-auto">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>IP</th>
+        <th>Mac</th>
+      </tr>
+    </thead>
+    <tbody>
+    for _, value := range hosts{
+        <tr>
+        <td>{value.Name}</td>
+        <td>{value.IP}</td>
+        <td>{value.Mac}</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+    }
 }

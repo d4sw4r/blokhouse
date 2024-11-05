@@ -30,11 +30,17 @@ func HandlerDashboard(c echo.Context) error {
 }
 
 func HandlerAssets(c echo.Context) error {
-	s := c.Get("svc").(service.AssetSvc)
+	s := c.Get("assetsvc").(service.AssetSvc)
 	as, _ := s.List()
 	return Render(c, http.StatusOK, ui.Asset(as))
 }
 
 func HandlerDiscovery(c echo.Context) error {
-	return Render(c, http.StatusOK, ui.Discovery())
+	s := c.Get("discoverysvc").(service.DiscoverySvc)
+	s.Discover()
+	return c.JSON(200, http.StatusOK)
+}
+
+func HandlerSettings(c echo.Context) error {
+	return Render(c, http.StatusOK, ui.Settings())
 }

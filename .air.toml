@@ -20,8 +20,8 @@ tmp_dir = "tmp"
 
 [proxy]
   enabled = true
-  proxy_port = 8080
-  app_port = 9000
+  proxy_port = 9000
+  app_port = 8080
 
 [color]
   app = ""
