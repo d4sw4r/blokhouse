@@ -1,4 +1,4 @@
-name: vul_scan
+name: Scan
 on:
   workflow_dispatch:
   schedule:

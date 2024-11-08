@@ -25,7 +25,6 @@ func (s Server) Start() error {
 	e.Use(bindApp(s.Svc, s.DiscoverySvc))
 	e.GET("/", ui.HandlerIndex)
 	e.GET("/dashboard", ui.HandlerDashboard)
-	e.GET("/discovery", ui.HandlerDiscovery)
 	e.GET("/settings", ui.HandlerSettings)
 	e.GET("/asset", ui.HandlerAssets)
 	e.Use(echoprometheus.NewMiddleware("blockhouse"))
