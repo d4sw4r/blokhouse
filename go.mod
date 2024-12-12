@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/a-h/templ v0.2.793
 	github.com/google/uuid v1.6.0
+	github.com/jpillora/icmpscan v1.3.1
 	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo/v4 v4.11.4
 )
@@ -15,7 +16,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jpillora/arp v0.0.0-20170204155840-96a8ba0be1a4 // indirect
-	github.com/jpillora/icmpscan v1.3.1 // indirect
 	github.com/jpillora/ipmath v0.0.0-20180121110145-ebede80a2ab9 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
@@ -31,11 +31,11 @@ require (
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
