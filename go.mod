@@ -3,7 +3,7 @@ module github.com/d4sw4r/blokhouse
 go 1.23.2
 
 require (
-	github.com/a-h/templ v0.2.793
+	github.com/a-h/templ v0.3.833
 	github.com/google/uuid v1.6.0
 	github.com/jpillora/icmpscan v1.3.1
 	github.com/labstack/echo-contrib v0.15.0
