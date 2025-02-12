@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
+interface DashboardType {
+  totalItems: number;
+  totalTypes: number;
+  untypedItems: number;
+  itemsPerType: {
+    itemTypeId: string;
+    count: number;
+    typeName?: string;
+  }[];
+}
 
 export default function Dashboard() {
-  const [dashboard, setDashboard] = useState(null);
+  const [dashboard, setDashboard] = useState<DashboardType | null>(null);
   const [loading, setLoading] = useState(true);
-  const { data: session, status } = useSession();
 
-
-  if (!session) {
-    redirect("/signin")
-  }
-
-  // Fetch aggregated dashboard data from the API.
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -34,10 +36,13 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  if (loading) return <p className="p-6">Loading dashboard...</p>;
+  if (loading || dashboard === null) {
+    return <p className="p-6">Loading dashboard...</p>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <Navbar />
       <main className="max-w-7xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -76,4 +81,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
