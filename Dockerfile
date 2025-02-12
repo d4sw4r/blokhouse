@@ -1,5 +1,5 @@
 # 1. Use an official Node.js image as the base
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 # 2. Set the working directory
 WORKDIR /app
@@ -26,7 +26,7 @@ RUN npx prisma db push
 RUN NEXT_DISABLE_ESLINT=1 NEXT_DISABLE_TYPECHECK=1 npm run build
 
 # 7. Use a lightweight Node.js image for production
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
