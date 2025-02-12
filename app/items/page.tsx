@@ -1,10 +1,8 @@
 'use client';
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import Navbar from "@/components/Navbar";
-import { useRouter } from "next/navigation";
 
 //
 // Define a TypeScript interface for configuration items.
@@ -27,7 +25,6 @@ interface Type {
 
 export default function Home() {
     const { data: session, status } = useSession();
-    const router = useRouter();
 
     // State for the list of configuration items
     const [items, setItems] = useState<ConfigItem[]>([]);
