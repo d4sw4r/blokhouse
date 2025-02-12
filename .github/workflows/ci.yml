@@ -13,7 +13,7 @@ jobs:
     steps:
       # Step 1: Check out the repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step 2: Set up Node.js 18.x and cache npm dependencies
       - name: Setup Node.js
@@ -44,7 +44,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # If you want to cache Docker layers, you can add caching steps here.
       - name: Build Docker Image
