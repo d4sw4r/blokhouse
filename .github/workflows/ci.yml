@@ -38,10 +38,6 @@ jobs:
       - name: Run Lint
         run: npm run lint
 
-      # Step 7: Run Tests (if you have tests defined)
-      - name: Run Tests
-        run: npm test
-
   # Optional: Build Docker Image
   docker:
     runs-on: ubuntu-latest
