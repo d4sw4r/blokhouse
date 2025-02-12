@@ -1,49 +1,44 @@
-# syntax=docker/dockerfile:1
+# 1. Use an official Node.js image as the base
+FROM node:18-alpine AS builder
 
-# USAGE: docker build -t blokhouse:latest -f Dockerfile .
-
-##
-## STEP 1 - BUILD APP
-##
-
-# specify the base image to  be used for the application, alpine or ubuntu
-FROM golang:1.22.3-alpine3.18 AS build
-
-# create a working directory inside the image
+# 2. Set the working directory
 WORKDIR /app
 
-#enable v1 dependencies
-RUN export GO111MODULE=on
+# 3. Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
 
-# copy directory files i.e all files ending with .go
-COPY . ./
+# 4. Install dependencies
+RUN npm install --frozen-lockfile
 
-# download Go modules and dependencies
-RUN go mod download
+# 5. Copy the rest of the application files
+COPY . .
 
-# download and install templ
-RUN go install github.com/a-h/templ/cmd/templ@latest
+ENV DATABASE_URL=file:./dev.db
+RUN npx prisma generate
+RUN npx prisma db push
 
-RUN go get github.com/a-h/templ/runtime
 
-# compile templates
-RUN templ generate
+# RUN npx prisma db seed
 
-# compile application
-RUN go build -o /godocker cmd/blokhouse/main.go
+# ENV NEXTAUTH_SECRET="dude-its-so-random"
 
-##
-## STEP 2 - BUILD CONTAINER
-##
-FROM scratch
+# 6. Disable ESLint and TypeScript errors during the build
+RUN NEXT_DISABLE_ESLINT=1 NEXT_DISABLE_TYPECHECK=1 npm run build
 
-WORKDIR /
+# 7. Use a lightweight Node.js image for production
+FROM node:18-alpine AS runner
 
-COPY --from=build /godocker /godocker
+WORKDIR /app
 
-#copy static css,js,images into the container
-# COPY static ./static
+# 8. Copy necessary files from the builder stage
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/.next .next
+COPY --from=builder /app/public public
+COPY --from=builder /app/node_modules node_modules
+COPY --from=builder ./app/prisma/dev.db /app/dev.db
 
-EXPOSE 8080
+# 9. Expose port
+EXPOSE 3000
 
-ENTRYPOINT ["/godocker"]
+# 10. Start the Next.js application
+CMD ["npm", "run", "start"]

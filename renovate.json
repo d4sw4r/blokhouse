@@ -3,5 +3,7 @@
   "extends": [
     "config:recommended"
   ],
-  "postUpdateOptions": ["gomodTidy"],
+  "assignees": [
+    "d4sw4r"
+  ]
 }
