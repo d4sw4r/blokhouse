@@ -16,7 +16,7 @@ export async function GET() {
     return new Response(JSON.stringify(tokens), { status: 200 });
 }
 
-export async function POST(request) {
+export async function POST() {
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });

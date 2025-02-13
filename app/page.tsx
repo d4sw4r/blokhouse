@@ -1,11 +1,11 @@
 "use client";
 
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   if (!session)
     return (
