@@ -157,12 +157,6 @@ export default function Home() {
     };
 
     if (status === "loading") return <p>Loading...</p>;
-    if (!session)
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>You are not signed in.</p>
-            </div>
-        );
 
     return (
         <div className="min-h-screen bg-gray-100">

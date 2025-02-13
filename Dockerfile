@@ -13,9 +13,9 @@ RUN npm install --frozen-lockfile
 # 5. Copy the rest of the application files
 COPY . .
 
-ENV DATABASE_URL=file:./dev.db
+ENV DATABASE_URL=file:./db/dev.db
 RUN npx prisma generate
-RUN npx prisma db push
+RUN npx prisma db push --force-reset && npx prisma db seed
 
 
 # RUN npx prisma db seed
@@ -35,7 +35,7 @@ COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/public public
 COPY --from=builder /app/node_modules node_modules
-COPY --from=builder ./app/prisma/dev.db /app/dev.db
+COPY --from=builder ./app/prisma/dev.db /app/db/dev.db
 
 # 9. Expose port
 EXPOSE 3000

@@ -15,7 +15,7 @@ export default function SignInPage() {
         const result = await signIn("credentials", {
             email,
             password,
-            callbackUrl: "/",
+            callbackUrl: "/"
         });
         if (result?.error) {
             setError("Invalid credentials");

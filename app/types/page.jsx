@@ -1,16 +1,11 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { Button } from '@/components/ui/Button';
-import Navbar from '@/components/Navbar';
+
 
 export default function TypesPage() {
-    const { data: session, status } = useSession();
-    const router = useRouter();
-
     const [types, setTypes] = useState([]);
     const [newType, setNewType] = useState({ name: '', description: '' });
     const [editingTypeId, setEditingTypeId] = useState(null);
@@ -72,14 +67,6 @@ export default function TypesPage() {
         setTypes((prev) => prev.map((t) => (t.id === id ? updated : t)));
         cancelEditing();
     };
-
-    if (status === 'loading') return <p>Loading...</p>;
-    if (!session)
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>You are not signed in.</p>
-            </div>
-        );
 
     return (
         <div className="min-h-screen bg-gray-100">

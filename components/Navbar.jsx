@@ -10,6 +10,11 @@ export default function Navbar() {
     const { data: session } = useSession();
     const router = useRouter();
 
+
+    if (!session) {
+        return null;
+    }
+
     return (
         <header className="bg-white shadow-md">
             <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -20,6 +25,11 @@ export default function Navbar() {
                     </Link>
                     <nav>
                         <ul className="flex gap-6">
+                            <li>
+                                <Link href="/dashboard">
+                                    <span className="text-gray-700 hover:text-brandRoof cursor-pointer">Dashboard</span>
+                                </Link>
+                            </li>
                             <li>
                                 <Link href="/items">
                                     <span className="text-gray-700 hover:text-brandRoof cursor-pointer">Items</span>

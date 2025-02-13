@@ -9,31 +9,32 @@ datasource db {
 }
 
 model User {
-  id                   String                @id @default(cuid())
-  name                 String?
-  email                String?               @unique
-  emailVerified        DateTime?
-  image                String?
-  password             String?               // For CredentialsProvider (plain text demo only)
-  accounts             Account[]
-  sessions             Session[]
-  configurationItems   ConfigurationItem[]
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String?             @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String? // For CredentialsProvider (plain text demo only)
+  accounts           Account[]
+  sessions           Session[]
+  configurationItems ConfigurationItem[]
+  ApiToken           ApiToken[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -55,25 +56,34 @@ model VerificationToken {
 }
 
 model ItemType {
-  id          String               @id @default(cuid())
-  name        String
-  description String?
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
   // Back-relation: all configuration items assigned to this type
   configurationItems ConfigurationItem[]
 }
 
 model ConfigurationItem {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-    // New fields for network information:
-  ip          String?  
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // New fields for network information:
+  ip          String?
   mac         String?
   // New relation: optional type assignment
   itemTypeId  String?
   itemType    ItemType? @relation(fields: [itemTypeId], references: [id])
+}
+
+model ApiToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
