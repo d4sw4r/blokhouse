@@ -1,5 +1,16 @@
 version: '3.8'
 services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
   app:
     build: .
     ports:
@@ -8,21 +19,10 @@ services:
       - NODE_ENV=production
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET="dude-its-so-random"
-      - DATABASE_URL=file:/app/dev.db
-#     depends_on:
-#       - db
+      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
 
-#   db:
-#     image: postgres:15
-#     restart: always
-#     environment:
-#       POSTGRES_USER: myuser
-#       POSTGRES_PASSWORD: mypassword
-#       POSTGRES_DB: mydatabase
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - pg_data:/var/lib/postgresql/data
+    depends_on:
+      - db
 
-# volumes:
-#   pg_data:
+volumes:
+  pg_data:
