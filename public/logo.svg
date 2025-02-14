@@ -1,56 +1,15 @@
-<!-- File: public/logo.svg -->
-<svg
-  version="1.1"
-  xmlns="http://www.w3.org/2000/svg"
-  width="200"
-  height="200"
-  viewBox="0 0 200 200"
->
-  <!-- Transparent background -->
-  <rect x="0" y="0" width="200" height="200" fill="none" />
-
-  <!-- House Base: a wooden blockhouse -->
-  <rect
-    x="50"
-    y="80"
-    width="100"
-    height="80"
-    fill="#8B4513"
-    stroke="#5D2E0D"
-    stroke-width="2"
-  />
-
-  <!-- Roof: a red roof -->
-  <polygon
-    points="50,80 150,80 100,40"
-    fill="#B22222"
-    stroke="#8B0000"
-    stroke-width="2"
-  />
-
-  <!-- Snow details on roof: white circles -->
-  <circle cx="85" cy="60" r="4" fill="#FFFFFF" />
-  <circle cx="100" cy="55" r="4" fill="#FFFFFF" />
-  <circle cx="115" cy="60" r="4" fill="#FFFFFF" />
-
-  <!-- Campfire in front of the house -->
-  <!-- Log base -->
-  <rect x="90" y="140" width="20" height="5" fill="#654321" />
-  <!-- Simple flame shape -->
-  <path
-    d="M100,135 C95,140 95,130 100,130 C105,130 105,140 100,135 Z"
-    fill="#FF8C00"
-  />
-
-  <!-- Brand Text: Blokhouse -->
-  <text
-    x="100"
-    y="190"
-    text-anchor="middle"
-    font-family="Arial, sans-serif"
-    font-size="16"
-    fill="#333333"
-  >
-    Blokhouse
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <!-- Gradient for the roof from brandAccent to brandPrimary -->
+    <linearGradient id="roofGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+  </defs>
+  <!-- House base with brandSecondary color -->
+  <rect x="20" y="45" width="60" height="35" rx="4" fill="#10B981"/>
+  <!-- Roof using the gradient -->
+  <polygon points="20,45 50,20 80,45" fill="url(#roofGradient)" />
+  <!-- Optional door with brandText color -->
+  <rect x="45" y="60" width="10" height="20" rx="2" fill="#1F2937"/>
 </svg>

@@ -2,4 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* You can add custom global styles here */
+body {
+    @apply bg-brandBackground text-brandText font-sans;
+}

@@ -29,18 +29,18 @@ export default function SignUpPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                <h1 className="text-2xl font-bold mb-6 text-center">Sign Up</h1>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
-                {success && <p className="text-green-500 mb-4">{success}</p>}
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="min-h-screen bg-gradient-to-r from-brandAccent to-brandRoof flex items-center justify-center">
+            <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
+                <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Sign Up</h1>
+                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                {success && <p className="text-green-500 text-center mb-4">{success}</p>}
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         type="text"
                         placeholder="Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="border rounded p-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
                         required
                     />
                     <input
@@ -48,7 +48,7 @@ export default function SignUpPage() {
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="border rounded p-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
                         required
                     />
                     <input
@@ -56,7 +56,7 @@ export default function SignUpPage() {
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="border rounded p-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
                         required
                     />
                     <Button type="submit" className="w-full">
@@ -66,7 +66,7 @@ export default function SignUpPage() {
                 <p className="mt-4 text-center text-gray-600">
                     Already have an account?{" "}
                     <Link href="/signin">
-                        <span className="text-blue-500 hover:underline">Sign In</span>
+                        <span className="text-brandRoof hover:underline">Sign In</span>
                     </Link>
                 </p>
             </div>
