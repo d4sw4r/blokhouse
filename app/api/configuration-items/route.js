@@ -72,6 +72,7 @@ export async function POST(req) {
     }
 
     const { name, description, itemTypeId, ip, mac } = await req.json();
+    const session = await getServerSession(authOptions);
 
     const item = await prisma.configurationItem.create({
         data: {
