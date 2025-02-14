@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import ThreeBackground from '../components/ThreeBackground';
 
 
 export default function Dashboard() {
@@ -16,6 +17,9 @@ export default function Dashboard() {
         </Link>
       </div>
     );
+  return (
+    <ThreeBackground />
+  );
 
 
 }
