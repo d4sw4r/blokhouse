@@ -1,4 +1,3 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -8,11 +7,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Define some custom brand colors
-        brandWood: "#A0522D", // a warm wood tone
-        brandRoof: "#B22222", // a strong red for the roof
-        brandSnow: "#F0F8FF", // a cool, snowy white/blue tint
-        // Add any additional colors you feel represent Blokhouse
+        // New brand colors
+        brandPrimary: "#4F46E5",  // Indigo-600
+        brandSecondary: "#10B981", // Emerald-500
+        brandAccent: "#6366F1",    // Indigo-500
+        brandBackground: "#F3F4F6", // Gray-100
+        brandText: "#1F2937",       // Gray-800
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
       },
     },
   },

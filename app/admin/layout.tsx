@@ -1,56 +1,56 @@
-// app/admin/layout.tsx
-"use client"; // This is a client component because it uses Next/link for navigation
+"use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-
-    // Optional: highlight active link
-    const isActive = (href: string) => pathname?.startsWith(href);
+    const isActive = (href: string) =>
+        pathname?.startsWith(href) ? "text-brandRoof font-semibold" : "hover:text-gray-300";
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex bg-gray-50">
             {/* Sidebar */}
-            <aside className="w-64 bg-gray-800 text-white p-6">
-                <h2 className="text-2xl font-bold mb-6">Admin Area</h2>
+            <aside className="w-64 bg-gray-900 text-white p-8 shadow-lg">
+                <div className="mb-8">
+                    <Link href="/">
+                        {/* Refreshed Logo – replace /logo-new.svg with your actual logo */}
+                        <Image src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" width={30} height={30} />
+                        <h1 className="mt-2 text-center text-2xl font-bold tracking-wide">Blokhouse</h1>
+                    </Link>
+                </div>
                 <nav>
-                    <ul>
-                        <li className="mb-4">
+                    <ul className="space-y-4">
+                        <li>
+                            <Link href="/admin">
+                                <span className={isActive("/admin")}>Dashboard</span>
+                            </Link>
+                        </li>
+                        <li>
                             <Link href="/admin/users">
-                                <span className={isActive("/admin/users") ? "text-brandRoof" : "hover:text-gray-300"}>
-                                    Users
-                                </span>
+                                <span className={isActive("/admin/users")}>Users</span>
                             </Link>
                         </li>
-                        <li className="mb-4">
+                        <li>
                             <Link href="/admin/api">
-                                <span className={isActive("/admin/api") ? "text-brandRoof" : "hover:text-gray-300"}>
-                                    API
-                                </span>
+                                <span className={isActive("/admin/api")}>API Tokens</span>
                             </Link>
                         </li>
-                        <li className="mb-4">
+                        <li>
                             <Link href="/admin/settings">
-                                <span className={isActive("/admin/settings") ? "text-brandRoof" : "hover:text-gray-300"}>
-                                    Settings
-                                </span>
+                                <span className={isActive("/admin/settings")}>Settings</span>
                             </Link>
                         </li>
-                        <li className="mb-4">
-                            <Link href="/ansible">
-                                <span className={isActive("/ansible") ? "text-brandRoof" : "hover:text-gray-300"}>
-                                    Ansible
-                                </span>
-                            </Link>
-                        </li>
+
                     </ul>
                 </nav>
             </aside>
 
             {/* Main content area */}
-            <main className="flex-1 p-6 bg-gray-100">{children}</main>
+            <main className="flex-1 p-10">
+                {children}
+            </main>
         </div>
     );
 }

@@ -1,23 +1,16 @@
 "use client";
-
 import { useState, useEffect } from "react";
-
 
 interface DashboardType {
     totalItems: number;
     totalTypes: number;
     untypedItems: number;
-    itemsPerType: {
-        itemTypeId: string;
-        count: number;
-        typeName?: string;
-    }[];
+    itemsPerType: { itemTypeId: string; count: number; typeName?: string }[];
 }
 
 export default function Dashboard() {
     const [dashboard, setDashboard] = useState<DashboardType | null>(null);
     const [loading, setLoading] = useState(true);
-
 
     useEffect(() => {
         const fetchDashboard = async () => {
@@ -37,42 +30,36 @@ export default function Dashboard() {
         fetchDashboard();
     }, []);
 
-
-    if (loading || dashboard === null) {
-        return <p className="p-6">Loading dashboard...</p>;
-    }
+    if (loading || !dashboard) return <p className="p-6 text-lg">Loading dashboard...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <main className="max-w-7xl mx-auto p-6">
-                <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded shadow">
-                        <h2 className="text-xl font-bold">Total Items</h2>
-                        <p className="text-4xl mt-2">{dashboard.totalItems}</p>
+        <div className="min-h-screen bg-brandBackground">
+            <main className="max-w-7xl mx-auto p-8">
+                <h1 className="text-4xl font-bold text-brandPrimary mb-8">Dashboard</h1>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold text-gray-700">Total Items</h2>
+                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.totalItems}</p>
                     </div>
-                    <div className="bg-white p-6 rounded shadow">
-                        <h2 className="text-xl font-bold">Total Types</h2>
-                        <p className="text-4xl mt-2">{dashboard.totalTypes}</p>
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold text-gray-700">Total Types</h2>
+                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.totalTypes}</p>
                     </div>
-                    <div className="bg-white p-6 rounded shadow">
-                        <h2 className="text-xl font-bold">Untyped Items</h2>
-                        <p className="text-4xl mt-2">{dashboard.untypedItems}</p>
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold text-gray-700">Untyped Items</h2>
+                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.untypedItems}</p>
                     </div>
                 </div>
-                <div className="mt-10">
-                    <h2 className="text-2xl font-bold mb-4">Items Per Type</h2>
+                <div className="mt-12">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Items Per Type</h2>
                     {dashboard.itemsPerType.length === 0 ? (
-                        <p>No items are assigned to a type.</p>
+                        <p className="text-gray-600">No items are assigned to a type.</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {dashboard.itemsPerType.map((group) => (
-                                <div
-                                    key={group.itemTypeId}
-                                    className="bg-white p-6 rounded shadow"
-                                >
-                                    <h3 className="text-xl font-bold">{group.typeName}</h3>
-                                    <p className="text-3xl mt-2">{group.count}</p>
+                                <div key={group.itemTypeId} className="bg-white p-6 rounded-lg shadow">
+                                    <h3 className="text-xl font-semibold text-gray-700">{group.typeName}</h3>
+                                    <p className="mt-2 text-3xl font-bold text-brandPrimary">{group.count}</p>
                                 </div>
                             ))}
                         </div>

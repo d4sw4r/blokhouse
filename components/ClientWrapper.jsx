@@ -1,6 +1,4 @@
-// components/ClientWrapper.jsx
 "use client";
-
 import { SessionProvider } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 

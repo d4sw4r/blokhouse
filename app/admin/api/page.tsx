@@ -62,20 +62,22 @@ export default function AdminAPIPage() {
         }
     };
 
-    if (loading) return <p>Loading tokens...</p>;
+    if (loading) return <p className="text-lg">Loading tokens...</p>;
 
     return (
-        <div>
-            <h1 className="text-3xl font-bold mb-4">API Token Management</h1>
-            <p>Create and manage API tokens for your REST API.</p>
+        <div className="space-y-6">
+            <h1 className="text-4xl font-bold text-gray-800">API Token Management</h1>
+            <p className="text-lg text-gray-600">
+                Create and manage API tokens for accessing your /api routes.
+            </p>
             <Button onClick={generateToken} className="mt-4">
                 Generate API Token
             </Button>
-            <div className="mt-6">
+            <div className="overflow-x-auto mt-6">
                 {tokens.length === 0 ? (
-                    <p>No API tokens found.</p>
+                    <p className="text-gray-600">No API tokens found.</p>
                 ) : (
-                    <table className="min-w-full bg-white shadow rounded mt-4">
+                    <table className="min-w-full bg-white shadow rounded">
                         <thead className="bg-gray-200">
                             <tr>
                                 <th className="py-2 px-4 border">Token</th>
@@ -91,10 +93,7 @@ export default function AdminAPIPage() {
                                         {new Date(token.createdAt).toLocaleString()}
                                     </td>
                                     <td className="py-2 px-4 border">
-                                        <Button
-                                            onClick={() => deleteToken(token.id)}
-
-                                        >
+                                        <Button onClick={() => deleteToken(token.id)} >
                                             Delete
                                         </Button>
                                     </td>
