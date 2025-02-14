@@ -8,9 +8,9 @@ export async function GET() {
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    // Return all users (select only safe fields)
+    // Return all users with safe fields
     const users = await prisma.user.findMany({
-        select: { id: true, name: true, email: true }
+        select: { id: true, name: true, email: true, role: true },
     });
     return new Response(JSON.stringify(users), { status: 200 });
 }
@@ -20,16 +20,17 @@ export async function POST(request) {
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    const { name, email, password } = await request.json();
+    const { name, email, password, role } = await request.json();
     try {
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
-                password, // Demo purposes only; hash in production!
+                password, // Ensure the password is hashed in production
                 emailVerified: new Date(),
+                role,
             },
-            select: { id: true, name: true, email: true }
+            select: { id: true, name: true, email: true, role: true },
         });
         return new Response(JSON.stringify(user), { status: 201 });
     } catch (error) {

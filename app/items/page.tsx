@@ -23,45 +23,66 @@ export default function ItemsPage() {
     const { data: session, status } = useSession();
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
-    const [newItem, setNewItem] = useState({ name: "", description: "", itemTypeId: "", ip: "", mac: "" });
+    const [newItem, setNewItem] = useState({
+        name: "",
+        description: "",
+        itemTypeId: "",
+        ip: "",
+        mac: "",
+    });
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
-    const [editingItemData, setEditingItemData] = useState({ name: "", description: "", ip: "", mac: "", itemTypeId: "" });
+    const [editingItemData, setEditingItemData] = useState({
+        name: "",
+        description: "",
+        ip: "",
+        mac: "",
+        itemTypeId: "",
+    });
+    const [csvContent, setCsvContent] = useState("");
 
+    // Fetch items and types as before
     useEffect(() => {
         if (session) {
-            fetch("/api/configuration-items")
-                .then(async (res) => {
-                    if (!res.ok) {
-                        console.error("API Error:", await res.text());
-                        return [];
-                    }
-                    return res.json();
-                })
-                .then((data) => {
-                    if (Array.isArray(data)) setItems(data);
-                    else setItems([]);
-                })
-                .catch((err) => console.error("Fetch error:", err));
+            fetchItems();
+            fetchTypes();
         }
     }, [session]);
 
-    useEffect(() => {
-        if (session) {
-            fetch("/api/types")
-                .then(async (res) => {
-                    if (!res.ok) {
-                        console.error("Types API Error:", await res.text());
-                        return [];
-                    }
-                    return res.json();
-                })
-                .then((data) => {
-                    if (Array.isArray(data)) setAvailableTypes(data);
-                    else setAvailableTypes([]);
-                })
-                .catch((err) => console.error("Fetch types error:", err));
+    const fetchItems = async () => {
+        try {
+            const res = await fetch("/api/configuration-items");
+            if (!res.ok) {
+                console.error("API Error:", await res.text());
+                return;
+            }
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setItems(data);
+            } else {
+                console.error("Unexpected API response:", data);
+            }
+        } catch (err) {
+            console.error("Fetch error:", err);
         }
-    }, [session]);
+    };
+
+    const fetchTypes = async () => {
+        try {
+            const res = await fetch("/api/types");
+            if (!res.ok) {
+                console.error("Types API Error:", await res.text());
+                return;
+            }
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setAvailableTypes(data);
+            } else {
+                console.error("Unexpected types response:", data);
+            }
+        } catch (err) {
+            console.error("Fetch types error:", err);
+        }
+    };
 
     const createItem = async () => {
         const res = await fetch("/api/configuration-items", {
@@ -106,16 +127,82 @@ export default function ItemsPage() {
         cancelEditing();
     };
 
+    // CSV Upload Handlers
+
+    const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const text = event.target?.result as string;
+                setCsvContent(text);
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    const uploadCsv = async () => {
+        if (!csvContent) return;
+        try {
+            const res = await fetch("/api/configuration-items/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ csv: csvContent }),
+            });
+            if (res.ok) {
+                // Refresh items after successful upload
+                fetchItems();
+            } else {
+                console.error("CSV upload failed:", await res.text());
+            }
+        } catch (error) {
+            console.error("Error uploading CSV:", error);
+        }
+    };
+
     if (status === "loading") return <p className="p-6 text-lg">Loading...</p>;
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <main className="max-w-7xl mx-auto p-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-8">Configuration Items</h1>
+            <main className="max-w-7xl mx-auto p-8 space-y-10">
+                {/* CSV Upload Section */}
+                <section className="bg-white p-6 rounded-lg shadow">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Upload CSV File</h2>
+                    <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleCsvFileChange}
+                            className="mb-4 md:mb-0"
+                        />
+                        <Button onClick={uploadCsv}>Upload CSV</Button>
+                        {/* Info icon with tooltip */}
+                        <div className="relative inline-block group ml-4">
+                            {/* Info icon (using an SVG icon) */}
+                            <svg
+                                className="w-6 h-6 text-gray-500 cursor-help"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
+                            </svg>
+                            {/* Tooltip – hidden by default, visible on hover */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <p className="mb-1 font-semibold">Example CSV Format:</p>
+                                <code>Name,Description,IP,MAC,ItemTypeId</code>
+                                <br />
+                                <code>Server 1,Main server,192.168.1.10,00:11:22:33:44:55,abc123</code>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
 
                 {/* New Item Form */}
-                <section className="bg-white p-6 rounded-lg shadow mb-10">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Item</h2>
+                <section className="bg-white p-6 rounded-lg shadow">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Configuration Item</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
                             type="text"

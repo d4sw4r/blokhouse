@@ -3,15 +3,15 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
 
-export async function GET(request, { params }) {
+export async function GET({ params }) {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    const { id } = params;
     const user = await prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true }
+        select: { id: true, name: true, email: true, role: true },
     });
     if (!user) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
@@ -20,17 +20,17 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+    const { id } = await params;
+    const { name, email, role } = await request.json();
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    const { id } = params;
-    const { name, email } = await request.json();
     try {
         const updated = await prisma.user.update({
             where: { id },
-            data: { name, email },
-            select: { id: true, name: true, email: true }
+            data: { name, email, role },
+            select: { id: true, name: true, email: true, role: true },
         });
         return new Response(JSON.stringify(updated), { status: 200 });
     } catch (error) {
@@ -39,12 +39,12 @@ export async function PUT(request, { params }) {
     }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE({ params }) {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    const { id } = params;
     try {
         await prisma.user.delete({ where: { id } });
         return new Response(JSON.stringify({ message: "Deleted" }), { status: 200 });

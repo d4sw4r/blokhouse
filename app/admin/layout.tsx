@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,7 +16,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="mb-8">
                     <Link href="/">
                         {/* Refreshed Logo – replace /logo-new.svg with your actual logo */}
-                        <img src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" />
+                        <Image src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" />
                         <h1 className="mt-2 text-center text-2xl font-bold tracking-wide">Blokhouse</h1>
                     </Link>
                 </div>

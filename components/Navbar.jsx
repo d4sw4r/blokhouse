@@ -43,11 +43,15 @@ export default function Navbar() {
                     </nav>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-gray-600">Hello, {session.user.name || session.user.email}</span>
+                    <span className="text-gray-600">
+                        Hello, {session.user.name || session.user.email} ({session.user.role})
+                    </span>
                     <Button onClick={() => signOut()}>Sign Out</Button>
-                    <Button onClick={() => router.push("/admin")} variant="outline">
-                        Admin Area
-                    </Button>
+                    {session.user.role === "ADMIN" && (
+                        <Button onClick={() => router.push("/admin")} variant="outline">
+                            Admin Area
+                        </Button>
+                    )}
                 </div>
             </div>
         </header>
