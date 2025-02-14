@@ -3,8 +3,9 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
 
-export async function GET({ params }) {
-    const { id } = await params;
+export async function GET(request, context) {
+    const { params } = context;
+    const { id } = params;
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
@@ -19,8 +20,9 @@ export async function GET({ params }) {
     return new Response(JSON.stringify(user), { status: 200 });
 }
 
-export async function PUT(request, { params }) {
-    const { id } = await params;
+export async function PUT(request, context) {
+    const { params } = context;
+    const { id } = params;
     const { name, email, role } = await request.json();
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -39,8 +41,9 @@ export async function PUT(request, { params }) {
     }
 }
 
-export async function DELETE({ params }) {
-    const { id } = await params;
+export async function DELETE(request, context) {
+    const { params } = context;
+    const { id } = params;
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
