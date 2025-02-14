@@ -16,7 +16,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="mb-8">
                     <Link href="/">
                         {/* Refreshed Logo – replace /logo-new.svg with your actual logo */}
-                        <Image src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" />
+                        <Image src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" width={30} height={30} />
                         <h1 className="mt-2 text-center text-2xl font-bold tracking-wide">Blokhouse</h1>
                     </Link>
                 </div>
@@ -42,11 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <span className={isActive("/admin/settings")}>Settings</span>
                             </Link>
                         </li>
-                        <li>
-                            <Link href="/ansible">
-                                <span className={isActive("/ansible")}>Ansible</span>
-                            </Link>
-                        </li>
+
                     </ul>
                 </nav>
             </aside>
