@@ -12,8 +12,8 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   app:
-    # image: ghcr.io/d4sw4r/blokhouse:latest
-    build: .
+    image: ghcr.io/d4sw4r/blokhouse:latest
+    # build: .
     ports:
       - "3000:3000"
     environment:

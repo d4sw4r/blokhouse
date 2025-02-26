@@ -7,24 +7,13 @@ This project aims to be a easy and simple to use CMDB, build with a automation f
 ```bash
 git clone https://github.com/d4sw4r/blokhouse.git
 cd blokhouse
-docker compose up --build
-export DATABASE_URL=postgresql://myuser:mypassword@localhost:5432/mydatabase
-npx prisma db push
-npx prisma db seed
+docker compose up
 ```
+(BUG: Maybe migrations take too long and a second inital start is required)
 
-## docker
-```bash
-docker compose up --build
-```
-This will start the container, and your application should be accessible at http://localhost:3000.
+This will start the app container + database, and your application should be accessible at [http://localhost:3000](http://localhost:3000) .
 
-## migrate db and seed in docker
-```bash
-export DATABASE_URL=postgresql://myuser:mypassword@localhost:5432/mydatabase
-npx prisma db push
-npx prisma db seed
-```
+
 ## ansible
 ```yaml
 # my-dynamic-inventory.yml
@@ -62,8 +51,10 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+There is a inital admin user:
+admin@example.com
+admin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 
