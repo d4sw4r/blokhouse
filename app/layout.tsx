@@ -1,5 +1,4 @@
 import "./globals.css";
-import ClientWrapper from "@/components/ClientWrapper";
 
 export const metadata = {
   title: "Blokhouse",
