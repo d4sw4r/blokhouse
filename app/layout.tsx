@@ -1,5 +1,4 @@
 import "./globals.css";
-import ClientWrapper from "@/components/ClientWrapper";
 
 export const metadata = {
   title: "Blokhouse",
@@ -11,7 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <ClientWrapper>{children}</ClientWrapper>
+        {children}
       </body>
     </html>
   );

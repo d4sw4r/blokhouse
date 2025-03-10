@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import Image from "next/image";
 
 interface ConfigItem {
     id: string;
@@ -167,7 +168,10 @@ export default function ItemsPage() {
             <main className="max-w-7xl mx-auto p-8 space-y-10">
                 {/* CSV Upload Section */}
                 <section className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Upload CSV File</h2>
+                    <div className="flex items-center">
+                        <Image src="file.svg" width={24} height={24} alt="file" ></Image>
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Upload CSV File</h2>
+                    </div>
                     <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
                         <input
                             type="file"
@@ -346,6 +350,6 @@ export default function ItemsPage() {
                     </table>
                 </section>
             </main>
-        </div>
+        </div >
     );
 }

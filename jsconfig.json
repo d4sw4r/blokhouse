@@ -5,6 +5,8 @@
     "include": [
         "next-env.d.ts",
         "**/*.js",
-        "**/*.jsx"
-, "app/items/page.tsx"    ]
+        "**/*.jsx",
+        "app/(root)/items/page.tsx",
+        "app/(auth)/layout.tsx"
+    ]
 }
