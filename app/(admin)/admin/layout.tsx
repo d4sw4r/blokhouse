@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import Logo from "@/components/Logo";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,11 +15,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Sidebar */}
             <aside className="w-64 bg-gray-900 text-white p-8 shadow-lg">
                 <div className="mb-8">
-                    <Link href="/">
-                        {/* Refreshed Logo – replace /logo-new.svg with your actual logo */}
-                        <Image src="/logo.svg" alt="Blokhouse" className="h-10 mx-auto" width={30} height={30} />
-                        <h1 className="mt-2 text-center text-2xl font-bold tracking-wide">Blokhouse</h1>
-                    </Link>
+                    <Link href="/dashboard"><Logo /></Link>
+
                 </div>
                 <nav>
                     <ul className="space-y-4">
@@ -45,12 +43,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     </ul>
                 </nav>
-            </aside>
+            </aside >
 
             {/* Main content area */}
-            <main className="flex-1 p-10">
+            < main className="flex-1 p-10" >
                 {children}
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

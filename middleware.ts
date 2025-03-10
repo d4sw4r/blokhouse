@@ -26,7 +26,7 @@ async function validateApiToken(req: NextRequest): Promise<boolean> {
 
 export async function middleware(req: NextRequest) {
     // Add /api/validate-token to publicPaths so it is not intercepted.
-    const publicPaths = ["/signin", "/signup", "/api/auth", "/api/validate-token"];
+    const publicPaths = ["/signin", "/signup", "/api/auth", "/api/validate-token", "/logo.svg", "/"];
     const { pathname } = req.nextUrl;
 
     if (publicPaths.some((path) => pathname.startsWith(path))) {
