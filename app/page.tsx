@@ -15,7 +15,7 @@ export default function LandingPage() {
           A modern CMDB solution to manage your infrastructure.
         </p>
 
-        <Link href="/signin" className="px-8 py-4 bg-brand-primary text-white rounded-md shadow-sm hover:bg-brandAccent transition">
+        <Link href="/signin" className="px-8 py-4 bg-brand-primary text-white rounded-md shadow-sm hover:bg-brand-accent transition">
           Sign In
         </Link>
 

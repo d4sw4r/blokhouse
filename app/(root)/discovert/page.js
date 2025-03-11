@@ -78,7 +78,7 @@ export default function DiscoveryPage() {
                 </Button>
                 {scanning && (
                     <div className="flex items-center justify-center mb-8">
-                        <div className="w-16 h-16 border-4 border-brandAccent border-t-transparent rounded-full animate-spin" />
+                        <div className="w-16 h-16 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
                 {devices.length > 0 && (

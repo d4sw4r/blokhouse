@@ -9,9 +9,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, children, variant, ...props }, ref) => {
-        let variantClass = "bg-brand-primary text-white hover:bg-brandAccent";
+        let variantClass = "bg-brand-primary text-white hover:bg-brand-accent";
         if (variant === "outline") {
-            variantClass = "border border-brandPrimary text-brand-primary hover:bg-brand-primary hover:text-white";
+            variantClass = "border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white";
         } else if (variant === "destructive") {
             variantClass = "bg-red-500 text-white hover:bg-red-600";
         }

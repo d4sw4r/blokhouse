@@ -40,7 +40,7 @@ export default function SignUpPage() {
                     placeholder="Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <input
@@ -48,7 +48,7 @@ export default function SignUpPage() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <input
@@ -56,7 +56,7 @@ export default function SignUpPage() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <Button type="submit" className="w-full">
