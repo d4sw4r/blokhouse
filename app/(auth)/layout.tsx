@@ -1,13 +1,13 @@
 
 import Logo from "@/components/Logo";
-
+import "../globals.css";
 
 
 
 const Layout = ({ children }: { children: React.ReactNode }) => (
     <>
         <div className="flex min-h-screen">
-            <section className="w-1/2 hidden items-center justify-center bg-gradient-to-r from-brandSecondary to-brandAccent bg-brandSecondary p-10 lg:flex xl:w-2/5">
+            <section className="w-1/2 hidden items-center justify-center bg-brand-accent p-10 lg:flex xl:w-2/5">
                 <div className="flex  justify-center">
                     <Logo />
                 </div>

@@ -31,7 +31,7 @@ export default function SignUpPage() {
     return (
 
         <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
-            <h1 className="text-3xl font-bold text-center text-brandPrimary mb-6">Sign Up</h1>
+            <h1 className="text-3xl font-bold text-center text-brand-primary mb-6">Sign Up</h1>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -40,7 +40,7 @@ export default function SignUpPage() {
                     placeholder="Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <input
@@ -48,7 +48,7 @@ export default function SignUpPage() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <input
@@ -56,7 +56,7 @@ export default function SignUpPage() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandAccent"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brand-accent"
                     required
                 />
                 <Button type="submit" className="w-full">

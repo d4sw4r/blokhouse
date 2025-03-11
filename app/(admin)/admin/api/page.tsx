@@ -77,7 +77,7 @@ export default function AdminAPIPage() {
                 {tokens.length === 0 ? (
                     <p className="text-gray-600">No API tokens found.</p>
                 ) : (
-                    <table className="min-w-full bg-white shadow rounded">
+                    <table className="min-w-full bg-white shadow-sm rounded-sm">
                         <thead className="bg-gray-200">
                             <tr>
                                 <th className="py-2 px-4 border">Token</th>

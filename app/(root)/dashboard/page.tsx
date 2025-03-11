@@ -33,21 +33,21 @@ export default function Dashboard() {
     if (loading || !dashboard) return <p className="p-6 text-lg">Loading dashboard...</p>;
 
     return (
-        <div className="min-h-screen bg-brandBackground">
+        <div className="min-h-screen">
             <main className="max-w-7xl mx-auto p-8">
-                <h1 className="text-4xl font-bold text-brandPrimary mb-8">Dashboard</h1>
+                <h1 className="text-4xl font-bold text-brand-primary mb-8">Dashboard</h1>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
                         <h2 className="text-xl font-semibold text-gray-700">Total Items</h2>
-                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.totalItems}</p>
+                        <p className="mt-4 text-4xl font-bold text-brand-primary">{dashboard.totalItems}</p>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
                         <h2 className="text-xl font-semibold text-gray-700">Total Types</h2>
-                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.totalTypes}</p>
+                        <p className="mt-4 text-4xl font-bold text-brand-primary">{dashboard.totalTypes}</p>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="bg-white p-6 rounded-lg shadow-sm">
                         <h2 className="text-xl font-semibold text-gray-700">Untyped Items</h2>
-                        <p className="mt-4 text-4xl font-bold text-brandPrimary">{dashboard.untypedItems}</p>
+                        <p className="mt-4 text-4xl font-bold text-brand-primary">{dashboard.untypedItems}</p>
                     </div>
                 </div>
                 <div className="mt-12">
@@ -57,9 +57,9 @@ export default function Dashboard() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {dashboard.itemsPerType.map((group) => (
-                                <div key={group.itemTypeId} className="bg-white p-6 rounded-lg shadow">
+                                <div key={group.itemTypeId} className="bg-white p-6 rounded-lg shadow-sm">
                                     <h3 className="text-xl font-semibold text-gray-700">{group.typeName}</h3>
-                                    <p className="mt-2 text-3xl font-bold text-brandPrimary">{group.count}</p>
+                                    <p className="mt-2 text-3xl font-bold text-brand-primary">{group.count}</p>
                                 </div>
                             ))}
                         </div>

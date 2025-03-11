@@ -11,7 +11,7 @@ export default function Navbar() {
     if (!session) return null;
 
     return (
-        <header className="bg-white shadow sticky top-0 z-50">
+        <header className="bg-white shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-8">
                     <Link href="/">
@@ -20,22 +20,22 @@ export default function Navbar() {
                     <nav>
                         <ul className="flex space-x-6">
                             <li>
-                                <Link href="/dashboard" className="text-gray-700 hover:text-brandPrimary transition">
+                                <Link href="/dashboard" className="text-gray-700 hover:text-brand-primary transition">
                                     Dashboard
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/items" className="text-gray-700 hover:text-brandPrimary transition">
+                                <Link href="/items" className="text-gray-700 hover:text-brand-primary transition">
                                     Items
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/types" className="text-gray-700 hover:text-brandPrimary transition">
+                                <Link href="/types" className="text-gray-700 hover:text-brand-primary transition">
                                     Types
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/discovert" className="text-gray-700 hover:text-brandPrimary transition">
+                                <Link href="/discovert" className="text-gray-700 hover:text-brand-primary transition">
                                     Discovery
                                 </Link>
                             </li>
