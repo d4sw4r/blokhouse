@@ -76,7 +76,7 @@ export default function TypesPage() {
                 <h1 className="text-3xl font-bold mb-6">Configuration Item Types</h1>
 
                 {/* New Type Form */}
-                <div className="bg-white p-4 rounded shadow mb-6">
+                <div className="bg-white p-4 rounded-sm shadow-sm mb-6">
                     <h2 className="text-xl font-semibold mb-4">Add New Type</h2>
                     <div className="flex flex-col gap-4">
                         <input
@@ -84,7 +84,7 @@ export default function TypesPage() {
                             placeholder="Name"
                             value={newType.name}
                             onChange={(e) => setNewType({ ...newType, name: e.target.value })}
-                            className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="border rounded-sm p-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                         <input
                             type="text"
@@ -93,20 +93,20 @@ export default function TypesPage() {
                             onChange={(e) =>
                                 setNewType({ ...newType, description: e.target.value })
                             }
-                            className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="border rounded-sm p-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
                         <Button onClick={createType}>Add Type</Button>
                     </div>
                 </div>
 
                 {/* Types List */}
-                <div className="bg-white p-4 rounded shadow">
+                <div className="bg-white p-4 rounded-sm shadow-sm">
                     <h2 className="text-xl font-semibold mb-4">Existing Types</h2>
                     <ul className="space-y-4">
                         {types.map((type) => (
                             <li
                                 key={type.id}
-                                className="border rounded p-4 flex justify-between items-center"
+                                className="border rounded-sm p-4 flex justify-between items-center"
                             >
                                 {editingTypeId === type.id ? (
                                     <div className="flex-1">
@@ -120,7 +120,7 @@ export default function TypesPage() {
                                                     name: e.target.value,
                                                 })
                                             }
-                                            className="border rounded p-2 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="border rounded-sm p-2 mr-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                         />
                                         <input
                                             type="text"
@@ -132,7 +132,7 @@ export default function TypesPage() {
                                                     description: e.target.value,
                                                 })
                                             }
-                                            className="border rounded p-2 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="border rounded-sm p-2 mr-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
                                 ) : (

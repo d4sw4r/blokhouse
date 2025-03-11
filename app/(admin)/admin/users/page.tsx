@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
                 <h1 className="text-4xl font-bold text-gray-800">Manage Users</h1>
 
                 {/* New User Form */}
-                <div className="bg-white p-6 rounded shadow">
+                <div className="bg-white p-6 rounded-sm shadow-sm">
                     <h2 className="text-2xl font-semibold mb-4">Add New User</h2>
                     <div className="space-y-4">
                         <input
@@ -113,26 +113,26 @@ export default function AdminUsersPage() {
                             placeholder="Name"
                             value={newUser.name}
                             onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                            className="w-full border rounded p-2"
+                            className="w-full border rounded-sm p-2"
                         />
                         <input
                             type="email"
                             placeholder="Email"
                             value={newUser.email}
                             onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                            className="w-full border rounded p-2"
+                            className="w-full border rounded-sm p-2"
                         />
                         <input
                             type="password"
                             placeholder="Password"
                             value={newUser.password}
                             onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                            className="w-full border rounded p-2"
+                            className="w-full border rounded-sm p-2"
                         />
                         <select
                             value={newUser.role}
                             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                            className="w-full border rounded p-2"
+                            className="w-full border rounded-sm p-2"
                         >
                             <option value="ADMIN">ADMIN</option>
                             <option value="USER">USER</option>
@@ -144,7 +144,7 @@ export default function AdminUsersPage() {
                 </div>
 
                 {/* Users Table */}
-                <div className="bg-white shadow rounded overflow-x-auto">
+                <div className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-gray-200">
                             <tr>
@@ -165,7 +165,7 @@ export default function AdminUsersPage() {
                                                 onChange={(e) =>
                                                     setEditingUserData({ ...editingUserData, name: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
                                                 onChange={(e) =>
                                                     setEditingUserData({ ...editingUserData, email: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                                                 onChange={(e) =>
                                                     setEditingUserData({ ...editingUserData, role: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             >
                                                 <option value="ADMIN">ADMIN</option>
                                                 <option value="USER">USER</option>

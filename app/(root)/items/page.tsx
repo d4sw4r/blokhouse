@@ -167,7 +167,7 @@ export default function ItemsPage() {
         <div className="min-h-screen bg-gray-50">
             <main className="max-w-7xl mx-auto p-8 space-y-10">
                 {/* CSV Upload Section */}
-                <section className="bg-white p-6 rounded-lg shadow">
+                <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex items-center">
                         <Image src="file.svg" width={24} height={24} alt="file" ></Image>
                         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Upload CSV File</h2>
@@ -193,7 +193,7 @@ export default function ItemsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
                             </svg>
                             {/* Tooltip – hidden by default, visible on hover */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 <p className="mb-1 font-semibold">Example CSV Format:</p>
                                 <code>Name,Description,IP,MAC,ItemTypeId</code>
                                 <br />
@@ -205,7 +205,7 @@ export default function ItemsPage() {
 
 
                 {/* New Item Form */}
-                <section className="bg-white p-6 rounded-lg shadow">
+                <section className="bg-white p-6 rounded-lg shadow-sm">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Configuration Item</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
@@ -213,33 +213,33 @@ export default function ItemsPage() {
                             placeholder="Name"
                             value={newItem.name}
                             onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                            className="border rounded p-2"
+                            className="border rounded-sm p-2"
                         />
                         <input
                             type="text"
                             placeholder="Description"
                             value={newItem.description}
                             onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                            className="border rounded p-2"
+                            className="border rounded-sm p-2"
                         />
                         <input
                             type="text"
                             placeholder="IP Address"
                             value={newItem.ip}
                             onChange={(e) => setNewItem({ ...newItem, ip: e.target.value })}
-                            className="border rounded p-2"
+                            className="border rounded-sm p-2"
                         />
                         <input
                             type="text"
                             placeholder="MAC Address"
                             value={newItem.mac}
                             onChange={(e) => setNewItem({ ...newItem, mac: e.target.value })}
-                            className="border rounded p-2"
+                            className="border rounded-sm p-2"
                         />
                         <select
                             value={newItem.itemTypeId}
                             onChange={(e) => setNewItem({ ...newItem, itemTypeId: e.target.value })}
-                            className="border rounded p-2"
+                            className="border rounded-sm p-2"
                         >
                             <option value="">Select a type (optional)</option>
                             {availableTypes.map((type) => (
@@ -255,7 +255,7 @@ export default function ItemsPage() {
                 </section>
 
                 {/* Items Table */}
-                <section className="bg-white shadow rounded overflow-x-auto">
+                <section className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="min-w-full">
                         <thead className="bg-gray-200">
                             <tr>
@@ -278,7 +278,7 @@ export default function ItemsPage() {
                                                 onChange={(e) =>
                                                     setEditingItemData({ ...editingItemData, name: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -288,7 +288,7 @@ export default function ItemsPage() {
                                                 onChange={(e) =>
                                                     setEditingItemData({ ...editingItemData, description: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -298,7 +298,7 @@ export default function ItemsPage() {
                                                 onChange={(e) =>
                                                     setEditingItemData({ ...editingItemData, ip: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -308,7 +308,7 @@ export default function ItemsPage() {
                                                 onChange={(e) =>
                                                     setEditingItemData({ ...editingItemData, mac: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             />
                                         </td>
                                         <td className="py-2 px-4 border">
@@ -317,7 +317,7 @@ export default function ItemsPage() {
                                                 onChange={(e) =>
                                                     setEditingItemData({ ...editingItemData, itemTypeId: e.target.value })
                                                 }
-                                                className="w-full border rounded p-1"
+                                                className="w-full border rounded-sm p-1"
                                             >
                                                 <option value="">None</option>
                                                 {availableTypes.map((type) => (

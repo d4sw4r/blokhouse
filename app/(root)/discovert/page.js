@@ -83,7 +83,7 @@ export default function DiscoveryPage() {
                 )}
                 {devices.length > 0 && (
                     <div className="w-full overflow-x-auto">
-                        <table className="min-w-full bg-white shadow rounded">
+                        <table className="min-w-full bg-white shadow-sm rounded-sm">
                             <thead className="bg-gray-200">
                                 <tr>
                                     <th className="py-3 px-4 border">Name</th>

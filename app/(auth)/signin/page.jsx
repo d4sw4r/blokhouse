@@ -34,7 +34,7 @@ export default function SignInPage() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandPrimary"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandPrimary"
                     required
                 />
                 <input
@@ -42,7 +42,7 @@ export default function SignInPage() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-brandPrimary"
+                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandPrimary"
                     required
                 />
                 <Button type="submit" className="w-full">
