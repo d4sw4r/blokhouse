@@ -1,29 +1,41 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
+import { logItemCreated, logItemUpdated } from "@/lib/audit";
 
 // Helper to check if the user can write (ADMIN, USER, API)
 function canWrite(role) {
     return role === "ADMIN" || role === "USER" || role === "API";
 }
 
-export async function GET(request) {
+// Helper to get user ID from session or API token
+async function getUserIdFromRequest(request) {
     const authHeader = request.headers.get("authorization");
-    let authorized = false;
     if (authHeader && authHeader.startsWith("Bearer ")) {
         const apiToken = authHeader.slice("Bearer ".length).trim();
         try {
-            const tokenRecord = await prisma.apiToken.findUnique({ where: { token: apiToken } });
-            if (tokenRecord) authorized = true;
+            const tokenRecord = await prisma.apiToken.findUnique({
+                where: { token: apiToken },
+                include: { user: true },
+            });
+            if (tokenRecord && tokenRecord.user) {
+                return { userId: tokenRecord.user.id, authorized: true };
+            }
         } catch (error) {
             console.error("Error checking API token:", error);
         }
     }
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+        return { userId: session.user.id, authorized: true, session };
+    }
+    return { authorized: false };
+}
+
+export async function GET(request) {
+    const { authorized } = await getUserIdFromRequest(request);
     if (!authorized) {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-        }
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
     // Parse query parameters for search, filter, and pagination
@@ -95,7 +107,8 @@ export async function POST(request) {
     if (!canWrite(session.user.role)) {
         return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
     }
-const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
+
+    const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
     
     const data = {
         name,
@@ -118,5 +131,9 @@ const { name, description, itemTypeId, ip, mac, status, tagIds } = await request
         data,
         include: { itemType: true, tags: true },
     });
+
+    // Log the creation
+    await logItemCreated({ item, userId: session.user.id, req: request });
+
     return new Response(JSON.stringify(item), { status: 201 });
 }

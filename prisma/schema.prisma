@@ -31,6 +31,7 @@ model User {
   sessions           Session[]
   configurationItems ConfigurationItem[]
   ApiToken           ApiToken[]
+  auditLogs          AuditLog[]
   role         Role     @default(USER)
 }
 
@@ -119,4 +120,33 @@ model ApiToken {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  API_TOKEN_CREATED
+  API_TOKEN_DELETED
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  action      AuditAction
+  entityType  String      // e.g., "ConfigurationItem", "User", "ApiToken"
+  entityId    String?     // ID of the affected entity (optional for global actions)
+  userId      String?     // Who performed the action
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  description String?     // Human-readable description
+  oldValues   Json?       // Previous values (for updates/deletes)
+  newValues   Json?       // New values (for creates/updates)
+  ipAddress   String?     // Client IP address
+  userAgent   String?     // Client user agent
+  createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
 }

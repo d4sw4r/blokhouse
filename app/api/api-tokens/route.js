@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
 import crypto from "crypto";
+import { logTokenCreated } from "@/lib/audit";
 
 export async function GET() {
     const session = await getServerSession(authOptions);
@@ -16,7 +17,7 @@ export async function GET() {
     return new Response(JSON.stringify(tokens), { status: 200 });
 }
 
-export async function POST() {
+export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
@@ -31,6 +32,14 @@ export async function POST() {
             },
             select: { id: true, token: true, createdAt: true }
         });
+
+        // Log token creation
+        await logTokenCreated({
+            token: newToken,
+            userId: session.user.id,
+            req: request,
+        });
+
         return new Response(JSON.stringify(newToken), { status: 201 });
     } catch (error) {
         console.error("Error creating API token", error);
