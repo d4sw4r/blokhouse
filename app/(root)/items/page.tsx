@@ -5,6 +5,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
+interface Tag {
+    id: string;
+    name: string;
+    color?: string | null;
+    description?: string | null;
+}
+
 interface ConfigItem {
     id: string;
     name: string;
@@ -13,6 +20,7 @@ interface ConfigItem {
     mac?: string;
     itemTypeId?: string;
     itemType?: { id: string; name: string } | null;
+    tags: Tag[];
 }
 
 interface Type {
@@ -24,12 +32,14 @@ export default function ItemsPage() {
     const { data: session, status } = useSession();
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
+    const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [newItem, setNewItem] = useState({
         name: "",
         description: "",
         itemTypeId: "",
         ip: "",
         mac: "",
+        tagIds: [] as string[],
     });
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
     const [editingItemData, setEditingItemData] = useState({
@@ -38,14 +48,21 @@ export default function ItemsPage() {
         ip: "",
         mac: "",
         itemTypeId: "",
+        tagIds: [] as string[],
     });
     const [csvContent, setCsvContent] = useState("");
+    // Tag management modal state
+    const [showTagModal, setShowTagModal] = useState(false);
+    const [newTagName, setNewTagName] = useState("");
+    const [newTagColor, setNewTagColor] = useState("#3b82f6");
+    const [newTagDescription, setNewTagDescription] = useState("");
 
-    // Fetch items and types as before
+    // Fetch items, types and tags
     useEffect(() => {
         if (session) {
             fetchItems();
             fetchTypes();
+            fetchTags();
         }
     }, [session]);
 
@@ -85,6 +102,24 @@ export default function ItemsPage() {
         }
     };
 
+    const fetchTags = async () => {
+        try {
+            const res = await fetch("/api/tags");
+            if (!res.ok) {
+                console.error("Tags API Error:", await res.text());
+                return;
+            }
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setAvailableTags(data);
+            } else {
+                console.error("Unexpected tags response:", data);
+            }
+        } catch (err) {
+            console.error("Fetch tags error:", err);
+        }
+    };
+
     const createItem = async () => {
         const res = await fetch("/api/configuration-items", {
             method: "POST",
@@ -93,7 +128,7 @@ export default function ItemsPage() {
         });
         const created = await res.json();
         setItems((prev) => [...prev, created]);
-        setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "" });
+        setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", tagIds: [] });
     };
 
     const deleteItem = async (id: string) => {
@@ -109,12 +144,13 @@ export default function ItemsPage() {
             ip: item.ip || "",
             mac: item.mac || "",
             itemTypeId: item.itemTypeId || "",
+            tagIds: item.tags?.map(t => t.id) || [],
         });
     };
 
     const cancelEditing = () => {
         setEditingItemId(null);
-        setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "" });
+        setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "", tagIds: [] });
     };
 
     const updateItem = async (id: string) => {
@@ -129,7 +165,6 @@ export default function ItemsPage() {
     };
 
     // CSV Upload Handlers
-
     const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -151,7 +186,6 @@ export default function ItemsPage() {
                 body: JSON.stringify({ csv: csvContent }),
             });
             if (res.ok) {
-                // Refresh items after successful upload
                 fetchItems();
             } else {
                 console.error("CSV upload failed:", await res.text());
@@ -161,11 +195,154 @@ export default function ItemsPage() {
         }
     };
 
+    // Tag management
+    const createTag = async () => {
+        if (!newTagName.trim()) return;
+        try {
+            const res = await fetch("/api/tags", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newTagName.trim(),
+                    color: newTagColor,
+                    description: newTagDescription || null,
+                }),
+            });
+            if (res.ok) {
+                const newTag = await res.json();
+                setAvailableTags((prev) => [...prev, newTag]);
+                setNewTagName("");
+                setNewTagColor("#3b82f6");
+                setNewTagDescription("");
+                setShowTagModal(false);
+            } else {
+                console.error("Failed to create tag:", await res.text());
+            }
+        } catch (error) {
+            console.error("Error creating tag:", error);
+        }
+    };
+
+    const deleteTag = async (tagId: string) => {
+        if (!confirm("Are you sure you want to delete this tag?")) return;
+        try {
+            const res = await fetch(`/api/tags/${tagId}`, { method: "DELETE" });
+            if (res.ok) {
+                setAvailableTags((prev) => prev.filter((t) => t.id !== tagId));
+            } else {
+                console.error("Failed to delete tag:", await res.text());
+            }
+        } catch (error) {
+            console.error("Error deleting tag:", error);
+        }
+    };
+
+    // Helper to toggle tag selection
+    const toggleTagSelection = (tagId: string, isEditing: boolean) => {
+        if (isEditing) {
+            setEditingItemData(prev => ({
+                ...prev,
+                tagIds: prev.tagIds.includes(tagId)
+                    ? prev.tagIds.filter(id => id !== tagId)
+                    : [...prev.tagIds, tagId]
+            }));
+        } else {
+            setNewItem(prev => ({
+                ...prev,
+                tagIds: prev.tagIds.includes(tagId)
+                    ? prev.tagIds.filter(id => id !== tagId)
+                    : [...prev.tagIds, tagId]
+            }));
+        }
+    };
+
+    // Helper to get tag by ID
+    const getTagById = (id: string) => availableTags.find(t => t.id === id);
+
     if (status === "loading") return <p className="p-6 text-lg">Loading...</p>;
 
     return (
         <div className="min-h-screen bg-gray-50">
             <main className="max-w-7xl mx-auto p-8 space-y-10">
+                {/* Tag Management Section */}
+                <section className="bg-white p-6 rounded-lg shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-semibold text-gray-700">Tags</h2>
+                        <Button onClick={() => setShowTagModal(true)}>+ Create Tag</Button>
+                    </div>
+                    {availableTags.length === 0 ? (
+                        <p className="text-gray-500">No tags created yet.</p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {availableTags.map((tag) => (
+                                <div
+                                    key={tag.id}
+                                    className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
+                                    style={{
+                                        backgroundColor: tag.color ? `${tag.color}20` : '#e5e7eb',
+                                        border: `1px solid ${tag.color || '#d1d5db'}`
+                                    }}
+                                >
+                                    <span style={{ color: tag.color || '#374151' }}>{tag.name}</span>
+                                    <button
+                                        onClick={() => deleteTag(tag.id)}
+                                        className="text-gray-400 hover:text-red-500 font-bold"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* Tag Modal */}
+                {showTagModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                            <h3 className="text-xl font-semibold mb-4">Create New Tag</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600 mb-1">Name *</label>
+                                    <input
+                                        type="text"
+                                        value={newTagName}
+                                        onChange={(e) => setNewTagName(e.target.value)}
+                                        className="w-full border rounded-sm p-2"
+                                        placeholder="e.g., production"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600 mb-1">Color</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="color"
+                                            value={newTagColor}
+                                            onChange={(e) => setNewTagColor(e.target.value)}
+                                            className="h-10 w-20"
+                                        />
+                                        <span className="text-sm text-gray-500">{newTagColor}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                                    <input
+                                        type="text"
+                                        value={newTagDescription}
+                                        onChange={(e) => setNewTagDescription(e.target.value)}
+                                        className="w-full border rounded-sm p-2"
+                                        placeholder="Optional description"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-6">
+                                <Button onClick={createTag}>Create</Button>
+                                <Button onClick={() => setShowTagModal(false)} variant="outline">Cancel</Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* CSV Upload Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex items-center">
@@ -182,7 +359,6 @@ export default function ItemsPage() {
                         <Button onClick={uploadCsv}>Upload CSV</Button>
                         {/* Info icon with tooltip */}
                         <div className="relative inline-block group ml-4">
-                            {/* Info icon (using an SVG icon) */}
                             <svg
                                 className="w-6 h-6 text-gray-500 cursor-help"
                                 fill="none"
@@ -192,7 +368,6 @@ export default function ItemsPage() {
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
                             </svg>
-                            {/* Tooltip – hidden by default, visible on hover */}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 <p className="mb-1 font-semibold">Example CSV Format:</p>
                                 <code>Name,Description,IP,MAC,ItemTypeId</code>
@@ -202,7 +377,6 @@ export default function ItemsPage() {
                         </div>
                     </div>
                 </section>
-
 
                 {/* New Item Form */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
@@ -249,6 +423,34 @@ export default function ItemsPage() {
                             ))}
                         </select>
                     </div>
+                    {/* Tags selection */}
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-600 mb-2">Tags</label>
+                        <div className="flex flex-wrap gap-2">
+                            {availableTags.map((tag) => (
+                                <button
+                                    key={tag.id}
+                                    onClick={() => toggleTagSelection(tag.id, false)}
+                                    className={`px-3 py-1 rounded-full text-sm transition-all ${
+                                        newItem.tagIds.includes(tag.id)
+                                            ? 'ring-2 ring-offset-1'
+                                            : 'opacity-60 hover:opacity-100'
+                                    }`}
+                                    style={{
+                                        backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
+                                        border: `1px solid ${tag.color || '#d1d5db'}`,
+                                        color: tag.color || '#374151',
+                                        ringColor: tag.color || '#3b82f6'
+                                    }}
+                                >
+                                    {newItem.tagIds.includes(tag.id) && '✓ '}{tag.name}
+                                </button>
+                            ))}
+                            {availableTags.length === 0 && (
+                                <span className="text-sm text-gray-500">No tags available. Create some above!</span>
+                            )}
+                        </div>
+                    </div>
                     <div className="mt-4">
                         <Button onClick={createItem}>Add Item</Button>
                     </div>
@@ -264,6 +466,7 @@ export default function ItemsPage() {
                                 <th className="py-3 px-4 border">IP</th>
                                 <th className="py-3 px-4 border">MAC</th>
                                 <th className="py-3 px-4 border">Type</th>
+                                <th className="py-3 px-4 border">Tags</th>
                                 <th className="py-3 px-4 border">Actions</th>
                             </tr>
                         </thead>
@@ -327,6 +530,28 @@ export default function ItemsPage() {
                                                 ))}
                                             </select>
                                         </td>
+                                        <td className="py-2 px-4 border">
+                                            <div className="flex flex-wrap gap-1">
+                                                {availableTags.map((tag) => (
+                                                    <button
+                                                        key={tag.id}
+                                                        onClick={() => toggleTagSelection(tag.id, true)}
+                                                        className={`px-2 py-0.5 rounded-full text-xs transition-all ${
+                                                            editingItemData.tagIds.includes(tag.id)
+                                                                ? 'ring-1 ring-offset-1'
+                                                                : 'opacity-50'
+                                                        }`}
+                                                        style={{
+                                                            backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
+                                                            border: `1px solid ${tag.color || '#d1d5db'}`,
+                                                            color: tag.color || '#374151',
+                                                        }}
+                                                    >
+                                                        {editingItemData.tagIds.includes(tag.id) ? '✓ ' : ''}{tag.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </td>
                                         <td className="py-2 px-4 border flex gap-2">
                                             <Button onClick={() => updateItem(item.id)}>Save</Button>
                                             <Button onClick={cancelEditing} variant="outline">Cancel</Button>
@@ -339,6 +564,26 @@ export default function ItemsPage() {
                                         <td className="py-2 px-4 border">{item.ip}</td>
                                         <td className="py-2 px-4 border">{item.mac}</td>
                                         <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
+                                        <td className="py-2 px-4 border">
+                                            <div className="flex flex-wrap gap-1">
+                                                {item.tags?.map((tag) => (
+                                                    <span
+                                                        key={tag.id}
+                                                        className="px-2 py-0.5 rounded-full text-xs"
+                                                        style={{
+                                                            backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
+                                                            border: `1px solid ${tag.color || '#d1d5db'}`,
+                                                            color: tag.color || '#374151',
+                                                        }}
+                                                    >
+                                                        {tag.name}
+                                                    </span>
+                                                ))}
+                                                {(!item.tags || item.tags.length === 0) && (
+                                                    <span className="text-gray-400 text-xs">-</span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="py-2 px-4 border flex gap-2">
                                             <Button onClick={() => startEditing(item)}>Edit</Button>
                                             <Button onClick={() => deleteItem(item.id)} variant="destructive">Delete</Button>
@@ -350,6 +595,6 @@ export default function ItemsPage() {
                     </table>
                 </section>
             </main>
-        </div >
+        </div>
     );
 }
