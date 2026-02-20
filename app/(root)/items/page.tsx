@@ -12,6 +12,8 @@ interface Tag {
     description?: string | null;
 }
 
+type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
+
 interface ConfigItem {
     id: string;
     name: string;
@@ -20,6 +22,7 @@ interface ConfigItem {
     mac?: string;
     itemTypeId?: string;
     itemType?: { id: string; name: string } | null;
+status: AssetStatus;
     tags: Tag[];
 }
 
@@ -34,6 +37,18 @@ interface PaginationData {
     limit: number;
     totalPages: number;
 }
+
+const statusColors: Record<AssetStatus, string> = {
+    ACTIVE: "bg-green-100 text-green-800",
+    DEPRECATED: "bg-red-100 text-red-800",
+    MAINTENANCE: "bg-yellow-100 text-yellow-800",
+};
+
+const statusLabels: Record<AssetStatus, string> = {
+    ACTIVE: "Active",
+    DEPRECATED: "Deprecated",
+    MAINTENANCE: "Maintenance",
+};
 
 export default function ItemsPage() {
     const { data: session, status } = useSession();
@@ -51,6 +66,7 @@ export default function ItemsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTypeId, setSelectedTypeId] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<AssetStatus | "ALL">("ALL");
 
     const [newItem, setNewItem] = useState({
         name: "",
@@ -58,6 +74,7 @@ export default function ItemsPage() {
         itemTypeId: "",
         ip: "",
         mac: "",
+status: "ACTIVE" as AssetStatus,
         tagIds: [] as string[],
     });
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -67,6 +84,7 @@ export default function ItemsPage() {
         ip: "",
         mac: "",
         itemTypeId: "",
+status: "ACTIVE" as AssetStatus,
         tagIds: [] as string[],
     });
     const [csvContent, setCsvContent] = useState("");
@@ -90,7 +108,7 @@ export default function ItemsPage() {
         if (session) {
             fetchItems();
         }
-    }, [session, pagination.page, debouncedSearch, selectedTypeId]);
+    }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
 
     // Fetch types and tags on mount
     useEffect(() => {
@@ -108,6 +126,7 @@ export default function ItemsPage() {
             });
             if (debouncedSearch) params.append("search", debouncedSearch);
             if (selectedTypeId) params.append("typeId", selectedTypeId);
+            if (statusFilter !== "ALL") params.append("status", statusFilter);
 
             const res = await fetch(`/api/configuration-items?${params.toString()}`);
             if (!res.ok) {
@@ -166,7 +185,7 @@ export default function ItemsPage() {
         });
         const created = await res.json();
         setItems((prev) => [created, ...prev]);
-        setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", tagIds: [] });
+setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
         // Refresh to get updated pagination
         fetchItems();
     };
@@ -185,13 +204,14 @@ export default function ItemsPage() {
             ip: item.ip || "",
             mac: item.mac || "",
             itemTypeId: item.itemTypeId || "",
+status: item.status || "ACTIVE",
             tagIds: item.tags?.map(t => t.id) || [],
         });
     };
 
     const cancelEditing = () => {
         setEditingItemId(null);
-        setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "", tagIds: [] });
+setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "", status: "ACTIVE", tagIds: [] });
     };
 
     const updateItem = async (id: string) => {
@@ -303,6 +323,7 @@ export default function ItemsPage() {
     const clearFilters = () => {
         setSearchQuery("");
         setSelectedTypeId("");
+        setStatusFilter("ALL");
         setPagination(prev => ({ ...prev, page: 1 }));
     };
 
@@ -451,9 +472,10 @@ export default function ItemsPage() {
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 <p className="mb-1 font-semibold">Example CSV Format:</p>
-                                <code>Name,Description,IP,MAC,ItemTypeId</code>
+                                <code>Name,Description,IP,MAC,ItemTypeId,Status</code>
                                 <br />
-                                <code>Server 1,Main server,192.168.1.10,00:11:22:33:44:55,abc123</code>
+                                <code>Server 1,Main server,192.168.1.10,00:11:22:33:44:55,abc123,ACTIVE</code>
+                                <p className="mt-1">Status: ACTIVE, MAINTENANCE, DEPRECATED</p>
                             </div>
                         </div>
                     </div>
@@ -462,7 +484,7 @@ export default function ItemsPage() {
                 {/* New Item Form */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Configuration Item</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input
                             type="text"
                             placeholder="Name"
@@ -503,6 +525,15 @@ export default function ItemsPage() {
                                 </option>
                             ))}
                         </select>
+                        <select
+                            value={newItem.status}
+                            onChange={(e) => setNewItem({ ...newItem, status: e.target.value as AssetStatus })}
+                            className="border rounded-sm p-2"
+                        >
+                            <option value="ACTIVE">Active</option>
+                            <option value="MAINTENANCE">Maintenance</option>
+                            <option value="DEPRECATED">Deprecated</option>
+                        </select>
                     </div>
                     {/* Tags selection */}
                     <div className="mt-4">
@@ -540,7 +571,7 @@ export default function ItemsPage() {
                 {/* Search and Filter Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Search & Filter</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">Search</label>
                             <input
@@ -569,6 +600,22 @@ export default function ItemsPage() {
                                 ))}
                             </select>
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by Status</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => {
+                                    setStatusFilter(e.target.value as AssetStatus | "ALL");
+                                    setPagination(prev => ({ ...prev, page: 1 }));
+                                }}
+                                className="w-full border rounded-sm p-2"
+                            >
+                                <option value="ALL">All Statuses</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="MAINTENANCE">Maintenance</option>
+                                <option value="DEPRECATED">Deprecated</option>
+                            </select>
+                        </div>
                         <div className="flex items-end">
                             <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
                         </div>
@@ -588,6 +635,7 @@ export default function ItemsPage() {
                                 <th className="py-3 px-4 border">IP</th>
                                 <th className="py-3 px-4 border">MAC</th>
                                 <th className="py-3 px-4 border">Type</th>
+<th className="py-3 px-4 border">Status</th>
                                 <th className="py-3 px-4 border">Tags</th>
                                 <th className="py-3 px-4 border">Actions</th>
                             </tr>
@@ -595,7 +643,7 @@ export default function ItemsPage() {
                         <tbody>
                             {items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="py-8 px-4 text-center text-gray-500">
+                                    <td colSpan={8} className="py-8 px-4 text-center text-gray-500">
                                         No items found. Try adjusting your search or filters.
                                     </td>
                                 </tr>
@@ -660,6 +708,19 @@ export default function ItemsPage() {
                                                 </select>
                                             </td>
                                             <td className="py-2 px-4 border">
+<select
+                                                    value={editingItemData.status}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, status: e.target.value as AssetStatus })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                >
+                                                    <option value="ACTIVE">Active</option>
+                                                    <option value="MAINTENANCE">Maintenance</option>
+                                                    <option value="DEPRECATED">Deprecated</option>
+                                                </select>
+                                            </td>
+                                            <td className="py-2 px-4 border">
                                                 <div className="flex flex-wrap gap-1">
                                                     {availableTags.map((tag) => (
                                                         <button
@@ -693,6 +754,11 @@ export default function ItemsPage() {
                                             <td className="py-2 px-4 border">{item.ip}</td>
                                             <td className="py-2 px-4 border">{item.mac}</td>
                                             <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
+                                            <td className="py-2 px-4 border">
+<span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
+                                                    {statusLabels[item.status]}
+                                                </span>
+                                            </td>
                                             <td className="py-2 px-4 border">
                                                 <div className="flex flex-wrap gap-1">
                                                     {item.tags?.map((tag) => (

@@ -49,6 +49,7 @@ export async function GET(req) {
                 ansible_host: item.ip,
                 ...(item.mac && { mac: item.mac }),
                 ...(item.description && { description: item.description }),
+                status: item.status,
             };
         }
     });

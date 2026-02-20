@@ -1,12 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 
+type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
+
 interface DashboardType {
     totalItems: number;
     totalTypes: number;
     untypedItems: number;
     itemsPerType: { itemTypeId: string; count: number; typeName?: string }[];
+    itemsPerStatus: { status: AssetStatus; count: number }[];
 }
+
+const statusColors: Record<AssetStatus, string> = {
+    ACTIVE: "bg-green-100 text-green-800 border-green-200",
+    DEPRECATED: "bg-red-100 text-red-800 border-red-200",
+    MAINTENANCE: "bg-yellow-100 text-yellow-800 border-yellow-200",
+};
 
 export default function Dashboard() {
     const [dashboard, setDashboard] = useState<DashboardType | null>(null);
@@ -50,6 +59,24 @@ export default function Dashboard() {
                         <p className="mt-4 text-4xl font-bold text-brand-primary">{dashboard.untypedItems}</p>
                     </div>
                 </div>
+
+                {/* Status Overview */}
+                <div className="mt-12">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Status Overview</h2>
+                    {dashboard.itemsPerStatus.length === 0 ? (
+                        <p className="text-gray-600">No status data available.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {dashboard.itemsPerStatus.map((group) => (
+                                <div key={group.status} className={`p-6 rounded-lg border-2 ${statusColors[group.status]}`}>
+                                    <h3 className="text-lg font-semibold capitalize">{group.status.toLowerCase()}</h3>
+                                    <p className="mt-2 text-3xl font-bold">{group.count}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div className="mt-12">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Items Per Type</h2>
                     {dashboard.itemsPerType.length === 0 ? (

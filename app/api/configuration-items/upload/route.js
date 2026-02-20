@@ -29,13 +29,14 @@ export async function POST(request) {
                 item[col] = row[index] || "";
             });
             // Map CSV columns to our fields – assuming headers are exactly:
-            // name, description, ip, mac, itemtypeid
+            // name, description, ip, mac, itemtypeid, status
             itemsData.push({
                 name: item.name,
                 description: item.description,
                 ip: item.ip,
                 mac: item.mac,
                 itemTypeId: item.itemtypeid || null,
+                status: item.status || "ACTIVE",
                 userId: session.user.id,
             });
         }

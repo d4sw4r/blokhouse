@@ -10,8 +10,6 @@ export async function GET() {
         const totalTypes = await prisma.itemType.count();
 
         // Group configuration items by itemTypeId.
-        // This returns an array of objects like:
-        // { itemTypeId: "someId" or null, _count: { id: number } }
         const grouped = await prisma.configurationItem.groupBy({
             by: ['itemTypeId'],
             _count: { id: true },
@@ -33,7 +31,6 @@ export async function GET() {
         }
 
         // For each group with an itemTypeId, fetch the type name.
-        // (You could also perform a JOIN query in raw SQL, but this works fine for now.)
         for (let i = 0; i < itemsPerType.length; i++) {
             const type = await prisma.itemType.findUnique({
                 where: { id: itemsPerType[i].itemTypeId },
@@ -41,11 +38,23 @@ export async function GET() {
             itemsPerType[i].typeName = type ? type.name : "Unknown";
         }
 
+        // Group by status
+        const statusGrouped = await prisma.configurationItem.groupBy({
+            by: ['status'],
+            _count: { id: true },
+        });
+
+        const itemsPerStatus = statusGrouped.map((group) => ({
+            status: group.status,
+            count: group._count.id,
+        }));
+
         const dashboard = {
             totalItems,
             totalTypes,
             untypedItems,
             itemsPerType,
+            itemsPerStatus,
         };
 
         return new Response(JSON.stringify(dashboard, null, 2), {

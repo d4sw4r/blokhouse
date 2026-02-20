@@ -30,6 +30,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const typeId = searchParams.get("typeId") || "";
+    const status = searchParams.get("status") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
@@ -49,6 +50,11 @@ export async function GET(request) {
     // Filter by item type
     if (typeId) {
         where.itemTypeId = typeId;
+    }
+
+    // Filter by status
+    if (status) {
+        where.status = status;
     }
 
     // Calculate pagination
@@ -89,7 +95,7 @@ export async function POST(request) {
     if (!canWrite(session.user.role)) {
         return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
     }
-    const { name, description, itemTypeId, ip, mac, tagIds } = await request.json();
+const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
     
     const data = {
         name,
@@ -98,6 +104,7 @@ export async function POST(request) {
         itemTypeId: itemTypeId || null,
         ip,
         mac,
+        status: status || "ACTIVE",
     };
 
     // Add tags if provided
