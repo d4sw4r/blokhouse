@@ -25,7 +25,21 @@ export async function GET(request) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
         }
     }
-    const items = await prisma.configurationItem.findMany({ include: { itemType: true } });
+
+    // Parse query parameters for filtering
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+
+    const where = {};
+    if (status) {
+        where.status = status;
+    }
+
+    const items = await prisma.configurationItem.findMany({
+        where,
+        include: { itemType: true },
+        orderBy: { createdAt: "desc" },
+    });
     return new Response(JSON.stringify(items), { status: 200 });
 }
 
@@ -37,7 +51,7 @@ export async function POST(request) {
     if (!canWrite(session.user.role)) {
         return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
     }
-    const { name, description, itemTypeId, ip, mac } = await request.json();
+    const { name, description, itemTypeId, ip, mac, status } = await request.json();
     const item = await prisma.configurationItem.create({
         data: {
             name,
@@ -46,6 +60,7 @@ export async function POST(request) {
             itemTypeId: itemTypeId || null,
             ip,
             mac,
+            status: status || "ACTIVE",
         },
         include: { itemType: true },
     });

@@ -26,11 +26,11 @@ export async function PUT(req, { params }) {
     }
     const { id } = params;
     const body = await req.json();
-    const { name, description, ip, mac, itemTypeId } = body;
+    const { name, description, ip, mac, itemTypeId, status } = body;
 
     const updated = await prisma.configurationItem.update({
         where: { id },
-        data: { name, description, ip, mac, itemTypeId },
+        data: { name, description, ip, mac, itemTypeId, status },
     });
 
     return new Response(JSON.stringify(updated), { status: 200 });
