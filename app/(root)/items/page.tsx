@@ -5,14 +5,14 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
+type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
+
 interface Tag {
     id: string;
     name: string;
     color?: string | null;
     description?: string | null;
 }
-
-type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 
 interface ConfigItem {
     id: string;
@@ -22,7 +22,7 @@ interface ConfigItem {
     mac?: string;
     itemTypeId?: string;
     itemType?: { id: string; name: string } | null;
-status: AssetStatus;
+    status: AssetStatus;
     tags: Tag[];
 }
 
@@ -74,7 +74,7 @@ export default function ItemsPage() {
         itemTypeId: "",
         ip: "",
         mac: "",
-status: "ACTIVE" as AssetStatus,
+        status: "ACTIVE" as AssetStatus,
         tagIds: [] as string[],
     });
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -84,33 +84,29 @@ status: "ACTIVE" as AssetStatus,
         ip: "",
         mac: "",
         itemTypeId: "",
-status: "ACTIVE" as AssetStatus,
+        status: "ACTIVE" as AssetStatus,
         tagIds: [] as string[],
     });
     const [csvContent, setCsvContent] = useState("");
-    // Tag management modal state
     const [showTagModal, setShowTagModal] = useState(false);
     const [newTagName, setNewTagName] = useState("");
     const [newTagColor, setNewTagColor] = useState("#3b82f6");
     const [newTagDescription, setNewTagDescription] = useState("");
 
-    // Debounce search input
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
-            setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
+            setPagination(prev => ({ ...prev, page: 1 }));
         }, 300);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Fetch items when session, page, filters change
     useEffect(() => {
         if (session) {
             fetchItems();
         }
     }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
 
-    // Fetch types and tags on mount
     useEffect(() => {
         if (session) {
             fetchTypes();
@@ -185,8 +181,7 @@ status: "ACTIVE" as AssetStatus,
         });
         const created = await res.json();
         setItems((prev) => [created, ...prev]);
-setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
-        // Refresh to get updated pagination
+        setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
         fetchItems();
     };
 
@@ -204,14 +199,14 @@ setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status:
             ip: item.ip || "",
             mac: item.mac || "",
             itemTypeId: item.itemTypeId || "",
-status: item.status || "ACTIVE",
+            status: item.status || "ACTIVE",
             tagIds: item.tags?.map(t => t.id) || [],
         });
     };
 
     const cancelEditing = () => {
         setEditingItemId(null);
-setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "", status: "ACTIVE", tagIds: [] });
+        setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "", status: "ACTIVE", tagIds: [] });
     };
 
     const updateItem = async (id: string) => {
@@ -225,7 +220,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         cancelEditing();
     };
 
-    // CSV Upload Handlers
     const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -256,7 +250,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         }
     };
 
-    // Tag management
     const createTag = async () => {
         if (!newTagName.trim()) return;
         try {
@@ -298,7 +291,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         }
     };
 
-    // Helper to toggle tag selection
     const toggleTagSelection = (tagId: string, isEditing: boolean) => {
         if (isEditing) {
             setEditingItemData(prev => ({
@@ -317,9 +309,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         }
     };
 
-    // Helper to get tag by ID
-    const getTagById = (id: string) => availableTags.find(t => t.id === id);
-
     const clearFilters = () => {
         setSearchQuery("");
         setSelectedTypeId("");
@@ -333,7 +322,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         }
     };
 
-    // Generate pagination range
     const getPaginationRange = () => {
         const { page, totalPages } = pagination;
         const range: (number | string)[] = [];
@@ -366,7 +354,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     return (
         <div className="min-h-screen bg-gray-50">
             <main className="max-w-7xl mx-auto p-8 space-y-10">
-                {/* Tag Management Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-semibold text-gray-700">Tags</h2>
@@ -398,7 +385,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     )}
                 </section>
 
-                {/* Tag Modal */}
                 {showTagModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -445,7 +431,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </div>
                 )}
 
-                {/* CSV Upload Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex items-center">
                         <Image src="file.svg" width={24} height={24} alt="file" ></Image>
@@ -459,7 +444,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             className="mb-4 md:mb-0"
                         />
                         <Button onClick={uploadCsv}>Upload CSV</Button>
-                        {/* Info icon with tooltip */}
                         <div className="relative inline-block group ml-4">
                             <svg
                                 className="w-6 h-6 text-gray-500 cursor-help"
@@ -481,7 +465,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </div>
                 </section>
 
-                {/* New Item Form */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Configuration Item</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -535,7 +518,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             <option value="DEPRECATED">Deprecated</option>
                         </select>
                     </div>
-                    {/* Tags selection */}
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-600 mb-2">Tags</label>
                         <div className="flex flex-wrap gap-2">
@@ -568,7 +550,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </div>
                 </section>
 
-                {/* Search and Filter Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-4">Search & Filter</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -625,7 +606,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </p>
                 </section>
 
-                {/* Items Table */}
                 <section className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="min-w-full">
                         <thead className="bg-gray-200">
@@ -635,7 +615,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                 <th className="py-3 px-4 border">IP</th>
                                 <th className="py-3 px-4 border">MAC</th>
                                 <th className="py-3 px-4 border">Type</th>
-<th className="py-3 px-4 border">Status</th>
+                                <th className="py-3 px-4 border">Status</th>
                                 <th className="py-3 px-4 border">Tags</th>
                                 <th className="py-3 px-4 border">Actions</th>
                             </tr>
@@ -708,7 +688,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                                 </select>
                                             </td>
                                             <td className="py-2 px-4 border">
-<select
+                                                <select
                                                     value={editingItemData.status}
                                                     onChange={(e) =>
                                                         setEditingItemData({ ...editingItemData, status: e.target.value as AssetStatus })
@@ -755,7 +735,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                             <td className="py-2 px-4 border">{item.mac}</td>
                                             <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
                                             <td className="py-2 px-4 border">
-<span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
                                                     {statusLabels[item.status]}
                                                 </span>
                                             </td>
@@ -790,7 +770,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         </tbody>
                     </table>
 
-                    {/* Pagination Controls */}
                     {pagination.totalPages > 1 && (
                         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
                             <div className="flex items-center">

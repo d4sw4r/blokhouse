@@ -2,7 +2,6 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
 
-// Helper to check if the user can write (ADMIN, USER, API)
 function canWrite(role) {
     return role === "ADMIN" || role === "USER" || role === "API";
 }
@@ -26,7 +25,6 @@ export async function GET(request) {
         }
     }
 
-    // Parse query parameters for search, filter, and pagination
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const typeId = searchParams.get("typeId") || "";
@@ -34,10 +32,8 @@ export async function GET(request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-    // Build where clause for filtering
     const where = {};
 
-    // Search across name, description, ip, and mac fields
     if (search) {
         where.OR = [
             { name: { contains: search, mode: "insensitive" } },
@@ -47,23 +43,18 @@ export async function GET(request) {
         ];
     }
 
-    // Filter by item type
     if (typeId) {
         where.itemTypeId = typeId;
     }
 
-    // Filter by status
     if (status) {
         where.status = status;
     }
 
-    // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Get total count for pagination metadata
     const totalCount = await prisma.configurationItem.count({ where });
 
-    // Fetch paginated items with tags included
     const items = await prisma.configurationItem.findMany({
         where,
         include: { itemType: true, tags: true },
@@ -72,7 +63,6 @@ export async function GET(request) {
         orderBy: { createdAt: "desc" },
     });
 
-    // Return items with pagination metadata
     return new Response(
         JSON.stringify({
             items,
@@ -95,7 +85,7 @@ export async function POST(request) {
     if (!canWrite(session.user.role)) {
         return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
     }
-const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
+    const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
     
     const data = {
         name,
@@ -107,7 +97,6 @@ const { name, description, itemTypeId, ip, mac, status, tagIds } = await request
         status: status || "ACTIVE",
     };
 
-    // Add tags if provided
     if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
         data.tags = {
             connect: tagIds.map(id => ({ id }))

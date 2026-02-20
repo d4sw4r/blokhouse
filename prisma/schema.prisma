@@ -2,12 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// datasource db {
-//  provider = "sqlite"
-//  url      = "file:./dev.db"
-  // url = env("DATABASE_URL")
-// }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -26,7 +20,7 @@ model User {
   email              String?             @unique
   emailVerified      DateTime?
   image              String?
-  password           String? // For CredentialsProvider (plain text demo only)
+  password           String?
   accounts           Account[]
   sessions           Session[]
   configurationItems ConfigurationItem[]
@@ -78,17 +72,15 @@ model ItemType {
   id                 String              @id @default(cuid())
   name               String
   description        String?
-  // Back-relation: all configuration items assigned to this type
   configurationItems ConfigurationItem[]
 }
 
 model Tag {
   id                 String              @id @default(cuid())
   name               String              @unique
-  color              String?             // Optional hex color for UI display
+  color              String?
   description        String?
   createdAt          DateTime            @default(now())
-  // Many-to-many relation with Configuration Items
   configurationItems ConfigurationItem[]
 }
 
@@ -100,15 +92,11 @@ model ConfigurationItem {
   updatedAt   DateTime    @updatedAt
   userId      String?
   user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  // New fields for network information:
   ip          String?
   mac         String?
-  // New relation: optional type assignment
   itemTypeId  String?
-itemType    ItemType? @relation(fields: [itemTypeId], references: [id])
-  // Asset status field
+  itemType    ItemType? @relation(fields: [itemTypeId], references: [id])
   status      AssetStatus @default(ACTIVE)
-  // Many-to-many relation with Tags
   tags        Tag[]
 }
 

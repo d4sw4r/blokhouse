@@ -27,11 +27,10 @@ export async function PUT(req, { params }) {
     }
     const { id } = await params;
     const body = await req.json();
-const { name, description, ip, mac, itemTypeId, status, tagIds } = body;
+    const { name, description, ip, mac, itemTypeId, status, tagIds } = body;
 
     const data = { name, description, ip, mac, itemTypeId, status };
 
-    // Handle tag updates if provided
     if (tagIds !== undefined && Array.isArray(tagIds)) {
         data.tags = {
             set: tagIds.map(tagId => ({ id: tagId }))
