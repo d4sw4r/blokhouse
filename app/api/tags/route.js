@@ -7,7 +7,64 @@ function canWrite(role) {
     return role === "ADMIN" || role === "USER" || role === "API";
 }
 
-// GET /api/tags - List all tags
+/**
+ * @swagger
+ * /api/tags:
+ *   get:
+ *     summary: List all tags
+ *     description: Get all tags with usage count
+ *     tags: [Tags]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of tags
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Tag'
+ *       401:
+ *         description: Unauthorized
+ *   post:
+ *     summary: Create a tag
+ *     description: Create a new tag for labeling assets
+ *     tags: [Tags]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               color:
+ *                 type: string
+ *                 description: Hex color code (e.g., #ff0000)
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created tag
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Tag'
+ *       400:
+ *         description: Bad request (missing name)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       409:
+ *         description: Conflict (tag already exists)
+ */
 export async function GET(request) {
     const authHeader = request.headers.get("authorization");
     let authorized = false;
@@ -43,7 +100,6 @@ export async function GET(request) {
     }
 }
 
-// POST /api/tags - Create a new tag
 export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session) {

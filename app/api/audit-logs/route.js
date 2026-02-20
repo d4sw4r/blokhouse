@@ -10,6 +10,68 @@ function canViewAuditLogs(role) {
     return role === "ADMIN" || role === "AUDIT";
 }
 
+/**
+ * @swagger
+ * /api/audit-logs:
+ *   get:
+ *     summary: Query audit logs
+ *     description: Get audit logs with optional filtering (Admin/Audit role only)
+ *     tags: [Audit Logs]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *           enum: [CREATE, UPDATE, DELETE, LOGIN, LOGOUT, API_TOKEN_CREATED, API_TOKEN_DELETED]
+ *         description: Filter by action type
+ *       - in: query
+ *         name: entityType
+ *         schema:
+ *           type: string
+ *         description: Filter by entity type (e.g., ConfigurationItem)
+ *       - in: query
+ *         name: entityId
+ *         schema:
+ *           type: string
+ *         description: Filter by specific entity ID
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: Filter by user who performed the action
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: Audit logs with pagination
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 logs:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/AuditLog'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (requires Admin or Audit role)
+ */
 export async function GET(request) {
     const session = await getServerSession(authOptions);
     if (!session) {

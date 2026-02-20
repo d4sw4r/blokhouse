@@ -32,6 +32,109 @@ async function getUserIdFromRequest(request) {
     return { authorized: false };
 }
 
+/**
+ * @swagger
+ * /api/configuration-items:
+ *   get:
+ *     summary: List configuration items
+ *     description: Get all configuration items with optional search, filtering, and pagination
+ *     tags: [Configuration Items]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search across name, description, IP, and MAC
+ *       - in: query
+ *         name: typeId
+ *         schema:
+ *           type: string
+ *         description: Filter by item type ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVE, DEPRECATED, MAINTENANCE]
+ *         description: Filter by asset status
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: List of configuration items with pagination
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ConfigurationItem'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *   post:
+ *     summary: Create a configuration item
+ *     description: Create a new asset in the CMDB
+ *     tags: [Configuration Items]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 required: true
+ *               description:
+ *                 type: string
+ *               ip:
+ *                 type: string
+ *               mac:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, DEPRECATED, MAINTENANCE]
+ *                 default: ACTIVE
+ *               itemTypeId:
+ *                 type: string
+ *               tagIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Created configuration item
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ConfigurationItem'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (read-only access)
+ */
 export async function GET(request) {
     const { authorized } = await getUserIdFromRequest(request);
     if (!authorized) {
