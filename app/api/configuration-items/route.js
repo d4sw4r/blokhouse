@@ -57,10 +57,10 @@ export async function GET(request) {
     // Get total count for pagination metadata
     const totalCount = await prisma.configurationItem.count({ where });
 
-    // Fetch paginated items
+    // Fetch paginated items with tags included
     const items = await prisma.configurationItem.findMany({
         where,
-        include: { itemType: true },
+        include: { itemType: true, tags: true },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -89,17 +89,27 @@ export async function POST(request) {
     if (!canWrite(session.user.role)) {
         return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
     }
-    const { name, description, itemTypeId, ip, mac } = await request.json();
+    const { name, description, itemTypeId, ip, mac, tagIds } = await request.json();
+    
+    const data = {
+        name,
+        description,
+        userId: session.user.id,
+        itemTypeId: itemTypeId || null,
+        ip,
+        mac,
+    };
+
+    // Add tags if provided
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+        data.tags = {
+            connect: tagIds.map(id => ({ id }))
+        };
+    }
+
     const item = await prisma.configurationItem.create({
-        data: {
-            name,
-            description,
-            userId: session.user.id,
-            itemTypeId: itemTypeId || null,
-            ip,
-            mac,
-        },
-        include: { itemType: true },
+        data,
+        include: { itemType: true, tags: true },
     });
     return new Response(JSON.stringify(item), { status: 201 });
 }
