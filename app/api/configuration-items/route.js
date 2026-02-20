@@ -25,10 +25,60 @@ export async function GET(request) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
         }
     }
-    const items = await prisma.configurationItem.findMany({ 
-        include: { itemType: true, tags: true } 
+
+    // Parse query parameters for search, filter, and pagination
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const typeId = searchParams.get("typeId") || "";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+
+    // Build where clause for filtering
+    const where = {};
+
+    // Search across name, description, ip, and mac fields
+    if (search) {
+        where.OR = [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+            { ip: { contains: search, mode: "insensitive" } },
+            { mac: { contains: search, mode: "insensitive" } },
+        ];
+    }
+
+    // Filter by item type
+    if (typeId) {
+        where.itemTypeId = typeId;
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.configurationItem.count({ where });
+
+    // Fetch paginated items with tags included
+    const items = await prisma.configurationItem.findMany({
+        where,
+        include: { itemType: true, tags: true },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
     });
-    return new Response(JSON.stringify(items), { status: 200 });
+
+    // Return items with pagination metadata
+    return new Response(
+        JSON.stringify({
+            items,
+            pagination: {
+                total: totalCount,
+                page,
+                limit,
+                totalPages: Math.ceil(totalCount / limit),
+            },
+        }),
+        { status: 200 }
+    );
 }
 
 export async function POST(request) {
