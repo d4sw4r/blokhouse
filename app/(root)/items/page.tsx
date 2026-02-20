@@ -551,8 +551,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                     style={{
                                         backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
                                         border: `1px solid ${tag.color || '#d1d5db'}`,
-                                        color: tag.color || '#374151',
-                                        ringColor: tag.color || '#3b82f6'
+                                        color: tag.color || '#374151'
                                     }}
                                 >
                                     {newItem.tagIds.includes(tag.id) && '✓ '}{tag.name}
@@ -813,7 +812,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                         <Button
                                             key={idx}
                                             onClick={() => goToPage(page as number)}
-                                            variant={pagination.page === page ? "default" : "outline"}
+                                            variant={pagination.page === page ? undefined : "outline"}
                                         >
                                             {page}
                                         </Button>

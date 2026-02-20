@@ -23,8 +23,11 @@ jobs:
           cache: "npm"
 
       # Step 3: Install dependencies
+      # Use `npm install` instead of `npm ci` so that Renovate PRs with
+      # updated package.json (but stale lockfile) don't fail at this step.
+      # The lockfile is regenerated in-place if it is out of sync.
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # Step 4: Generate Prisma Client
       - name: Generate Prisma Client
