@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "rs": "npx prisma migrate deploy && npx prisma db seed && npm run start"
   },
   "dependencies": {
@@ -30,7 +33,8 @@
     "eslint-config-next": "15.5.12",
     "postcss": "^8.5.2",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -1,8 +1,8 @@
 'use client';
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { Button } from "@components/ui/Button";
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
@@ -23,6 +23,13 @@ interface Type {
     name: string;
 }
 
+interface PaginationData {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
 const statusColors: Record<AssetStatus, string> = {
     ACTIVE: "bg-green-100 text-green-800",
     DEPRECATED: "bg-red-100 text-red-800",
@@ -38,8 +45,20 @@ const statusLabels: Record<AssetStatus, string> = {
 export default function ItemsPage() {
     const { data: session, status } = useSession();
     const [items, setItems] = useState<ConfigItem[]>([]);
-    const [filteredItems, setFilteredItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
+    const [pagination, setPagination] = useState<PaginationData>({
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+    });
+
+    // Search and filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedTypeId, setSelectedTypeId] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<AssetStatus | "ALL">("ALL");
+
     const [newItem, setNewItem] = useState({
         name: "",
         description: "",
@@ -58,39 +77,48 @@ export default function ItemsPage() {
         status: "ACTIVE" as AssetStatus,
     });
     const [csvContent, setCsvContent] = useState("");
-    const [statusFilter, setStatusFilter] = useState<AssetStatus | "ALL">("ALL");
 
-    // Fetch items and types as before
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Fetch items when session, page, filters change
     useEffect(() => {
         if (session) {
             fetchItems();
+        }
+    }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
+
+    // Fetch types on mount
+    useEffect(() => {
+        if (session) {
             fetchTypes();
         }
     }, [session]);
 
-    // Filter items when statusFilter changes
-    useEffect(() => {
-        if (statusFilter === "ALL") {
-            setFilteredItems(items);
-        } else {
-            setFilteredItems(items.filter((item) => item.status === statusFilter));
-        }
-    }, [statusFilter, items]);
-
     const fetchItems = async () => {
         try {
-            const res = await fetch("/api/configuration-items");
+            const params = new URLSearchParams({
+                page: pagination.page.toString(),
+                limit: pagination.limit.toString(),
+            });
+            if (debouncedSearch) params.append("search", debouncedSearch);
+            if (selectedTypeId) params.append("typeId", selectedTypeId);
+            if (statusFilter !== "ALL") params.append("status", statusFilter);
+
+            const res = await fetch(`/api/configuration-items?${params.toString()}`);
             if (!res.ok) {
                 console.error("API Error:", await res.text());
                 return;
             }
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setItems(data);
-                setFilteredItems(data);
-            } else {
-                console.error("Unexpected API response:", data);
-            }
+            setItems(data.items || []);
+            setPagination(data.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 });
         } catch (err) {
             console.error("Fetch error:", err);
         }
@@ -121,13 +149,16 @@ export default function ItemsPage() {
             body: JSON.stringify(newItem),
         });
         const created = await res.json();
-        setItems((prev) => [...prev, created]);
+        setItems((prev) => [created, ...prev]);
         setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE" });
+        // Refresh to get updated pagination
+        fetchItems();
     };
 
     const deleteItem = async (id: string) => {
         await fetch(`/api/configuration-items/${id}`, { method: "DELETE" });
         setItems((prev) => prev.filter((item) => item.id !== id));
+        fetchItems();
     };
 
     const startEditing = (item: ConfigItem) => {
@@ -187,6 +218,47 @@ export default function ItemsPage() {
         } catch (error) {
             console.error("Error uploading CSV:", error);
         }
+    };
+
+    const clearFilters = () => {
+        setSearchQuery("");
+        setSelectedTypeId("");
+        setStatusFilter("ALL");
+        setPagination(prev => ({ ...prev, page: 1 }));
+    };
+
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= pagination.totalPages) {
+            setPagination(prev => ({ ...prev, page }));
+        }
+    };
+
+    // Generate pagination range
+    const getPaginationRange = () => {
+        const { page, totalPages } = pagination;
+        const range: (number | string)[] = [];
+        const maxVisible = 5;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) range.push(i);
+        } else {
+            if (page <= 3) {
+                for (let i = 1; i <= 4; i++) range.push(i);
+                range.push("...");
+                range.push(totalPages);
+            } else if (page >= totalPages - 2) {
+                range.push(1);
+                range.push("...");
+                for (let i = totalPages - 3; i <= totalPages; i++) range.push(i);
+            } else {
+                range.push(1);
+                range.push("...");
+                for (let i = page - 1; i <= page + 1; i++) range.push(i);
+                range.push("...");
+                range.push(totalPages);
+            }
+        }
+        return range;
     };
 
     if (status === "loading") return <p className="p-6 text-lg">Loading...</p>;
@@ -289,24 +361,61 @@ export default function ItemsPage() {
                     </div>
                 </section>
 
-                {/* Filter Section */}
-                <section className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <label className="font-semibold text-gray-700">Filter by Status:</label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as AssetStatus | "ALL")}
-                            className="border rounded-sm p-2"
-                        >
-                            <option value="ALL">All Statuses</option>
-                            <option value="ACTIVE">Active</option>
-                            <option value="MAINTENANCE">Maintenance</option>
-                            <option value="DEPRECATED">Deprecated</option>
-                        </select>
-                        <span className="text-gray-500 text-sm">
-                            Showing {filteredItems.length} of {items.length} items
-                        </span>
+                {/* Search and Filter Section */}
+                <section className="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Search & Filter</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Search</label>
+                            <input
+                                type="text"
+                                placeholder="Search name, IP, MAC, description..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full border rounded-sm p-2"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by Type</label>
+                            <select
+                                value={selectedTypeId}
+                                onChange={(e) => {
+                                    setSelectedTypeId(e.target.value);
+                                    setPagination(prev => ({ ...prev, page: 1 }));
+                                }}
+                                className="w-full border rounded-sm p-2"
+                            >
+                                <option value="">All Types</option>
+                                {availableTypes.map((type) => (
+                                    <option key={type.id} value={type.id}>
+                                        {type.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by Status</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => {
+                                    setStatusFilter(e.target.value as AssetStatus | "ALL");
+                                    setPagination(prev => ({ ...prev, page: 1 }));
+                                }}
+                                className="w-full border rounded-sm p-2"
+                            >
+                                <option value="ALL">All Statuses</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="MAINTENANCE">Maintenance</option>
+                                <option value="DEPRECATED">Deprecated</option>
+                            </select>
+                        </div>
+                        <div className="flex items-end">
+                            <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
+                        </div>
                     </div>
+                    <p className="mt-2 text-sm text-gray-500">
+                        Showing {items.length} of {pagination.total} items
+                    </p>
                 </section>
 
                 {/* Items Table */}
@@ -324,104 +433,152 @@ export default function ItemsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredItems.map((item) =>
-                                editingItemId === item.id ? (
-                                    <tr key={item.id}>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="text"
-                                                value={editingItemData.name}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, name: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="text"
-                                                value={editingItemData.description}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, description: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="text"
-                                                value={editingItemData.ip}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, ip: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="text"
-                                                value={editingItemData.mac}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, mac: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <select
-                                                value={editingItemData.itemTypeId}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, itemTypeId: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            >
-                                                <option value="">None</option>
-                                                {availableTypes.map((type) => (
-                                                    <option key={type.id} value={type.id}>
-                                                        {type.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <select
-                                                value={editingItemData.status}
-                                                onChange={(e) =>
-                                                    setEditingItemData({ ...editingItemData, status: e.target.value as AssetStatus })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            >
-                                                <option value="ACTIVE">Active</option>
-                                                <option value="MAINTENANCE">Maintenance</option>
-                                                <option value="DEPRECATED">Deprecated</option>
-                                            </select>
-                                        </td>
-                                        <td className="py-2 px-4 border flex gap-2">
-                                            <Button onClick={() => updateItem(item.id)}>Save</Button>
-                                            <Button onClick={cancelEditing} variant="outline">Cancel</Button>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    <tr key={item.id}>
-                                        <td className="py-2 px-4 border">{item.name}</td>
-                                        <td className="py-2 px-4 border">{item.description}</td>
-                                        <td className="py-2 px-4 border">{item.ip}</td>
-                                        <td className="py-2 px-4 border">{item.mac}</td>
-                                        <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
-                                        <td className="py-2 px-4 border">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
-                                                {statusLabels[item.status]}
-                                            </span>
-                                        </td>
-                                        <td className="py-2 px-4 border flex gap-2">
-                                            <Button onClick={() => startEditing(item)}>Edit</Button>
-                                            <Button onClick={() => deleteItem(item.id)} variant="destructive">Delete</Button>
-                                        </td>
-                                    </tr>
+                            {items.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-8 px-4 text-center text-gray-500">
+                                        No items found. Try adjusting your search or filters.
+                                    </td>
+                                </tr>
+                            ) : (
+                                items.map((item) =>
+                                    editingItemId === item.id ? (
+                                        <tr key={item.id}>
+                                            <td className="py-2 px-4 border">
+                                                <input
+                                                    type="text"
+                                                    value={editingItemData.name}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, name: e.target.value })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                />
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <input
+                                                    type="text"
+                                                    value={editingItemData.description}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, description: e.target.value })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                />
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <input
+                                                    type="text"
+                                                    value={editingItemData.ip}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, ip: e.target.value })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                />
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <input
+                                                    type="text"
+                                                    value={editingItemData.mac}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, mac: e.target.value })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                />
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <select
+                                                    value={editingItemData.itemTypeId}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, itemTypeId: e.target.value })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                >
+                                                    <option value="">None</option>
+                                                    {availableTypes.map((type) => (
+                                                        <option key={type.id} value={type.id}>
+                                                            {type.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <select
+                                                    value={editingItemData.status}
+                                                    onChange={(e) =>
+                                                        setEditingItemData({ ...editingItemData, status: e.target.value as AssetStatus })
+                                                    }
+                                                    className="w-full border rounded-sm p-1"
+                                                >
+                                                    <option value="ACTIVE">Active</option>
+                                                    <option value="MAINTENANCE">Maintenance</option>
+                                                    <option value="DEPRECATED">Deprecated</option>
+                                                </select>
+                                            </td>
+                                            <td className="py-2 px-4 border flex gap-2">
+                                                <Button onClick={() => updateItem(item.id)}>Save</Button>
+                                                <Button onClick={cancelEditing} variant="outline">Cancel</Button>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <tr key={item.id}>
+                                            <td className="py-2 px-4 border">{item.name}</td>
+                                            <td className="py-2 px-4 border">{item.description}</td>
+                                            <td className="py-2 px-4 border">{item.ip}</td>
+                                            <td className="py-2 px-4 border">{item.mac}</td>
+                                            <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
+                                            <td className="py-2 px-4 border">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
+                                                    {statusLabels[item.status]}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-4 border flex gap-2">
+                                                <Button onClick={() => startEditing(item)}>Edit</Button>
+                                                <Button onClick={() => deleteItem(item.id)} variant="destructive">Delete</Button>
+                                            </td>
+                                        </tr>
+                                    )
                                 )
                             )}
                         </tbody>
                     </table>
+
+                    {/* Pagination Controls */}
+                    {pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
+                            <div className="flex items-center">
+                                <span className="text-sm text-gray-600">
+                                    Page {pagination.page} of {pagination.totalPages}
+                                </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                                <Button
+                                    onClick={() => goToPage(pagination.page - 1)}
+                                    disabled={pagination.page === 1}
+                                    variant="outline"
+                                >
+                                    Previous
+                                </Button>
+                                {getPaginationRange().map((page, idx) =>
+                                    page === "..." ? (
+                                        <span key={idx} className="px-3 py-1 text-gray-500">...</span>
+                                    ) : (
+                                        <Button
+                                            key={idx}
+                                            onClick={() => goToPage(page as number)}
+                                            variant={pagination.page === page ? "default" : "outline"}
+                                        >
+                                            {page}
+                                        </Button>
+                                    )
+                                )}
+                                <Button
+                                    onClick={() => goToPage(pagination.page + 1)}
+                                    disabled={pagination.page === pagination.totalPages}
+                                    variant="outline"
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </section>
             </main>
         </div>
