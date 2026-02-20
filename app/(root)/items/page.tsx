@@ -812,7 +812,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                         <Button
                                             key={idx}
                                             onClick={() => goToPage(page as number)}
-                                            variant={pagination.page === page ? "default" : "outline"}
+                                            variant={pagination.page === page ? undefined : "outline"}
                                         >
                                             {page}
                                         </Button>
