@@ -22,7 +22,68 @@ url: http://localhost:3000/api/ansible
 validate_certs: false
 ```
 
-(See Ansible’s documentation on dynamic inventories for details.)
+(See Ansible's documentation on dynamic inventories for details.)
+
+## puppet
+
+Blokhouse acts as a **Puppet External Node Classifier (ENC)**. Configure your Puppet master to call the endpoint per-node.
+
+```ini
+# /etc/puppet/puppet.conf or /etc/puppetlabs/puppet/puppet.conf
+[master]
+external_nodes = curl -sf -H 'Authorization: Bearer YOUR_API_TOKEN' http://localhost:3000/api/puppet?node=%s
+node_terminus  = exec
+```
+
+The ENC returns YAML with classes, parameters and environment derived from the asset's type:
+
+```yaml
+---
+classes:
+  webserver:
+parameters:
+  blokhouse_id: "clxyz..."
+  blokhouse_name: "web-01"
+  ip_address: "192.168.1.10"
+  item_type: "webserver"
+  managed_by: "blokhouse"
+environment: webserver
+```
+
+List all nodes (JSON overview):
+```bash
+curl -H 'Authorization: Bearer YOUR_API_TOKEN' http://localhost:3000/api/puppet
+```
+
+## chef
+
+Blokhouse exposes a **Chef-compatible node inventory**. Use it to bootstrap node attributes or build a custom `knife` plugin.
+
+```bash
+# All nodes as Chef::Node objects
+curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/api/chef
+
+# Single node (knife node show format)
+curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/api/chef?node=web-01
+
+# Chef Data Bag (data_bags/blokhouse/*)
+curl -H 'Authorization: Bearer TOKEN' 'http://localhost:3000/api/chef?format=databag'
+```
+
+Example node object returned:
+
+```json
+{
+  "name": "web-01",
+  "chef_type": "node",
+  "chef_environment": "webserver",
+  "run_list": ["role[webserver]"],
+  "automatic": { "ipaddress": "192.168.1.10", "hostname": "web-01" },
+  "normal": {
+    "blokhouse": { "id": "clxyz...", "managed": true }
+  }
+}
+```
 
 ## Getting Started
 
