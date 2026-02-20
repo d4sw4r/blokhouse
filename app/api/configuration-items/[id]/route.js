@@ -8,9 +8,10 @@ export async function GET(req, { params }) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const item = await prisma.configurationItem.findUnique({
         where: { id },
+        include: { itemType: true, tags: true },
     });
 
     if (!item) {
@@ -24,13 +25,23 @@ export async function PUT(req, { params }) {
     if (!session) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
-    const { name, description, ip, mac, itemTypeId, status } = body;
+const { name, description, ip, mac, itemTypeId, status, tagIds } = body;
+
+    const data = { name, description, ip, mac, itemTypeId, status };
+
+    // Handle tag updates if provided
+    if (tagIds !== undefined && Array.isArray(tagIds)) {
+        data.tags = {
+            set: tagIds.map(tagId => ({ id: tagId }))
+        };
+    }
 
     const updated = await prisma.configurationItem.update({
         where: { id },
-        data: { name, description, ip, mac, itemTypeId, status },
+        data,
+        include: { itemType: true, tags: true },
     });
 
     return new Response(JSON.stringify(updated), { status: 200 });

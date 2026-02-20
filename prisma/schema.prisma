@@ -82,6 +82,16 @@ model ItemType {
   configurationItems ConfigurationItem[]
 }
 
+model Tag {
+  id                 String              @id @default(cuid())
+  name               String              @unique
+  color              String?             // Optional hex color for UI display
+  description        String?
+  createdAt          DateTime            @default(now())
+  // Many-to-many relation with Configuration Items
+  configurationItems ConfigurationItem[]
+}
+
 model ConfigurationItem {
   id          String      @id @default(cuid())
   name        String
@@ -95,9 +105,11 @@ model ConfigurationItem {
   mac         String?
   // New relation: optional type assignment
   itemTypeId  String?
-  itemType    ItemType?   @relation(fields: [itemTypeId], references: [id])
+itemType    ItemType? @relation(fields: [itemTypeId], references: [id])
   // Asset status field
   status      AssetStatus @default(ACTIVE)
+  // Many-to-many relation with Tags
+  tags        Tag[]
 }
 
 model ApiToken {
