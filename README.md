@@ -2,6 +2,34 @@
 
 This project aims to be a easy and simple to use CMDB, build with a automation first approach. The goal should be to have an easy to setup CMDB with all your assets, which then can be filled and read with automation tools like ansible, puppet, ect. and custom REST-API scripts, depending on your infrastructure.
 
+## 🚀 Quick Start
+
+Get Blokhouse up and running in seconds with the automated install script:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | bash
+```
+
+Or clone and run manually:
+
+```bash
+git clone https://github.com/d4sw4r/blokhouse.git
+cd blokhouse
+./install.sh
+```
+
+The script will:
+- ✓ Check Docker & Docker Compose installation
+- ✓ Start all services (app + database)
+- ✓ Show you the access URL
+
+Once running, open [http://localhost:3000](http://localhost:3000) and login with:
+- **Email**: `admin@example.com`
+- **Password**: `admin`
+
+## Manual Setup (Docker Compose)
+
+If you prefer to start manually without the install script:
 
 ## Quick start
 ```bash
