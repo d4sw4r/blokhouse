@@ -31,17 +31,6 @@ Once running, open [http://localhost:3000](http://localhost:3000) and login with
 
 If you prefer to start manually without the install script:
 
-## Quick start
-```bash
-git clone https://github.com/d4sw4r/blokhouse.git
-cd blokhouse
-docker compose up
-```
-(BUG: Maybe migrations take too long and a second inital start is required)
-
-This will start the app container + database, and your application should be accessible at [http://localhost:3000](http://localhost:3000) .
-
-
 ## ansible
 ```yaml
 # my-dynamic-inventory.yml
