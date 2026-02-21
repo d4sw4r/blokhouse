@@ -50,7 +50,7 @@ export default function ApiDocsPage() {
             </div>
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="bg-white rounded-lg shadow">
-                    <SwaggerUI spec={spec} docExpansion="list" />
+                    <SwaggerUI spec={spec ?? undefined} docExpansion="list" />
                 </div>
             </div>
         </div>
