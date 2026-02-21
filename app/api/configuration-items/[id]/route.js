@@ -12,13 +12,35 @@ export async function GET(req, { params }) {
     const { id } = await params;
     const item = await prisma.configurationItem.findUnique({
         where: { id },
-        include: { itemType: true, tags: true },
+        include: {
+            itemType: true,
+            tags: true,
+            customFieldValues: {
+                include: { customField: true },
+            },
+        },
     });
 
     if (!item) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
-    return new Response(JSON.stringify(item), { status: 200 });
+
+    // Format custom fields
+    const customFields = item.customFieldValues.map((cfv) => ({
+        id: cfv.customField.id,
+        name: cfv.customField.name,
+        label: cfv.customField.label,
+        type: cfv.customField.type,
+        value: cfv.value,
+    }));
+
+    const result = {
+        ...item,
+        customFields,
+    };
+    delete result.customFieldValues;
+
+    return new Response(JSON.stringify(result), { status: 200 });
 }
 
 export async function PUT(req, { params }) {
