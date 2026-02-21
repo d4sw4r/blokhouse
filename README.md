@@ -7,29 +7,36 @@ This project aims to be a easy and simple to use CMDB, build with a automation f
 Get Blokhouse up and running in seconds with the automated install script:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | sudo bash
 ```
 
 Or clone and run manually:
 
 ```bash
-git clone https://github.com/d4sw4r/blokhouse.git
-cd blokhouse
-./install.sh
+git clone https://github.com/d4sw4r/blokhouse.git /opt/blokhouse
+cd /opt/blokhouse
+sudo ./install.sh
 ```
 
+**Requirements:**
+- Node.js >= 18
+- npm
+- git
+
 The script will:
-- ✓ Check Docker & Docker Compose installation
-- ✓ Start all services (app + database)
+- ✓ Check Node.js installation
+- ✓ Install dependencies
+- ✓ Set up SQLite database
+- ✓ Build and start the application
 - ✓ Show you the access URL
 
 Once running, open [http://localhost:3000](http://localhost:3000) and login with:
 - **Email**: `admin@example.com`
 - **Password**: `admin`
 
-## Manual Setup (Docker Compose)
+## Manual Setup (Node.js)
 
-If you prefer to start manually without the install script:
+If you prefer to set up manually:
 
 ## ansible
 ```yaml
@@ -104,18 +111,20 @@ Example node object returned:
 
 ## Getting Started
 
-First, run the development server:
-Start a postgres server and add your connectionstring to env.local e.g.
+First, create your `.env` file:
 ```bash
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET="random-string"
-DATABASE_URL=postgresql://myuser:mypassword@localhost:5432/mydatabase
+DATABASE_URL=file:./prisma/blokhouse.db
 ```
+
 Then update schema and seed the db:
 ```bash
+npm install
 npx prisma db push
 npx prisma db seed
 ```
+
 Now you can start your dev instance:
 ```bash
 npm run dev
@@ -129,9 +138,9 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-There is a inital admin user:
-admin@example.com
-admin
+Default admin user:
+- **Email**: `admin@example.com`
+- **Password**: `admin`
 
 
 ## API Documentation
