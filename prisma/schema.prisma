@@ -81,6 +81,8 @@ model ItemType {
   description        String?
   // Back-relation: all configuration items assigned to this type
   configurationItems ConfigurationItem[]
+  // Custom fields for this item type
+  customFields       CustomField[]
 }
 
 model Tag {
@@ -106,11 +108,13 @@ model ConfigurationItem {
   mac         String?
   // New relation: optional type assignment
   itemTypeId  String?
-itemType    ItemType? @relation(fields: [itemTypeId], references: [id])
+  itemType    ItemType?   @relation(fields: [itemTypeId], references: [id])
   // Asset status field
   status      AssetStatus @default(ACTIVE)
   // Many-to-many relation with Tags
   tags        Tag[]
+  // Custom field values
+  customFieldValues CustomFieldValue[]
 }
 
 model ApiToken {
@@ -132,6 +136,15 @@ enum AuditAction {
   API_TOKEN_DELETED
 }
 
+enum CustomFieldType {
+  STRING
+  NUMBER
+  BOOLEAN
+  DATE
+  URL
+  EMAIL
+}
+
 model AuditLog {
   id          String      @id @default(cuid())
   action      AuditAction
@@ -149,4 +162,37 @@ model AuditLog {
   @@index([createdAt])
   @@index([userId])
   @@index([entityType, entityId])
+}
+
+model CustomField {
+  id          String          @id @default(cuid())
+  name        String          // Field name (e.g., "purchase_date")
+  label       String          // Display label (e.g., "Purchase Date")
+  description String?
+  type        CustomFieldType // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
+  required    Boolean         @default(false)
+  defaultValue String?        // Default value as string
+  options     String[]        // Optional enum values for STRING type
+  itemTypeId  String?         // If null, applies to all item types
+  itemType    ItemType?       @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
+  values      CustomFieldValue[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([name, itemTypeId])
+  @@index([itemTypeId])
+}
+
+model CustomFieldValue {
+  id                  String          @id @default(cuid())
+  value               String          // Stored as string, parsed based on field type
+  customFieldId       String
+  customField         CustomField     @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  configurationItemId String
+  configurationItem   ConfigurationItem @relation(fields: [configurationItemId], references: [id], onDelete: Cascade)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@unique([customFieldId, configurationItemId])
+  @@index([configurationItemId])
 }

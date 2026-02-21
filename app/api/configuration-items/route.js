@@ -75,19 +75,41 @@ export async function GET(request) {
     // Get total count for pagination metadata
     const totalCount = await prisma.configurationItem.count({ where });
 
-    // Fetch paginated items with tags included
+    // Fetch paginated items with tags and custom fields included
     const items = await prisma.configurationItem.findMany({
         where,
-        include: { itemType: true, tags: true },
+        include: {
+            itemType: true,
+            tags: true,
+            customFieldValues: {
+                include: { customField: true },
+            },
+        },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
     });
 
+    // Format items with custom fields
+    const formattedItems = items.map((item) => {
+        const customFields = item.customFieldValues.map((cfv) => ({
+            id: cfv.customField.id,
+            name: cfv.customField.name,
+            label: cfv.customField.label,
+            type: cfv.customField.type,
+            value: cfv.value,
+        }));
+        return {
+            ...item,
+            customFields,
+            customFieldValues: undefined,
+        };
+    });
+
     // Return items with pagination metadata
     return new Response(
         JSON.stringify({
-            items,
+            items: formattedItems,
             pagination: {
                 total: totalCount,
                 page,
