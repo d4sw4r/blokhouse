@@ -2,22 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// datasource db {
-//  provider = "sqlite"
-//  url      = "file:./dev.db"
-  // url = env("DATABASE_URL")
-// }
-
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  USER
-  API
-  AUDIT
 }
 
 model User {
@@ -32,7 +19,7 @@ model User {
   configurationItems ConfigurationItem[]
   ApiToken           ApiToken[]
   auditLogs          AuditLog[]
-  role         Role     @default(USER)
+  role               String              @default("USER")
 }
 
 model Account {
@@ -67,12 +54,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-enum AssetStatus {
-  ACTIVE
-  DEPRECATED
-  MAINTENANCE
 }
 
 model ItemType {
@@ -110,7 +91,7 @@ model ConfigurationItem {
   itemTypeId  String?
   itemType    ItemType?   @relation(fields: [itemTypeId], references: [id])
   // Asset status field
-  status      AssetStatus @default(ACTIVE)
+  status      String      @default("ACTIVE")
   // Many-to-many relation with Tags
   tags        Tag[]
   // Custom field values
@@ -126,35 +107,16 @@ model ApiToken {
   updatedAt DateTime @updatedAt
 }
 
-enum AuditAction {
-  CREATE
-  UPDATE
-  DELETE
-  LOGIN
-  LOGOUT
-  API_TOKEN_CREATED
-  API_TOKEN_DELETED
-}
-
-enum CustomFieldType {
-  STRING
-  NUMBER
-  BOOLEAN
-  DATE
-  URL
-  EMAIL
-}
-
 model AuditLog {
   id          String      @id @default(cuid())
-  action      AuditAction
+  action      String
   entityType  String      // e.g., "ConfigurationItem", "User", "ApiToken"
   entityId    String?     // ID of the affected entity (optional for global actions)
   userId      String?     // Who performed the action
   user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   description String?     // Human-readable description
-  oldValues   Json?       // Previous values (for updates/deletes)
-  newValues   Json?       // New values (for creates/updates)
+  oldValues   String?     // Previous values (for updates/deletes)
+  newValues   String?     // New values (for creates/updates)
   ipAddress   String?     // Client IP address
   userAgent   String?     // Client user agent
   createdAt   DateTime    @default(now())
@@ -169,10 +131,10 @@ model CustomField {
   name        String          // Field name (e.g., "purchase_date")
   label       String          // Display label (e.g., "Purchase Date")
   description String?
-  type        CustomFieldType // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
+  type        String          // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
   required    Boolean         @default(false)
   defaultValue String?        // Default value as string
-  options     String[]        // Optional enum values for STRING type
+  options     String          @default("[]") // JSON array as string for SQLite
   itemTypeId  String?         // If null, applies to all item types
   itemType    ItemType?       @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
   values      CustomFieldValue[]

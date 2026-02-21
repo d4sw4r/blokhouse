@@ -178,16 +178,28 @@ status: "ACTIVE" as AssetStatus,
     };
 
     const createItem = async () => {
-        const res = await fetch("/api/configuration-items", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newItem),
-        });
-        const created = await res.json();
-        setItems((prev) => [created, ...prev]);
-setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
-        // Refresh to get updated pagination
-        fetchItems();
+        if (!newItem.name.trim()) {
+            alert("Name is required");
+            return;
+        }
+        try {
+            const res = await fetch("/api/configuration-items", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newItem),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                alert(`Error: ${err.error || res.statusText}`);
+                return;
+            }
+            const created = await res.json();
+            setItems((prev) => [created, ...prev]);
+            setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
+            fetchItems();
+        } catch (err) {
+            alert(`Network error: ${err}`);
+        }
     };
 
     const deleteItem = async (id: string) => {

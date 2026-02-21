@@ -1,16 +1,5 @@
 version: '3.8'
 services:
-  db:
-    image: postgres:18
-    restart: always
-    environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
   app:
     image: ghcr.io/d4sw4r/blokhouse:latest
     # build: .
@@ -20,10 +9,9 @@ services:
       - NODE_ENV=production
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET="dude-its-so-random"
-      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
-
-    depends_on:
-      - db
+      - DATABASE_URL=file:./prisma/blokhouse.db
+    volumes:
+      - blokhouse_data:/app/prisma
 
 volumes:
-  pg_data:
+  blokhouse_data:

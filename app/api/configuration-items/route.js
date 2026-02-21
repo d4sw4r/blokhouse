@@ -155,10 +155,10 @@ export async function GET(request) {
     // Search across name, description, ip, and mac fields
     if (search) {
         where.OR = [
-            { name: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } },
-            { ip: { contains: search, mode: "insensitive" } },
-            { mac: { contains: search, mode: "insensitive" } },
+            { name: { contains: search } },
+            { description: { contains: search } },
+            { ip: { contains: search } },
+            { mac: { contains: search } },
         ];
     }
 
