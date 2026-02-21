@@ -117,6 +117,32 @@ admin@example.com
 admin
 
 
+## API Documentation
+
+Blokhouse provides interactive OpenAPI/Swagger documentation for all API endpoints.
+
+### Interactive Documentation UI
+
+Visit `/docs` in your browser for the interactive Swagger UI:
+```
+http://localhost:3000/docs
+```
+
+### OpenAPI Specification
+
+Get the raw OpenAPI JSON spec:
+```bash
+curl http://localhost:3000/api/docs
+```
+
+### Authentication
+
+All API endpoints support two authentication methods:
+1. **Bearer Token** - For API/automation access: `Authorization: Bearer YOUR_TOKEN`
+2. **Session Cookie** - For browser-based access via NextAuth
+
+Generate API tokens in the web UI under Settings → API Tokens.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
