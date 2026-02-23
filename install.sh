@@ -130,10 +130,13 @@ step "Initializing SQLite database..."
 npx prisma db push --accept-data-loss
 success "Database schema created"
 
+# Generate a random admin password for the initial seed
+ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
+
 # Seed database with admin user
 step "Seeding database with admin user..."
-if npx prisma db seed; then
-    success "Database seeded"
+if ADMIN_PASSWORD="$ADMIN_PASSWORD" npx prisma db seed; then
+    success "Database seeded with generated admin password"
 else
     warning "Seeding may have already been done or failed (check if admin user exists)"
 fi
@@ -182,7 +185,9 @@ echo -e "  👉 ${GREEN}http://localhost:3000${NC}"
 echo ""
 echo -e "  ${BLUE}Default login credentials:${NC}"
 echo -e "  📧 Email:    ${YELLOW}admin@example.com${NC}"
-echo -e "  🔑 Password: ${YELLOW}admin${NC}"
+echo -e "  🔑 Password: ${GREEN}$ADMIN_PASSWORD${NC}"
+echo ""
+echo -e "  ${RED}⚠  Save this password now — it won't be shown again!${NC}"
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
 echo ""
@@ -193,6 +198,4 @@ echo -e "${BLUE}Useful commands:${NC}"
 echo -e "  View logs:     ${YELLOW}tail -f $INSTALL_DIR/logs/*.log${NC}"
 echo -e "  Stop app:      ${YELLOW}kill \$(cat $INSTALL_DIR/.app.pid)${NC}"
 echo -e "  Restart:       ${YELLOW}cd $INSTALL_DIR && npm start &${NC}"
-echo ""
-warning "Remember to change the default admin password after first login!"
 echo ""
