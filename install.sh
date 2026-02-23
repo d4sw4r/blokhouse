@@ -107,7 +107,7 @@ cd "$INSTALL_DIR"
 
 # Install dependencies
 step "Installing Node.js dependencies..."
-npm install --production
+npm install
 success "Dependencies installed"
 
 # Create .env file if it doesn't exist
