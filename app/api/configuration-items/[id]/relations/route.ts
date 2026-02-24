@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
 import { getServerSession } from "next-auth/next";
 import { createAuditLog } from "@/lib/audit";
+import { notifyAssetChange } from "@/lib/notifications";
 
 // GET /api/configuration-items/[id]/relations - Get all relations for an item
 export async function GET(
@@ -164,6 +165,15 @@ export async function POST(
       userId: session.user.id,
       description: `Created ${type} relation from ${sourceItem.name} to ${targetItem.name}`,
       newValues: JSON.stringify({ sourceId, targetId, type, description }),
+    });
+
+    // Notify about new relation
+    await notifyAssetChange({
+      assetId: sourceId,
+      assetName: sourceItem.name,
+      type: "RELATION_CREATED",
+      message: `New "${type}" relation to "${targetItem.name}" created by ${session.user.name || session.user.email}`,
+      changedByUserId: session.user.id,
     });
 
     return NextResponse.json({

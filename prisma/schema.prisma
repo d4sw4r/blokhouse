@@ -19,6 +19,7 @@ model User {
   configurationItems ConfigurationItem[]
   ApiToken           ApiToken[]
   auditLogs          AuditLog[]
+  notifications      Notification[]
   role               String              @default("USER")
 }
 
@@ -177,4 +178,20 @@ model CustomFieldValue {
 
   @@unique([customFieldId, configurationItemId])
   @@index([configurationItemId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // e.g., "ASSET_STATUS_CHANGED", "RELATION_CREATED", "MAINTENANCE_DUE"
+  title       String
+  message     String
+  entityType  String?  // Related entity type (e.g., "ConfigurationItem")
+  entityId    String?  // Related entity ID
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import Logo from "@/components/Logo";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Navbar() {
     const { data: session } = useSession();
@@ -43,6 +44,7 @@ export default function Navbar() {
                     </nav>
                 </div>
                 <div className="flex items-center gap-4">
+                    <NotificationBell />
                     <span className="text-gray-600">
                         Hello, {session.user.name || session.user.email} ({session.user.role})
                     </span>
