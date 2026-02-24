@@ -29,7 +29,8 @@ export default function AdminAPIPage() {
     };
 
     useEffect(() => {
-        fetchTokens();
+        const load = async () => { await fetchTokens(); };
+        load();
     }, []);
 
     const generateToken = async () => {

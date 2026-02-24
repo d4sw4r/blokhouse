@@ -70,12 +70,14 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
 
   useEffect(() => {
     fetchRelations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemId]);
 
   useEffect(() => {
     if (showAddModal) {
       fetchAvailableItems();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAddModal, searchQuery]);
 
   const fetchRelations = async () => {
@@ -201,7 +203,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as "all" | "outgoing" | "incoming")}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? "border-blue-500 text-blue-600"

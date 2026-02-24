@@ -8,6 +8,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,6 +51,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

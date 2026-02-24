@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import AssetRelations from "@/components/AssetRelations";
@@ -99,30 +99,6 @@ status: "ACTIVE" as AssetStatus,
     const [showRelationsModal, setShowRelationsModal] = useState(false);
     const [relationsItem, setRelationsItem] = useState<ConfigItem | null>(null);
 
-    // Debounce search input
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(searchQuery);
-            setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
-
-    // Fetch items when session, page, filters change
-    useEffect(() => {
-        if (session) {
-            fetchItems();
-        }
-    }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
-
-    // Fetch types and tags on mount
-    useEffect(() => {
-        if (session) {
-            fetchTypes();
-            fetchTags();
-        }
-    }, [session]);
-
     const fetchItems = async () => {
         try {
             const params = new URLSearchParams({
@@ -181,6 +157,31 @@ status: "ACTIVE" as AssetStatus,
             console.error("Fetch tags error:", err);
         }
     };
+
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Fetch items when session, page, filters change
+    useEffect(() => {
+        if (session) {
+            fetchItems();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
+
+    // Fetch types and tags on mount
+    useEffect(() => {
+        if (session) {
+            fetchTypes();
+            fetchTags();
+        }
+    }, [session]);
 
     const createItem = async () => {
         if (!newItem.name.trim()) {
@@ -333,9 +334,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             }));
         }
     };
-
-    // Helper to get tag by ID
-    const getTagById = (id: string) => availableTags.find(t => t.id === id);
 
     const clearFilters = () => {
         setSearchQuery("");

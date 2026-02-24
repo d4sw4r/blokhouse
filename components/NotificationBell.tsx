@@ -40,11 +40,24 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch("/api/notifications?limit=20");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
   useEffect(() => {
-    fetchNotifications();
+    const load = async () => { await fetchNotifications(); };
+    load();
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
@@ -60,19 +73,6 @@ export default function NotificationBell() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch("/api/notifications?limit=20");
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications);
-        setUnreadCount(data.unreadCount);
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
 
   const markAsRead = async (id: string) => {
     try {

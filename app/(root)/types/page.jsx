@@ -11,11 +11,6 @@ export default function TypesPage() {
     const [editingTypeId, setEditingTypeId] = useState(null);
     const [editingTypeData, setEditingTypeData] = useState({ name: '', description: '' });
 
-    // Fetch the available types when the component mounts
-    useEffect(() => {
-        fetchTypes();
-    }, []);
-
     const fetchTypes = async () => {
         try {
             const res = await fetch('/api/types');
@@ -30,6 +25,12 @@ export default function TypesPage() {
             console.error('Error fetching types:', error);
         }
     };
+
+    // Fetch the available types when the component mounts
+    useEffect(() => {
+        const load = async () => { await fetchTypes(); };
+        load();
+    }, []);
 
     const createType = async () => {
         const res = await fetch('/api/types', {

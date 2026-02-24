@@ -58,7 +58,7 @@ export async function GET(
     }
 
     // Format relations with direction indicator
-    const outgoing = item.relationsFrom.map((rel: any) => ({
+    const outgoing = item.relationsFrom.map((rel) => ({
       id: rel.id,
       type: rel.type,
       description: rel.description,
@@ -67,7 +67,7 @@ export async function GET(
       direction: "outgoing",
     }));
 
-    const incoming = item.relationsTo.map((rel: any) => ({
+    const incoming = item.relationsTo.map((rel) => ({
       id: rel.id,
       type: rel.type,
       description: rel.description,
@@ -92,6 +92,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -180,11 +181,11 @@ export async function POST(
       ...relation,
       direction: "outgoing",
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating relation:", error);
     
     // Handle unique constraint violation
-    if (error.code === "P2002") {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === "P2002") {
       return NextResponse.json(
         { error: "Relation already exists" },
         { status: 409 }
