@@ -1,4 +1,4 @@
-// middleware.ts
+// proxy.ts  (Next.js 16 — renamed from middleware.ts)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -24,7 +24,7 @@ async function validateApiToken(req: NextRequest): Promise<boolean> {
     }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
     // Add /api/validate-token to publicPaths so it is not intercepted.
     const publicPaths = ["/signin", "/signup", "/api/auth", "/api/validate-token", "/logo.svg", "/"];
     const { pathname } = req.nextUrl;
