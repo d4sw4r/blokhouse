@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
-import { logItemCreated, logItemUpdated } from "@/lib/audit";
+import { logItemCreated } from "@/lib/audit";
 
 // Helper to check if the user can write (ADMIN, USER, API)
 function canWrite(role) {

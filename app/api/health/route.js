@@ -41,7 +41,7 @@ export async function GET(request) {
             status: "healthy",
             responseTime: Date.now() - dbCheckStart,
         };
-    } catch (error) {
+    } catch {
         checks.database = {
             status: "unhealthy",
             error: "Database connection failed",

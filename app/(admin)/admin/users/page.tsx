@@ -33,7 +33,8 @@ export default function AdminUsersPage() {
     };
 
     useEffect(() => {
-        fetchUsers();
+        const load = async () => { await fetchUsers(); };
+        load();
     }, []);
 
     const createUser = async () => {

@@ -66,7 +66,8 @@ export default function DiscoveryPage() {
     };
 
     useEffect(() => {
-        fetchImportedItems();
+        const load = async () => { await fetchImportedItems(); };
+        load();
     }, []);
 
     return (

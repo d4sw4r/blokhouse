@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 // GET /api/notifications - Get all notifications for the current user
 export async function GET(request: Request) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
 
 // POST /api/notifications - Create a new notification (admin only)
 export async function POST(request: Request) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -91,7 +93,8 @@ export async function POST(request: Request) {
 }
 
 // PATCH /api/notifications - Mark all notifications as read
-export async function PATCH(request: Request) {
+export async function PATCH() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as any;
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
