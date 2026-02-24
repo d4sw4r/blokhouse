@@ -58,7 +58,8 @@ export async function GET(
     }
 
     // Format relations with direction indicator
-    const outgoing = item.relationsFrom.map((rel) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const outgoing = item.relationsFrom.map((rel: any) => ({
       id: rel.id,
       type: rel.type,
       description: rel.description,
@@ -67,7 +68,8 @@ export async function GET(
       direction: "outgoing",
     }));
 
-    const incoming = item.relationsTo.map((rel) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const incoming = item.relationsTo.map((rel: any) => ({
       id: rel.id,
       type: rel.type,
       description: rel.description,
