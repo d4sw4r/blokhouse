@@ -99,3 +99,8 @@ export type CustomField = Prisma.CustomFieldModel
  * 
  */
 export type CustomFieldValue = Prisma.CustomFieldValueModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel

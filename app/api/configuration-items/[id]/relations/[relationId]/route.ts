@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/authOptions";
 import { getServerSession } from "next-auth/next";
 import { createAuditLog } from "@/lib/audit";
+import { notifyAssetChange } from "@/lib/notifications";
 
 // DELETE /api/configuration-items/[id]/relations/[relationId] - Delete a relation
 export async function DELETE(
@@ -57,6 +58,15 @@ export async function DELETE(
         type: relation.type,
         description: relation.description,
       }),
+    });
+
+    // Notify about deleted relation
+    await notifyAssetChange({
+      assetId: relation.sourceId,
+      assetName: relation.source.name,
+      type: "RELATION_DELETED",
+      message: `"${relation.type}" relation to "${relation.target.name}" was removed by ${session.user.name || session.user.email}`,
+      changedByUserId: session.user.id,
     });
 
     return NextResponse.json({ success: true });

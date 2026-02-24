@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import authOptions from "@/lib/authOptions";
 import { logItemUpdated, logItemDeleted } from "@/lib/audit";
+import { notifyAssetChange } from "@/lib/notifications";
 
 export async function GET(req, { params }) {
     const session = await getServerSession(authOptions);
@@ -86,6 +87,17 @@ export async function PUT(req, { params }) {
         req,
     });
 
+    // Send notification if status changed
+    if (oldItem.status !== updated.status) {
+        await notifyAssetChange({
+            assetId: id,
+            assetName: updated.name,
+            type: "ASSET_STATUS_CHANGED",
+            message: `Status changed from "${oldItem.status}" to "${updated.status}" by ${session.user.name || session.user.email}`,
+            changedByUserId: session.user.id,
+        });
+    }
+
     return new Response(JSON.stringify(updated), { status: 200 });
 }
 
@@ -111,6 +123,15 @@ export async function DELETE(req, { params }) {
 
     // Log the deletion
     await logItemDeleted({ item, userId: session.user.id, req });
+
+    // Notify about deletion
+    await notifyAssetChange({
+        assetId: id,
+        assetName: item.name,
+        type: "ASSET_DELETED",
+        message: `Asset "${item.name}" was deleted by ${session.user.name || session.user.email}`,
+        changedByUserId: session.user.id,
+    });
 
     return new Response(JSON.stringify({ message: "Deleted" }), { status: 200 });
 }
