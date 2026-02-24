@@ -58,6 +58,7 @@ export const ModelName = {
   ItemType: 'ItemType',
   Tag: 'Tag',
   ConfigurationItem: 'ConfigurationItem',
+  AssetRelation: 'AssetRelation',
   ApiToken: 'ApiToken',
   AuditLog: 'AuditLog',
   CustomField: 'CustomField',
@@ -161,6 +162,19 @@ export const ConfigurationItemScalarFieldEnum = {
 } as const
 
 export type ConfigurationItemScalarFieldEnum = (typeof ConfigurationItemScalarFieldEnum)[keyof typeof ConfigurationItemScalarFieldEnum]
+
+
+export const AssetRelationScalarFieldEnum = {
+  id: 'id',
+  sourceId: 'sourceId',
+  targetId: 'targetId',
+  type: 'type',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AssetRelationScalarFieldEnum = (typeof AssetRelationScalarFieldEnum)[keyof typeof AssetRelationScalarFieldEnum]
 
 
 export const ApiTokenScalarFieldEnum = {

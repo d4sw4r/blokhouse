@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
+import AssetRelations from "@/components/AssetRelations";
 
 interface Tag {
     id: string;
@@ -93,6 +94,10 @@ status: "ACTIVE" as AssetStatus,
     const [newTagName, setNewTagName] = useState("");
     const [newTagColor, setNewTagColor] = useState("#3b82f6");
     const [newTagDescription, setNewTagDescription] = useState("");
+
+    // Relations modal state
+    const [showRelationsModal, setShowRelationsModal] = useState(false);
+    const [relationsItem, setRelationsItem] = useState<ConfigItem | null>(null);
 
     // Debounce search input
     useEffect(() => {
@@ -792,6 +797,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                             </td>
                                             <td className="py-2 px-4 border flex gap-2">
                                                 <Button onClick={() => startEditing(item)}>Edit</Button>
+                                                <Button onClick={() => { setRelationsItem(item); setShowRelationsModal(true); }} variant="outline">Relations</Button>
                                                 <Button onClick={() => deleteItem(item.id)} variant="destructive">Delete</Button>
                                             </td>
                                         </tr>
@@ -841,6 +847,36 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         </div>
                     )}
                 </section>
+                {/* Relations Modal */}
+                {showRelationsModal && relationsItem && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-gray-50 p-6 rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h2 className="text-2xl font-semibold text-gray-700">
+                                        Asset Relations: {relationsItem.name}
+                                    </h2>
+                                    <p className="text-sm text-gray-500">
+                                        Manage relationships with other configuration items
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={() => {
+                                        setShowRelationsModal(false);
+                                        setRelationsItem(null);
+                                    }}
+                                    variant="outline"
+                                >
+                                    Close
+                                </Button>
+                            </div>
+                            <AssetRelations
+                                itemId={relationsItem.id}
+                                itemName={relationsItem.name}
+                            />
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

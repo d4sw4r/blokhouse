@@ -96,6 +96,26 @@ model ConfigurationItem {
   tags        Tag[]
   // Custom field values
   customFieldValues CustomFieldValue[]
+  // Asset relationships (outgoing relations)
+  relationsFrom AssetRelation[] @relation("RelationSource")
+  // Asset relationships (incoming relations)
+  relationsTo   AssetRelation[] @relation("RelationTarget")
+}
+
+model AssetRelation {
+  id          String            @id @default(cuid())
+  sourceId    String            // Source ConfigurationItem
+  source      ConfigurationItem @relation("RelationSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetId    String            // Target ConfigurationItem
+  target      ConfigurationItem @relation("RelationTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  type        String            // e.g., "DEPENDS_ON", "RUNS_ON", "CONNECTED_TO", "CONTAINS"
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([sourceId, targetId, type])
+  @@index([sourceId])
+  @@index([targetId])
 }
 
 model ApiToken {

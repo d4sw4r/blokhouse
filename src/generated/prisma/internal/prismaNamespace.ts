@@ -391,6 +391,7 @@ export const ModelName = {
   ItemType: 'ItemType',
   Tag: 'Tag',
   ConfigurationItem: 'ConfigurationItem',
+  AssetRelation: 'AssetRelation',
   ApiToken: 'ApiToken',
   AuditLog: 'AuditLog',
   CustomField: 'CustomField',
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "apiToken" | "auditLog" | "customField" | "customFieldValue"
+    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "assetRelation" | "apiToken" | "auditLog" | "customField" | "customFieldValue"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -932,6 +933,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AssetRelation: {
+      payload: Prisma.$AssetRelationPayload<ExtArgs>
+      fields: Prisma.AssetRelationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AssetRelationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AssetRelationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        findFirst: {
+          args: Prisma.AssetRelationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AssetRelationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        findMany: {
+          args: Prisma.AssetRelationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>[]
+        }
+        create: {
+          args: Prisma.AssetRelationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        createMany: {
+          args: Prisma.AssetRelationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AssetRelationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>[]
+        }
+        delete: {
+          args: Prisma.AssetRelationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        update: {
+          args: Prisma.AssetRelationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        deleteMany: {
+          args: Prisma.AssetRelationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AssetRelationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AssetRelationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>[]
+        }
+        upsert: {
+          args: Prisma.AssetRelationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssetRelationPayload>
+        }
+        aggregate: {
+          args: Prisma.AssetRelationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAssetRelation>
+        }
+        groupBy: {
+          args: Prisma.AssetRelationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssetRelationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AssetRelationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssetRelationCountAggregateOutputType> | number
+        }
+      }
+    }
     ApiToken: {
       payload: Prisma.$ApiTokenPayload<ExtArgs>
       fields: Prisma.ApiTokenFieldRefs
@@ -1350,6 +1425,19 @@ export const ConfigurationItemScalarFieldEnum = {
 export type ConfigurationItemScalarFieldEnum = (typeof ConfigurationItemScalarFieldEnum)[keyof typeof ConfigurationItemScalarFieldEnum]
 
 
+export const AssetRelationScalarFieldEnum = {
+  id: 'id',
+  sourceId: 'sourceId',
+  targetId: 'targetId',
+  type: 'type',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AssetRelationScalarFieldEnum = (typeof AssetRelationScalarFieldEnum)[keyof typeof AssetRelationScalarFieldEnum]
+
+
 export const ApiTokenScalarFieldEnum = {
   id: 'id',
   token: 'token',
@@ -1565,6 +1653,7 @@ export type GlobalOmitConfig = {
   itemType?: Prisma.ItemTypeOmit
   tag?: Prisma.TagOmit
   configurationItem?: Prisma.ConfigurationItemOmit
+  assetRelation?: Prisma.AssetRelationOmit
   apiToken?: Prisma.ApiTokenOmit
   auditLog?: Prisma.AuditLogOmit
   customField?: Prisma.CustomFieldOmit
