@@ -226,6 +226,8 @@ export type ConfigurationItemWhereInput = {
   itemType?: Prisma.XOR<Prisma.ItemTypeNullableScalarRelationFilter, Prisma.ItemTypeWhereInput> | null
   tags?: Prisma.TagListRelationFilter
   customFieldValues?: Prisma.CustomFieldValueListRelationFilter
+  relationsFrom?: Prisma.AssetRelationListRelationFilter
+  relationsTo?: Prisma.AssetRelationListRelationFilter
 }
 
 export type ConfigurationItemOrderByWithRelationInput = {
@@ -243,6 +245,8 @@ export type ConfigurationItemOrderByWithRelationInput = {
   itemType?: Prisma.ItemTypeOrderByWithRelationInput
   tags?: Prisma.TagOrderByRelationAggregateInput
   customFieldValues?: Prisma.CustomFieldValueOrderByRelationAggregateInput
+  relationsFrom?: Prisma.AssetRelationOrderByRelationAggregateInput
+  relationsTo?: Prisma.AssetRelationOrderByRelationAggregateInput
 }
 
 export type ConfigurationItemWhereUniqueInput = Prisma.AtLeast<{
@@ -263,6 +267,8 @@ export type ConfigurationItemWhereUniqueInput = Prisma.AtLeast<{
   itemType?: Prisma.XOR<Prisma.ItemTypeNullableScalarRelationFilter, Prisma.ItemTypeWhereInput> | null
   tags?: Prisma.TagListRelationFilter
   customFieldValues?: Prisma.CustomFieldValueListRelationFilter
+  relationsFrom?: Prisma.AssetRelationListRelationFilter
+  relationsTo?: Prisma.AssetRelationListRelationFilter
 }, "id">
 
 export type ConfigurationItemOrderByWithAggregationInput = {
@@ -310,6 +316,8 @@ export type ConfigurationItemCreateInput = {
   itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
   tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUncheckedCreateInput = {
@@ -325,6 +333,8 @@ export type ConfigurationItemUncheckedCreateInput = {
   status?: string
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUpdateInput = {
@@ -340,6 +350,8 @@ export type ConfigurationItemUpdateInput = {
   itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
   tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateInput = {
@@ -355,6 +367,8 @@ export type ConfigurationItemUncheckedUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemCreateManyInput = {
@@ -570,6 +584,34 @@ export type ConfigurationItemUncheckedUpdateManyWithoutTagsNestedInput = {
   deleteMany?: Prisma.ConfigurationItemScalarWhereInput | Prisma.ConfigurationItemScalarWhereInput[]
 }
 
+export type ConfigurationItemCreateNestedOneWithoutRelationsFromInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsFromInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutRelationsFromInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+}
+
+export type ConfigurationItemCreateNestedOneWithoutRelationsToInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsToInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutRelationsToInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+}
+
+export type ConfigurationItemUpdateOneRequiredWithoutRelationsFromNestedInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsFromInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutRelationsFromInput
+  upsert?: Prisma.ConfigurationItemUpsertWithoutRelationsFromInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ConfigurationItemUpdateToOneWithWhereWithoutRelationsFromInput, Prisma.ConfigurationItemUpdateWithoutRelationsFromInput>, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsFromInput>
+}
+
+export type ConfigurationItemUpdateOneRequiredWithoutRelationsToNestedInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsToInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutRelationsToInput
+  upsert?: Prisma.ConfigurationItemUpsertWithoutRelationsToInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ConfigurationItemUpdateToOneWithWhereWithoutRelationsToInput, Prisma.ConfigurationItemUpdateWithoutRelationsToInput>, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsToInput>
+}
+
 export type ConfigurationItemCreateNestedOneWithoutCustomFieldValuesInput = {
   create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutCustomFieldValuesInput, Prisma.ConfigurationItemUncheckedCreateWithoutCustomFieldValuesInput>
   connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutCustomFieldValuesInput
@@ -596,6 +638,8 @@ export type ConfigurationItemCreateWithoutUserInput = {
   itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
   tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutUserInput = {
@@ -610,6 +654,8 @@ export type ConfigurationItemUncheckedCreateWithoutUserInput = {
   status?: string
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutUserInput = {
@@ -665,6 +711,8 @@ export type ConfigurationItemCreateWithoutItemTypeInput = {
   user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
   tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutItemTypeInput = {
@@ -679,6 +727,8 @@ export type ConfigurationItemUncheckedCreateWithoutItemTypeInput = {
   status?: string
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutItemTypeInput = {
@@ -718,6 +768,8 @@ export type ConfigurationItemCreateWithoutTagsInput = {
   user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
   itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutTagsInput = {
@@ -732,6 +784,8 @@ export type ConfigurationItemUncheckedCreateWithoutTagsInput = {
   itemTypeId?: string | null
   status?: string
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutTagsInput = {
@@ -755,6 +809,166 @@ export type ConfigurationItemUpdateManyWithWhereWithoutTagsInput = {
   data: Prisma.XOR<Prisma.ConfigurationItemUpdateManyMutationInput, Prisma.ConfigurationItemUncheckedUpdateManyWithoutTagsInput>
 }
 
+export type ConfigurationItemCreateWithoutRelationsFromInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ip?: string | null
+  mac?: string | null
+  status?: string
+  user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
+  itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
+  tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
+}
+
+export type ConfigurationItemUncheckedCreateWithoutRelationsFromInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId?: string | null
+  ip?: string | null
+  mac?: string | null
+  itemTypeId?: string | null
+  status?: string
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
+}
+
+export type ConfigurationItemCreateOrConnectWithoutRelationsFromInput = {
+  where: Prisma.ConfigurationItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsFromInput>
+}
+
+export type ConfigurationItemCreateWithoutRelationsToInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ip?: string | null
+  mac?: string | null
+  status?: string
+  user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
+  itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
+  tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+}
+
+export type ConfigurationItemUncheckedCreateWithoutRelationsToInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId?: string | null
+  ip?: string | null
+  mac?: string | null
+  itemTypeId?: string | null
+  status?: string
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+}
+
+export type ConfigurationItemCreateOrConnectWithoutRelationsToInput = {
+  where: Prisma.ConfigurationItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsToInput>
+}
+
+export type ConfigurationItemUpsertWithoutRelationsFromInput = {
+  update: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsFromInput>
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsFromInput>
+  where?: Prisma.ConfigurationItemWhereInput
+}
+
+export type ConfigurationItemUpdateToOneWithWhereWithoutRelationsFromInput = {
+  where?: Prisma.ConfigurationItemWhereInput
+  data: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutRelationsFromInput, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsFromInput>
+}
+
+export type ConfigurationItemUpdateWithoutRelationsFromInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
+  itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
+  tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
+}
+
+export type ConfigurationItemUncheckedUpdateWithoutRelationsFromInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itemTypeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
+}
+
+export type ConfigurationItemUpsertWithoutRelationsToInput = {
+  update: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsToInput>
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedCreateWithoutRelationsToInput>
+  where?: Prisma.ConfigurationItemWhereInput
+}
+
+export type ConfigurationItemUpdateToOneWithWhereWithoutRelationsToInput = {
+  where?: Prisma.ConfigurationItemWhereInput
+  data: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutRelationsToInput, Prisma.ConfigurationItemUncheckedUpdateWithoutRelationsToInput>
+}
+
+export type ConfigurationItemUpdateWithoutRelationsToInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
+  itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
+  tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+}
+
+export type ConfigurationItemUncheckedUpdateWithoutRelationsToInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itemTypeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+}
+
 export type ConfigurationItemCreateWithoutCustomFieldValuesInput = {
   id?: string
   name: string
@@ -767,6 +981,8 @@ export type ConfigurationItemCreateWithoutCustomFieldValuesInput = {
   user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
   itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
   tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutCustomFieldValuesInput = {
@@ -781,6 +997,8 @@ export type ConfigurationItemUncheckedCreateWithoutCustomFieldValuesInput = {
   itemTypeId?: string | null
   status?: string
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutCustomFieldValuesInput = {
@@ -811,6 +1029,8 @@ export type ConfigurationItemUpdateWithoutCustomFieldValuesInput = {
   user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
   itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
   tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutCustomFieldValuesInput = {
@@ -825,6 +1045,8 @@ export type ConfigurationItemUncheckedUpdateWithoutCustomFieldValuesInput = {
   itemTypeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemCreateManyUserInput = {
@@ -851,6 +1073,8 @@ export type ConfigurationItemUpdateWithoutUserInput = {
   itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
   tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutUserInput = {
@@ -865,6 +1089,8 @@ export type ConfigurationItemUncheckedUpdateWithoutUserInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutUserInput = {
@@ -903,6 +1129,8 @@ export type ConfigurationItemUpdateWithoutItemTypeInput = {
   user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
   tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutItemTypeInput = {
@@ -917,6 +1145,8 @@ export type ConfigurationItemUncheckedUpdateWithoutItemTypeInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutItemTypeInput = {
@@ -943,6 +1173,8 @@ export type ConfigurationItemUpdateWithoutTagsInput = {
   user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
   itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutTagsInput = {
@@ -957,6 +1189,8 @@ export type ConfigurationItemUncheckedUpdateWithoutTagsInput = {
   itemTypeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutTagsInput = {
@@ -980,11 +1214,15 @@ export type ConfigurationItemUncheckedUpdateManyWithoutTagsInput = {
 export type ConfigurationItemCountOutputType = {
   tags: number
   customFieldValues: number
+  relationsFrom: number
+  relationsTo: number
 }
 
 export type ConfigurationItemCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tags?: boolean | ConfigurationItemCountOutputTypeCountTagsArgs
   customFieldValues?: boolean | ConfigurationItemCountOutputTypeCountCustomFieldValuesArgs
+  relationsFrom?: boolean | ConfigurationItemCountOutputTypeCountRelationsFromArgs
+  relationsTo?: boolean | ConfigurationItemCountOutputTypeCountRelationsToArgs
 }
 
 /**
@@ -1011,6 +1249,20 @@ export type ConfigurationItemCountOutputTypeCountCustomFieldValuesArgs<ExtArgs e
   where?: Prisma.CustomFieldValueWhereInput
 }
 
+/**
+ * ConfigurationItemCountOutputType without action
+ */
+export type ConfigurationItemCountOutputTypeCountRelationsFromArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AssetRelationWhereInput
+}
+
+/**
+ * ConfigurationItemCountOutputType without action
+ */
+export type ConfigurationItemCountOutputTypeCountRelationsToArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AssetRelationWhereInput
+}
+
 
 export type ConfigurationItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1027,6 +1279,8 @@ export type ConfigurationItemSelect<ExtArgs extends runtime.Types.Extensions.Int
   itemType?: boolean | Prisma.ConfigurationItem$itemTypeArgs<ExtArgs>
   tags?: boolean | Prisma.ConfigurationItem$tagsArgs<ExtArgs>
   customFieldValues?: boolean | Prisma.ConfigurationItem$customFieldValuesArgs<ExtArgs>
+  relationsFrom?: boolean | Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>
+  relationsTo?: boolean | Prisma.ConfigurationItem$relationsToArgs<ExtArgs>
   _count?: boolean | Prisma.ConfigurationItemCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["configurationItem"]>
 
@@ -1079,6 +1333,8 @@ export type ConfigurationItemInclude<ExtArgs extends runtime.Types.Extensions.In
   itemType?: boolean | Prisma.ConfigurationItem$itemTypeArgs<ExtArgs>
   tags?: boolean | Prisma.ConfigurationItem$tagsArgs<ExtArgs>
   customFieldValues?: boolean | Prisma.ConfigurationItem$customFieldValuesArgs<ExtArgs>
+  relationsFrom?: boolean | Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>
+  relationsTo?: boolean | Prisma.ConfigurationItem$relationsToArgs<ExtArgs>
   _count?: boolean | Prisma.ConfigurationItemCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ConfigurationItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1097,6 +1353,8 @@ export type $ConfigurationItemPayload<ExtArgs extends runtime.Types.Extensions.I
     itemType: Prisma.$ItemTypePayload<ExtArgs> | null
     tags: Prisma.$TagPayload<ExtArgs>[]
     customFieldValues: Prisma.$CustomFieldValuePayload<ExtArgs>[]
+    relationsFrom: Prisma.$AssetRelationPayload<ExtArgs>[]
+    relationsTo: Prisma.$AssetRelationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1507,6 +1765,8 @@ export interface Prisma__ConfigurationItemClient<T, Null = never, ExtArgs extend
   itemType<T extends Prisma.ConfigurationItem$itemTypeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$itemTypeArgs<ExtArgs>>): Prisma.Prisma__ItemTypeClient<runtime.Types.Result.GetResult<Prisma.$ItemTypePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   tags<T extends Prisma.ConfigurationItem$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   customFieldValues<T extends Prisma.ConfigurationItem$customFieldValuesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$customFieldValuesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CustomFieldValuePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  relationsFrom<T extends Prisma.ConfigurationItem$relationsFromArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssetRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  relationsTo<T extends Prisma.ConfigurationItem$relationsToArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$relationsToArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssetRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2023,6 +2283,54 @@ export type ConfigurationItem$customFieldValuesArgs<ExtArgs extends runtime.Type
   take?: number
   skip?: number
   distinct?: Prisma.CustomFieldValueScalarFieldEnum | Prisma.CustomFieldValueScalarFieldEnum[]
+}
+
+/**
+ * ConfigurationItem.relationsFrom
+ */
+export type ConfigurationItem$relationsFromArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AssetRelation
+   */
+  select?: Prisma.AssetRelationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AssetRelation
+   */
+  omit?: Prisma.AssetRelationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AssetRelationInclude<ExtArgs> | null
+  where?: Prisma.AssetRelationWhereInput
+  orderBy?: Prisma.AssetRelationOrderByWithRelationInput | Prisma.AssetRelationOrderByWithRelationInput[]
+  cursor?: Prisma.AssetRelationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AssetRelationScalarFieldEnum | Prisma.AssetRelationScalarFieldEnum[]
+}
+
+/**
+ * ConfigurationItem.relationsTo
+ */
+export type ConfigurationItem$relationsToArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AssetRelation
+   */
+  select?: Prisma.AssetRelationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AssetRelation
+   */
+  omit?: Prisma.AssetRelationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AssetRelationInclude<ExtArgs> | null
+  where?: Prisma.AssetRelationWhereInput
+  orderBy?: Prisma.AssetRelationOrderByWithRelationInput | Prisma.AssetRelationOrderByWithRelationInput[]
+  cursor?: Prisma.AssetRelationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AssetRelationScalarFieldEnum | Prisma.AssetRelationScalarFieldEnum[]
 }
 
 /**

@@ -53,6 +53,11 @@ export type Tag = Prisma.TagModel
  */
 export type ConfigurationItem = Prisma.ConfigurationItemModel
 /**
+ * Model AssetRelation
+ * 
+ */
+export type AssetRelation = Prisma.AssetRelationModel
+/**
  * Model ApiToken
  * 
  */
