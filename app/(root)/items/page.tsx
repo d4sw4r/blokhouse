@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import AssetRelations from "@/components/AssetRelations";
+import ValidatedInput from "@/components/ValidatedInput";
+import CopyButton from "@/components/CopyButton";
+import { isValidIP, isValidMAC } from "@/lib/validation";
 
 interface Tag {
     id: string;
@@ -188,6 +191,15 @@ status: "ACTIVE" as AssetStatus,
             alert("Name is required");
             return;
         }
+        // Validate IP and MAC before saving
+        if (newItem.ip && !isValidIP(newItem.ip)) {
+            alert("Please enter a valid IP address");
+            return;
+        }
+        if (newItem.mac && !isValidMAC(newItem.mac)) {
+            alert("Please enter a valid MAC address");
+            return;
+        }
         try {
             const res = await fetch("/api/configuration-items", {
                 method: "POST",
@@ -233,6 +245,15 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     };
 
     const updateItem = async (id: string) => {
+        // Validate IP and MAC before saving
+        if (editingItemData.ip && !isValidIP(editingItemData.ip)) {
+            alert("Please enter a valid IP address");
+            return;
+        }
+        if (editingItemData.mac && !isValidMAC(editingItemData.mac)) {
+            alert("Please enter a valid MAC address");
+            return;
+        }
         const res = await fetch(`/api/configuration-items/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -514,19 +535,17 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                             className="border rounded-sm p-2"
                         />
-                        <input
-                            type="text"
-                            placeholder="IP Address"
+                        <ValidatedInput
+                            type="ip"
                             value={newItem.ip}
-                            onChange={(e) => setNewItem({ ...newItem, ip: e.target.value })}
-                            className="border rounded-sm p-2"
+                            onChange={(value) => setNewItem({ ...newItem, ip: value })}
+                            placeholder="IP Address (e.g., 192.168.1.1)"
                         />
-                        <input
-                            type="text"
-                            placeholder="MAC Address"
+                        <ValidatedInput
+                            type="mac"
                             value={newItem.mac}
-                            onChange={(e) => setNewItem({ ...newItem, mac: e.target.value })}
-                            className="border rounded-sm p-2"
+                            onChange={(value) => setNewItem({ ...newItem, mac: value })}
+                            placeholder="MAC Address (e.g., 00:11:22:33:44:55)"
                         />
                         <select
                             value={newItem.itemTypeId}
@@ -686,23 +705,23 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                                 />
                                             </td>
                                             <td className="py-2 px-4 border">
-                                                <input
-                                                    type="text"
+                                                <ValidatedInput
+                                                    type="ip"
                                                     value={editingItemData.ip}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, ip: e.target.value })
+                                                    onChange={(value) =>
+                                                        setEditingItemData({ ...editingItemData, ip: value })
                                                     }
-                                                    className="w-full border rounded-sm p-1"
+                                                    placeholder="IP Address"
                                                 />
                                             </td>
                                             <td className="py-2 px-4 border">
-                                                <input
-                                                    type="text"
+                                                <ValidatedInput
+                                                    type="mac"
                                                     value={editingItemData.mac}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, mac: e.target.value })
+                                                    onChange={(value) =>
+                                                        setEditingItemData({ ...editingItemData, mac: value })
                                                     }
-                                                    className="w-full border rounded-sm p-1"
+                                                    placeholder="MAC Address"
                                                 />
                                             </td>
                                             <td className="py-2 px-4 border">
@@ -765,8 +784,26 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                         <tr key={item.id}>
                                             <td className="py-2 px-4 border">{item.name}</td>
                                             <td className="py-2 px-4 border">{item.description}</td>
-                                            <td className="py-2 px-4 border">{item.ip}</td>
-                                            <td className="py-2 px-4 border">{item.mac}</td>
+                                            <td className="py-2 px-4 border">
+                                                <div className="flex items-center gap-2">
+                                                    {item.ip && (
+                                                        <>
+                                                            <span className="font-mono text-sm">{item.ip}</span>
+                                                            <CopyButton text={item.ip} />
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-2 px-4 border">
+                                                <div className="flex items-center gap-2">
+                                                    {item.mac && (
+                                                        <>
+                                                            <span className="font-mono text-sm">{item.mac}</span>
+                                                            <CopyButton text={item.mac} />
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
                                             <td className="py-2 px-4 border">
 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
