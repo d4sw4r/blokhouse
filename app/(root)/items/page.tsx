@@ -364,6 +364,37 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         setPagination(prev => ({ ...prev, page: 1 }));
     };
 
+    // Export handlers
+    const exportData = async (format: "json" | "csv") => {
+        try {
+            const params = new URLSearchParams({
+                format,
+                includeTags: "true",
+            });
+            if (selectedTypeId) params.append("typeId", selectedTypeId);
+            if (statusFilter !== "ALL") params.append("status", statusFilter);
+
+            const res = await fetch(`/api/configuration-items/export?${params.toString()}`);
+            if (!res.ok) {
+                console.error("Export failed:", await res.text());
+                return;
+            }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            const filename = res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] || `export.${format}`;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Export error:", error);
+        }
+    };
+
     const goToPage = (page: number) => {
         if (page >= 1 && page <= pagination.totalPages) {
             setPagination(prev => ({ ...prev, page }));
@@ -661,13 +692,30 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                 <option value="DEPRECATED">Deprecated</option>
                             </select>
                         </div>
-                        <div className="flex items-end">
+                        <div className="flex items-end gap-2">
                             <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
                         </div>
                     </div>
-                    <p className="mt-2 text-sm text-gray-500">
-                        Showing {items.length} of {pagination.total} items
-                    </p>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                        <p className="text-sm text-gray-500">
+                            Showing {items.length} of {pagination.total} items
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 mr-2">Export:</span>
+                            <Button onClick={() => exportData("json")} variant="outline" size="sm">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                                </svg>
+                                JSON
+                            </Button>
+                            <Button onClick={() => exportData("csv")} variant="outline" size="sm">
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                CSV
+                            </Button>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Items Table */}
