@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import AssetRelations from "@/components/AssetRelations";
+import { SkeletonTable, LoadingSpinner } from "@/components/Skeleton";
 
 interface Tag {
     id: string;
@@ -376,7 +377,18 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         return range;
     };
 
-    if (status === "loading") return <p className="p-6 text-lg">Loading...</p>;
+    if (status === "loading") {
+        return (
+            <div className="min-h-screen bg-gray-50 p-8">
+                <div className="max-w-7xl mx-auto">
+                    <LoadingSpinner size="lg" />
+                    <div className="mt-8">
+                        <SkeletonTable rows={5} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">

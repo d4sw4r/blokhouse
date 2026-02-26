@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { SkeletonCard, SkeletonActivity, LoadingSpinner } from "@/components/Skeleton";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 
@@ -93,7 +94,36 @@ export default function Dashboard() {
         fetchActivity();
     }, []);
 
-    if (loading || !dashboard) return <p className="p-6 text-lg">Loading dashboard...</p>;
+    if (loading || !dashboard) {
+        return (
+            <div className="min-h-screen">
+                <main className="max-w-7xl mx-auto p-8">
+                    <h1 className="text-4xl font-bold text-brand-primary mb-8">Dashboard</h1>
+                    <SkeletonCard />
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4">Status Overview</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <SkeletonCard />
+                                <SkeletonCard />
+                                <SkeletonCard />
+                            </div>
+                        </div>
+                        <div className="lg:col-span-1">
+                            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
+                                </div>
+                                <SkeletonActivity />
+                                <SkeletonActivity />
+                                <SkeletonActivity />
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen">
@@ -159,7 +189,13 @@ export default function Dashboard() {
                             </div>
                             <div className="divide-y divide-gray-100">
                                 {activityLoading ? (
-                                    <div className="p-4 text-center text-gray-500">Loading...</div>
+                                    <>
+                                        <SkeletonActivity />
+                                        <SkeletonActivity />
+                                        <SkeletonActivity />
+                                        <SkeletonActivity />
+                                        <SkeletonActivity />
+                                    </>
                                 ) : activities.length === 0 ? (
                                     <div className="p-4 text-center text-gray-500">
                                         <p>No recent activity.</p>
