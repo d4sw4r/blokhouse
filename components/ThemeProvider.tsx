@@ -13,41 +13,33 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    // Lazy-initialize from localStorage to avoid setState inside a mount effect
+    // Lazy-initialize from localStorage — no setState in effect needed
     const [theme, setTheme] = useState<Theme>(() => {
         if (typeof window === "undefined") return "system";
         return (localStorage.getItem("theme") as Theme) || "system";
     });
 
-    // Lazy-initialize systemDark from matchMedia — only updated via event listener callback
+    // Lazy-initialize from matchMedia — updated only inside event listener callback
     const [systemDark, setSystemDark] = useState<boolean>(() => {
         if (typeof window === "undefined") return false;
         return window.matchMedia("(prefers-color-scheme: dark)").matches;
     });
 
-    const [mounted, setMounted] = useState(false);
-
-    // Mark as mounted (empty deps → runs once, no cascade risk)
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    // Derive resolved theme — no setState needed
+    // Derived — no state needed
     const resolvedTheme = useMemo((): "light" | "dark" => {
         if (theme !== "system") return theme;
         return systemDark ? "dark" : "light";
     }, [theme, systemDark]);
 
-    // Apply theme classes to <html> and persist preference
+    // Apply theme to <html> — useEffect is client-only, no SSR guard needed
     useEffect(() => {
-        if (!mounted) return;
         const root = document.documentElement;
         root.classList.remove("light", "dark");
         root.classList.add(resolvedTheme);
         localStorage.setItem("theme", theme);
-    }, [resolvedTheme, theme, mounted]);
+    }, [resolvedTheme, theme]);
 
-    // Listen for system preference changes — setState only inside the callback, never synchronously
+    // Listen for system preference changes — setState only inside the callback
     useEffect(() => {
         if (theme !== "system") return;
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -55,15 +47,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         mediaQuery.addEventListener("change", handleChange);
         return () => mediaQuery.removeEventListener("change", handleChange);
     }, [theme]);
-
-    // Prevent flash of wrong theme
-    if (!mounted) {
-        return (
-            <div style={{ visibility: "hidden" }}>
-                {children}
-            </div>
-        );
-    }
 
     return (
         <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
