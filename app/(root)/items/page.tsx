@@ -10,6 +10,7 @@ import ValidatedInput from "@/components/ValidatedInput";
 import CopyButton from "@/components/CopyButton";
 import { isValidIP, isValidMAC } from "@/lib/validation";
 import { SkeletonTable, LoadingSpinner } from "@/components/Skeleton";
+import BulkOperations from "@/components/BulkOperations";
 
 interface Tag {
     id: string;
@@ -98,11 +99,35 @@ status: "ACTIVE" as AssetStatus,
     const [showTagModal, setShowTagModal] = useState(false);
     const [newTagName, setNewTagName] = useState("");
     const [newTagColor, setNewTagColor] = useState("#3b82f6");
+    
+    // Bulk selection state
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [newTagDescription, setNewTagDescription] = useState("");
 
     // Relations modal state
     const [showRelationsModal, setShowRelationsModal] = useState(false);
     const [relationsItem, setRelationsItem] = useState<ConfigItem | null>(null);
+
+    // Bulk selection handlers
+    const toggleSelection = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id)
+                ? prev.filter(itemId => itemId !== id)
+                : [...prev, id]
+        );
+    };
+
+    const toggleAllSelection = () => {
+        if (selectedIds.length === items.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(items.map(item => item.id));
+        }
+    };
+
+    const clearSelection = () => {
+        setSelectedIds([]);
+    };
 
     const fetchItems = async () => {
         try {
@@ -719,11 +744,32 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </div>
                 </section>
 
+                {/* Bulk Operations */}
+                <BulkOperations
+                    selectedIds={selectedIds}
+                    availableTags={availableTags}
+                    availableStatuses={[
+                        { value: "ACTIVE", label: "Active", color: statusColors.ACTIVE },
+                        { value: "MAINTENANCE", label: "Maintenance", color: statusColors.MAINTENANCE },
+                        { value: "DEPRECATED", label: "Deprecated", color: statusColors.DEPRECATED },
+                    ]}
+                    onClearSelection={clearSelection}
+                    onRefresh={fetchItems}
+                />
+
                 {/* Items Table */}
                 <section className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="min-w-full">
                         <thead className="bg-gray-200">
                             <tr>
+                                <th className="py-3 px-2 border text-center w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === items.length && items.length > 0}
+                                        onChange={toggleAllSelection}
+                                        className="cursor-pointer"
+                                    />
+                                </th>
                                 <th className="py-3 px-4 border">Name</th>
                                 <th className="py-3 px-4 border">Description</th>
                                 <th className="py-3 px-4 border">IP</th>
@@ -737,7 +783,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         <tbody>
                             {items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="py-8 px-4 text-center text-gray-500">
+                                    <td colSpan={9} className="py-8 px-4 text-center text-gray-500">
                                         No items found. Try adjusting your search or filters.
                                     </td>
                                 </tr>
@@ -745,6 +791,14 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                 items.map((item) =>
                                     editingItemId === item.id ? (
                                         <tr key={item.id}>
+                                            <td className="py-2 px-2 border text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(item.id)}
+                                                    onChange={() => toggleSelection(item.id)}
+                                                    className="cursor-pointer"
+                                                />
+                                            </td>
                                             <td className="py-2 px-4 border">
                                                 <input
                                                     type="text"
@@ -843,6 +897,14 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                         </tr>
                                     ) : (
                                         <tr key={item.id} className="hover:bg-gray-50">
+                                            <td className="py-2 px-2 border text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(item.id)}
+                                                    onChange={() => toggleSelection(item.id)}
+                                                    className="cursor-pointer"
+                                                />
+                                            </td>
                                             <td className="py-2 px-4 border">
                                                 <Link href={`/items/${item.id}`} className="text-brand-primary hover:underline font-medium">
                                                     {item.name}
