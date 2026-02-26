@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { SkeletonCard, SkeletonActivity, LoadingSpinner } from "@/components/Skeleton";
+import { SkeletonCard, SkeletonActivity } from "@/components/Skeleton";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 

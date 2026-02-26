@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -13,60 +13,48 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [theme, setTheme] = useState<Theme>("system");
-    const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+    // Lazy-initialize from localStorage to avoid setState inside a mount effect
+    const [theme, setTheme] = useState<Theme>(() => {
+        if (typeof window === "undefined") return "system";
+        return (localStorage.getItem("theme") as Theme) || "system";
+    });
+
+    // Lazy-initialize systemDark from matchMedia — only updated via event listener callback
+    const [systemDark, setSystemDark] = useState<boolean>(() => {
+        if (typeof window === "undefined") return false;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    });
+
     const [mounted, setMounted] = useState(false);
 
-    // Initialize theme from localStorage or system preference
+    // Mark as mounted (empty deps → runs once, no cascade risk)
     useEffect(() => {
-        const storedTheme = localStorage.getItem("theme") as Theme | null;
-        if (storedTheme) {
-            setTheme(storedTheme);
-        }
         setMounted(true);
     }, []);
 
-    // Apply theme when it changes
+    // Derive resolved theme — no setState needed
+    const resolvedTheme = useMemo((): "light" | "dark" => {
+        if (theme !== "system") return theme;
+        return systemDark ? "dark" : "light";
+    }, [theme, systemDark]);
+
+    // Apply theme classes to <html> and persist preference
     useEffect(() => {
         if (!mounted) return;
-
         const root = document.documentElement;
-        
-        // Remove both classes first
         root.classList.remove("light", "dark");
-
-        let resolved: "light" | "dark";
-        
-        if (theme === "system") {
-            resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        } else {
-            resolved = theme;
-        }
-
-        root.classList.add(resolved);
-        setResolvedTheme(resolved);
-        
-        // Store preference
+        root.classList.add(resolvedTheme);
         localStorage.setItem("theme", theme);
-    }, [theme, mounted]);
+    }, [resolvedTheme, theme, mounted]);
 
-    // Listen for system theme changes
+    // Listen for system preference changes — setState only inside the callback, never synchronously
     useEffect(() => {
-        if (!mounted || theme !== "system") return;
-
+        if (theme !== "system") return;
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        
-        const handleChange = (e: MediaQueryListEvent) => {
-            const root = document.documentElement;
-            root.classList.remove("light", "dark");
-            const resolved = e.matches ? "dark" : "light";
-            root.classList.add(resolved);
-            setResolvedTheme(resolved);
-        };
-
+        const handleChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
         mediaQuery.addEventListener("change", handleChange);
         return () => mediaQuery.removeEventListener("change", handleChange);
-    }, [theme, mounted]);
+    }, [theme]);
 
     // Prevent flash of wrong theme
     if (!mounted) {

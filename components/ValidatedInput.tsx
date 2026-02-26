@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { isValidIP, isValidMAC, getValidationColor } from "@/lib/validation";
+import { useState } from "react";
+import { isValidIP, isValidMAC } from "@/lib/validation";
 import CopyButton from "./CopyButton";
 
 interface ValidatedInputProps {
@@ -20,13 +20,10 @@ export default function ValidatedInput({
     className = "",
     showCopyButton = false,
 }: ValidatedInputProps) {
-    const [isValid, setIsValid] = useState(true);
     const [isTouched, setIsTouched] = useState(false);
 
-    useEffect(() => {
-        const valid = type === "ip" ? isValidIP(value) : isValidMAC(value);
-        setIsValid(valid);
-    }, [value, type]);
+    // Derived — no useEffect needed
+    const isValid = !value || (type === "ip" ? isValidIP(value) : isValidMAC(value));
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.value);
