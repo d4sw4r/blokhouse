@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
+import Link from "next/link";
 import AssetRelations from "@/components/AssetRelations";
 import ValidatedInput from "@/components/ValidatedInput";
 import CopyButton from "@/components/CopyButton";
@@ -841,8 +842,12 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                             </td>
                                         </tr>
                                     ) : (
-                                        <tr key={item.id}>
-                                            <td className="py-2 px-4 border">{item.name}</td>
+                                        <tr key={item.id} className="hover:bg-gray-50">
+                                            <td className="py-2 px-4 border">
+                                                <Link href={`/items/${item.id}`} className="text-brand-primary hover:underline font-medium">
+                                                    {item.name}
+                                                </Link>
+                                            </td>
                                             <td className="py-2 px-4 border">{item.description}</td>
                                             <td className="py-2 px-4 border">
                                                 <div className="flex items-center gap-2">
