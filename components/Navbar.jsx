@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
     const { data: session } = useSession();
@@ -12,7 +13,7 @@ export default function Navbar() {
     if (!session) return null;
 
     return (
-        <header className="bg-white shadow-sm sticky top-0 z-50">
+        <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors">
             <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-8">
                     <Link href="/">
@@ -21,22 +22,22 @@ export default function Navbar() {
                     <nav>
                         <ul className="flex space-x-6">
                             <li>
-                                <Link href="/dashboard" className="text-gray-700 hover:text-brand-primary transition">
+                                <Link href="/dashboard" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Dashboard
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/items" className="text-gray-700 hover:text-brand-primary transition">
+                                <Link href="/items" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Items
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/types" className="text-gray-700 hover:text-brand-primary transition">
+                                <Link href="/types" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Types
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/discovert" className="text-gray-700 hover:text-brand-primary transition">
+                                <Link href="/discovert" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Discovery
                                 </Link>
                             </li>
@@ -44,6 +45,7 @@ export default function Navbar() {
                     </nav>
                 </div>
                 <div className="flex items-center gap-4">
+                    <ThemeToggle />
                     {/* Search Trigger */}
                     <button
                         onClick={() => document.dispatchEvent(new CustomEvent("openCommandPalette"))}
@@ -58,7 +60,7 @@ export default function Navbar() {
                         </kbd>
                     </button>
                     <NotificationBell />
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 dark:text-gray-300">
                         Hello, {session.user.name || session.user.email} ({session.user.role})
                     </span>
                     <Button onClick={() => signOut()}>Sign Out</Button>
