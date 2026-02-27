@@ -40,7 +40,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <span className={isActive("/admin/settings")}>Settings</span>
                             </Link>
                         </li>
-
+                        <li>
+                            <Link href="/admin/custom-fields">
+                                <span className={isActive("/admin/custom-fields")}>Custom Fields</span>
+                            </Link>
+                        </li>
                     </ul>
                 </nav>
             </aside >
