@@ -41,6 +41,24 @@ interface AuditLogEntry {
     user?: { id: string; name: string | null; email: string | null } | null;
 }
 
+interface CustomField {
+    id: string;
+    name: string;
+    label: string;
+    description: string | null;
+    type: string;
+    required: boolean;
+    defaultValue: string | null;
+    options: string[];
+}
+
+interface CustomFieldValue {
+    id: string;
+    value: string;
+    customFieldId: string;
+    customField: CustomField;
+}
+
 const statusColors: Record<AssetStatus, string> = {
     ACTIVE: "bg-green-100 text-green-800 border-green-200",
     DEPRECATED: "bg-red-100 text-red-800 border-red-200",
@@ -93,14 +111,19 @@ export default function AssetDetailPage() {
 
     const [item, setItem] = useState<ConfigItem | null>(null);
     const [history, setHistory] = useState<AuditLogEntry[]>([]);
+    const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValue[]>([]);
+    const [customFieldDefs, setCustomFieldDefs] = useState<CustomField[]>([]);
+    const [cfEdits, setCfEdits] = useState<Record<string, string>>({});
+    const [cfSaving, setCfSaving] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"overview" | "relations" | "history">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "relations" | "history" | "fields">("overview");
 
     useEffect(() => {
         if (status === "authenticated" && itemId) {
             fetchItem();
             fetchHistory();
+            fetchCustomFields();
         }
     }, [status, itemId]);
 
@@ -122,6 +145,47 @@ export default function AssetDetailPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchCustomFields = async () => {
+        try {
+            const [valRes, itemRes] = await Promise.all([
+                fetch(`/api/configuration-items/${itemId}/custom-fields`),
+                fetch(`/api/configuration-items/${itemId}`),
+            ]);
+            if (valRes.ok) {
+                const vals: CustomFieldValue[] = await valRes.json();
+                setCustomFieldValues(vals);
+                // Build edits map from existing values
+                const edits: Record<string, string> = {};
+                vals.forEach(v => { edits[v.customFieldId] = v.value; });
+                setCfEdits(edits);
+            }
+            // After we have the item, fetch field defs for its type (+ global)
+            if (itemRes.ok) {
+                const it = await itemRes.json();
+                const typeParam = it.itemTypeId ? `?itemTypeId=${it.itemTypeId}` : "";
+                const defsRes = await fetch(`/api/custom-fields${typeParam}`);
+                if (defsRes.ok) setCustomFieldDefs(await defsRes.json());
+            }
+        } catch (err) {
+            console.error("Failed to fetch custom fields:", err);
+        }
+    };
+
+    const saveCustomFieldValue = async (fieldId: string) => {
+        setCfSaving(fieldId);
+        try {
+            const res = await fetch(`/api/configuration-items/${itemId}/custom-fields`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customFieldId: fieldId, value: cfEdits[fieldId] ?? "" }),
+            });
+            if (res.ok) await fetchCustomFields();
+        } catch (err) {
+            console.error("Failed to save custom field value:", err);
+        }
+        setCfSaving(null);
     };
 
     const fetchHistory = async () => {
@@ -280,6 +344,16 @@ export default function AssetDetailPage() {
                             >
                                 History ({history.length})
                             </button>
+                            <button
+                                onClick={() => setActiveTab("fields")}
+                                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                                    activeTab === "fields"
+                                        ? "border-brand-primary text-brand-primary"
+                                        : "border-transparent text-gray-500 hover:text-gray-700"
+                                }`}
+                            >
+                                Custom Fields ({customFieldDefs.length})
+                            </button>
                         </nav>
                     </div>
 
@@ -375,6 +449,81 @@ export default function AssetDetailPage() {
                                                 )}
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === "fields" && (
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Custom Fields</h3>
+                                {customFieldDefs.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-400">
+                                        <p>No custom fields defined for this item type.</p>
+                                        <p className="text-sm mt-1">
+                                            Admins can create custom fields under{" "}
+                                            <a href="/admin/custom-fields" className="text-brand-primary hover:underline">
+                                                Admin → Custom Fields
+                                            </a>.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {customFieldDefs.map((field) => {
+                                            const current = cfEdits[field.id] ?? customFieldValues.find(v => v.customFieldId === field.id)?.value ?? "";
+                                            return (
+                                                <div key={field.id} className="border border-gray-200 rounded-lg p-4">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="flex-1">
+                                                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                                                {field.label}
+                                                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                                            </label>
+                                                            {field.description && (
+                                                                <p className="text-xs text-gray-400 mb-2">{field.description}</p>
+                                                            )}
+                                                            {field.options?.length > 0 ? (
+                                                                <select
+                                                                    value={cfEdits[field.id] ?? ""}
+                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                                    className="w-full border rounded-sm p-2 text-sm"
+                                                                >
+                                                                    <option value="">— select —</option>
+                                                                    {field.options.map(o => (
+                                                                        <option key={o} value={o}>{o}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : field.type === "BOOLEAN" ? (
+                                                                <select
+                                                                    value={cfEdits[field.id] ?? ""}
+                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                                    className="w-full border rounded-sm p-2 text-sm"
+                                                                >
+                                                                    <option value="">— select —</option>
+                                                                    <option value="true">Yes</option>
+                                                                    <option value="false">No</option>
+                                                                </select>
+                                                            ) : (
+                                                                <input
+                                                                    type={field.type === "DATE" ? "date" : field.type === "NUMBER" ? "number" : field.type === "EMAIL" ? "email" : field.type === "URL" ? "url" : "text"}
+                                                                    value={cfEdits[field.id] ?? ""}
+                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                                    placeholder={field.defaultValue || ""}
+                                                                    className="w-full border rounded-sm p-2 text-sm"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => saveCustomFieldValue(field.id)}
+                                                            disabled={cfSaving === field.id}
+                                                        >
+                                                            {cfSaving === field.id ? "Saving…" : "Save"}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
