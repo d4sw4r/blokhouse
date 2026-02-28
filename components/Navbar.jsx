@@ -37,6 +37,11 @@ export default function Navbar() {
                                 </Link>
                             </li>
                             <li>
+                                <Link href="/tags" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
+                                    Tags
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/discovery" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Discovery
                                 </Link>
