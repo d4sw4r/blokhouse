@@ -51,6 +51,11 @@ export default function Navbar() {
                                     Discovery
                                 </Link>
                             </li>
+                            <li>
+                                <Link href="/reports" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
+                                    Reports
+                                </Link>
+                            </li>
                         </ul>
                     </nav>
                 </div>
