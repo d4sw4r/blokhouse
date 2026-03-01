@@ -32,6 +32,11 @@ export default function Navbar() {
                                 </Link>
                             </li>
                             <li>
+                                <Link href="/graph" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
+                                    Graph
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/types" className="text-gray-700 dark:text-gray-200 hover:text-brand-primary transition">
                                     Types
                                 </Link>
