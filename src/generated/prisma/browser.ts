@@ -82,3 +82,8 @@ export type CustomFieldValue = Prisma.CustomFieldValueModel
  * 
  */
 export type Notification = Prisma.NotificationModel
+/**
+ * Model MaintenanceSchedule
+ * 
+ */
+export type MaintenanceSchedule = Prisma.MaintenanceScheduleModel

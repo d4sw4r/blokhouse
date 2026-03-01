@@ -101,6 +101,8 @@ model ConfigurationItem {
   relationsFrom AssetRelation[] @relation("RelationSource")
   // Asset relationships (incoming relations)
   relationsTo   AssetRelation[] @relation("RelationTarget")
+  // Maintenance schedules
+  maintenanceSchedules MaintenanceSchedule[]
 }
 
 model AssetRelation {
@@ -194,4 +196,24 @@ model Notification {
 
   @@index([userId, read])
   @@index([createdAt])
+}
+
+model MaintenanceSchedule {
+  id                  String            @id @default(cuid())
+  configurationItemId String
+  configurationItem   ConfigurationItem @relation(fields: [configurationItemId], references: [id], onDelete: Cascade)
+  title               String
+  description         String?
+  scheduledDate       DateTime
+  completedDate       DateTime?
+  status              String            @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  priority            String            @default("MEDIUM")     // LOW, MEDIUM, HIGH, CRITICAL
+  assignedTo          String?           // User ID or name
+  createdBy           String?           // User ID
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([configurationItemId])
+  @@index([scheduledDate])
+  @@index([status])
 }

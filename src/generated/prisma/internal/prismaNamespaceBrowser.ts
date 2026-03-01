@@ -63,7 +63,8 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   CustomField: 'CustomField',
   CustomFieldValue: 'CustomFieldValue',
-  Notification: 'Notification'
+  Notification: 'Notification',
+  MaintenanceSchedule: 'MaintenanceSchedule'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -248,6 +249,24 @@ export const NotificationScalarFieldEnum = {
 } as const
 
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const MaintenanceScheduleScalarFieldEnum = {
+  id: 'id',
+  configurationItemId: 'configurationItemId',
+  title: 'title',
+  description: 'description',
+  scheduledDate: 'scheduledDate',
+  completedDate: 'completedDate',
+  status: 'status',
+  priority: 'priority',
+  assignedTo: 'assignedTo',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MaintenanceScheduleScalarFieldEnum = (typeof MaintenanceScheduleScalarFieldEnum)[keyof typeof MaintenanceScheduleScalarFieldEnum]
 
 
 export const SortOrder = {
