@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.4.1
- * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+ * Prisma Client JS version: 7.4.2
+ * Query Engine version: 94a226be1cf2967af2541cca5529f0f7ba866919
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.4.1",
-  engine: "55ae170b1ced7fc6ed07a15f110549408c501bb3"
+  client: "7.4.2",
+  engine: "94a226be1cf2967af2541cca5529f0f7ba866919"
 }
 
 /**
@@ -396,7 +396,8 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   CustomField: 'CustomField',
   CustomFieldValue: 'CustomFieldValue',
-  Notification: 'Notification'
+  Notification: 'Notification',
+  MaintenanceSchedule: 'MaintenanceSchedule'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,7 +413,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "assetRelation" | "apiToken" | "auditLog" | "customField" | "customFieldValue" | "notification"
+    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "assetRelation" | "apiToken" | "auditLog" | "customField" | "customFieldValue" | "notification" | "maintenanceSchedule"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1378,6 +1379,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MaintenanceSchedule: {
+      payload: Prisma.$MaintenanceSchedulePayload<ExtArgs>
+      fields: Prisma.MaintenanceScheduleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MaintenanceScheduleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MaintenanceScheduleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        findFirst: {
+          args: Prisma.MaintenanceScheduleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MaintenanceScheduleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        findMany: {
+          args: Prisma.MaintenanceScheduleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>[]
+        }
+        create: {
+          args: Prisma.MaintenanceScheduleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        createMany: {
+          args: Prisma.MaintenanceScheduleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MaintenanceScheduleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>[]
+        }
+        delete: {
+          args: Prisma.MaintenanceScheduleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        update: {
+          args: Prisma.MaintenanceScheduleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        deleteMany: {
+          args: Prisma.MaintenanceScheduleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MaintenanceScheduleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MaintenanceScheduleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>[]
+        }
+        upsert: {
+          args: Prisma.MaintenanceScheduleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MaintenanceSchedulePayload>
+        }
+        aggregate: {
+          args: Prisma.MaintenanceScheduleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMaintenanceSchedule>
+        }
+        groupBy: {
+          args: Prisma.MaintenanceScheduleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MaintenanceScheduleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MaintenanceScheduleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MaintenanceScheduleCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1585,6 +1660,24 @@ export const NotificationScalarFieldEnum = {
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
+export const MaintenanceScheduleScalarFieldEnum = {
+  id: 'id',
+  configurationItemId: 'configurationItemId',
+  title: 'title',
+  description: 'description',
+  scheduledDate: 'scheduledDate',
+  completedDate: 'completedDate',
+  status: 'status',
+  priority: 'priority',
+  assignedTo: 'assignedTo',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MaintenanceScheduleScalarFieldEnum = (typeof MaintenanceScheduleScalarFieldEnum)[keyof typeof MaintenanceScheduleScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1749,6 +1842,7 @@ export type GlobalOmitConfig = {
   customField?: Prisma.CustomFieldOmit
   customFieldValue?: Prisma.CustomFieldValueOmit
   notification?: Prisma.NotificationOmit
+  maintenanceSchedule?: Prisma.MaintenanceScheduleOmit
 }
 
 /* Types for Logging */
