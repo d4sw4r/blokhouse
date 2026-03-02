@@ -58,10 +58,6 @@ export default function CustomFieldsAdminPage() {
     const [filterType, setFilterType] = useState<string>("");
     const [msg, setMsg]             = useState<{ ok: boolean; text: string } | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     async function fetchData() {
         setLoading(true);
         const [fRes, tRes] = await Promise.all([
@@ -73,6 +69,9 @@ export default function CustomFieldsAdminPage() {
         setLoading(false);
     }
 
+    useEffect(() => {
+        fetchData();
+    }, []);
     async function createField(e: React.FormEvent) {
         e.preventDefault();
         setSaving(true);
