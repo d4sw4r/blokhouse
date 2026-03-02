@@ -124,7 +124,7 @@ export default function AuditLogsPage() {
         } finally {
             setLoading(false);
         }
-    }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter, debouncedSearch]);
+    }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter]);
 
     useEffect(() => {
         fetchLogs();
