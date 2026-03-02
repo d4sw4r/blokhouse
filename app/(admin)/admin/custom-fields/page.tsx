@@ -58,12 +58,7 @@ export default function CustomFieldsAdminPage() {
     const [filterType, setFilterType] = useState<string>("");
     const [msg, setMsg]             = useState<{ ok: boolean; text: string } | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     async function fetchData() {
-        setLoading(true);
         const [fRes, tRes] = await Promise.all([
             fetch("/api/custom-fields"),
             fetch("/api/types"),
@@ -73,6 +68,10 @@ export default function CustomFieldsAdminPage() {
         setLoading(false);
     }
 
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchData();
+    }, []);
     async function createField(e: React.FormEvent) {
         e.preventDefault();
         setSaving(true);
@@ -287,7 +286,7 @@ export default function CustomFieldsAdminPage() {
             ) : displayed.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                     <p className="text-lg">No custom fields defined yet.</p>
-                    <p className="text-sm mt-1">Click "+ New Field" to create one.</p>
+                    <p className="text-sm mt-1">Click &quot;+ New Field&quot; to create one.</p>
                 </div>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">

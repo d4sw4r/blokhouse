@@ -46,6 +46,14 @@ interface Relation {
     };
 }
 
+interface ApiConfigItem {
+    id: string;
+    name: string;
+    status: string;
+    itemType?: { name: string } | null;
+    relationsFrom?: Array<Omit<Relation, "source">>;
+}
+
 const statusColors: Record<string, string> = {
     ACTIVE: "#22c55e",
     DEPRECATED: "#ef4444",
@@ -63,7 +71,7 @@ const relationTypeColors: Record<string, string> = {
 export default function RelationshipGraphPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [relations, setRelations] = useState<Relation[]>([]);
+    const [, setRelations] = useState<Relation[]>([]);
     const [nodes, setNodes] = useState<GraphNode[]>([]);
     const [edges, setEdges] = useState<GraphEdge[]>([]);
     const [loading, setLoading] = useState(true);
@@ -79,7 +87,7 @@ export default function RelationshipGraphPage() {
     const [animationEnabled, setAnimationEnabled] = useState(true);
 
     const animationRef = useRef<number | undefined>(undefined);
-    const transformRef = useRef({ x: 0, y: 0, scale: 1 });
+
 
     // Fetch all relations
     useEffect(() => {
@@ -91,9 +99,9 @@ export default function RelationshipGraphPage() {
                     const data = await res.json();
                     // Extract unique relations from items
                     const allRelations: Relation[] = [];
-                    data.forEach((item: any) => {
+                    data.forEach((item: ApiConfigItem) => {
                         if (item.relationsFrom) {
-                            item.relationsFrom.forEach((rel: any) => {
+                            item.relationsFrom.forEach((rel: Omit<Relation, "source">) => {
                                 allRelations.push({
                                     ...rel,
                                     source: item,
@@ -307,9 +315,6 @@ export default function RelationshipGraphPage() {
             const angle = Math.atan2(target.y - source.y, target.x - source.x);
             const arrowLength = 10;
             const arrowAngle = Math.PI / 6;
-            const dist = Math.sqrt(
-                Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2)
-            );
             const arrowX = target.x - (Math.cos(angle) * target.radius);
             const arrowY = target.y - (Math.sin(angle) * target.radius);
 
@@ -417,7 +422,7 @@ export default function RelationshipGraphPage() {
         setHoveredNode(hovered || null);
     };
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handleMouseDown = () => {
         if (hoveredNode) {
             setIsDragging(true);
             setDraggedNode(hoveredNode);

@@ -42,7 +42,7 @@ export default function MaintenancePage() {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [selectedSchedule, setSelectedSchedule] = useState<MaintenanceSchedule | null>(null);
+
 
     // Form states
     const [formData, setFormData] = useState({
@@ -58,7 +58,8 @@ export default function MaintenancePage() {
     useEffect(() => {
         fetchSchedules();
         fetchItems();
-    }, [statusFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statusFilter]); // fetchSchedules and fetchItems are stable function declarations
 
     const fetchSchedules = async () => {
         try {

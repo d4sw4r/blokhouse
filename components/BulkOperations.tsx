@@ -58,7 +58,7 @@ export default function BulkOperations({
             } else {
                 alert("Bulk status update failed");
             }
-        } catch (error) {
+        } catch {
             alert("Network error");
         } finally {
             setLoading(false);
@@ -86,7 +86,7 @@ export default function BulkOperations({
             setIsOpen(false);
             setOperation(null);
             setSelectedTagIds([]);
-        } catch (error) {
+        } catch {
             alert("Network error");
         } finally {
             setLoading(false);
@@ -107,7 +107,7 @@ export default function BulkOperations({
             onRefresh();
             setIsOpen(false);
             setOperation(null);
-        } catch (error) {
+        } catch {
             alert("Network error");
         } finally {
             setLoading(false);

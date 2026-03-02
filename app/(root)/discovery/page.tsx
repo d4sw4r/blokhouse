@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { SkeletonCard, LoadingSpinner } from "@/components/Skeleton";
+import { LoadingSpinner } from "@/components/Skeleton";
 import Link from "next/link";
 
 interface DiscoveredDevice {
@@ -22,7 +22,6 @@ interface ImportResult {
 
 export default function DiscoveryPage() {
     const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
-    const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
     const [subnet, setSubnet] = useState("192.168.1.0/24");
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +41,7 @@ export default function DiscoveryPage() {
             if (res.ok) {
                 const data = await res.json();
                 const assetMap = new Map<string, string>();
-                data.items?.forEach((item: any) => {
+                data.items?.forEach((item: { ip?: string; mac?: string; id: string }) => {
                     if (item.ip) assetMap.set(item.ip, item.id);
                     if (item.mac) assetMap.set(item.mac.toLowerCase(), item.id);
                 });
@@ -85,8 +84,8 @@ export default function DiscoveryPage() {
             });
 
             setDevices(enrichedDevices);
-        } catch (err: any) {
-            setError(err.message || "Failed to scan network");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to scan network");
         } finally {
             setScanning(false);
         }
@@ -134,10 +133,10 @@ export default function DiscoveryPage() {
                 const err = await res.json();
                 throw new Error(err.error || "Import failed");
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setImportResults((prev) => [
                 ...prev,
-                { success: false, device, error: err.message },
+                { success: false, device, error: err instanceof Error ? err.message : "Import failed" },
             ]);
         } finally {
             setImporting((prev) => {
@@ -386,7 +385,7 @@ export default function DiscoveryPage() {
                         </svg>
                         <h3 className="text-lg font-medium text-gray-800 mb-2">Ready to Discover</h3>
                         <p className="text-gray-500 max-w-md mx-auto">
-                            Configure your network subnet and click "Start Discovery" to scan for devices on your network.
+                            Configure your network subnet and click &quot;Start Discovery&quot; to scan for devices on your network.
                         </p>
                     </div>
                 )}

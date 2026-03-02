@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
-import { SkeletonTable, LoadingSpinner } from "@/components/Skeleton";
+import { SkeletonTable } from "@/components/Skeleton";
 
 interface AuditLog {
     id: string;
@@ -74,7 +74,7 @@ export default function AuditLogsPage() {
     const [actionFilter, setActionFilter] = useState<string>("");
     const [entityTypeFilter, setEntityTypeFilter] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [, setDebouncedSearch] = useState("");
 
     // Detail modal state
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -91,11 +91,7 @@ export default function AuditLogsPage() {
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    useEffect(() => {
-        fetchLogs();
-    }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter, debouncedSearch]);
-
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -128,7 +124,11 @@ export default function AuditLogsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [pagination.page, pagination.limit, actionFilter, entityTypeFilter]);
+
+    useEffect(() => {
+        fetchLogs();
+    }, [fetchLogs]);
 
     const exportLogs = async (format: "json" | "csv") => {
         try {
