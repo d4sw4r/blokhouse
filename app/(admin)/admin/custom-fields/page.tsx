@@ -59,7 +59,6 @@ export default function CustomFieldsAdminPage() {
     const [msg, setMsg]             = useState<{ ok: boolean; text: string } | null>(null);
 
     async function fetchData() {
-        setLoading(true);
         const [fRes, tRes] = await Promise.all([
             fetch("/api/custom-fields"),
             fetch("/api/types"),
