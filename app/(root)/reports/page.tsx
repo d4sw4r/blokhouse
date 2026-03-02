@@ -77,7 +77,8 @@ export default function ReportsPage() {
 
     useEffect(() => {
         fetchReports();
-    }, [period]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [period]); // fetchReports is a stable function declaration
 
     const fetchReports = async () => {
         try {

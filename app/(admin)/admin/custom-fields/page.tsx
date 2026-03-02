@@ -69,6 +69,7 @@ export default function CustomFieldsAdminPage() {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchData();
     }, []);
     async function createField(e: React.FormEvent) {
@@ -285,7 +286,7 @@ export default function CustomFieldsAdminPage() {
             ) : displayed.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                     <p className="text-lg">No custom fields defined yet.</p>
-                    <p className="text-sm mt-1">Click "+ New Field" to create one.</p>
+                    <p className="text-sm mt-1">Click &quot;+ New Field&quot; to create one.</p>
                 </div>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">

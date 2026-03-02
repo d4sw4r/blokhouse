@@ -71,7 +71,7 @@ const relationTypeColors: Record<string, string> = {
 export default function RelationshipGraphPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [_relations, setRelations] = useState<Relation[]>([]);
+    const [, setRelations] = useState<Relation[]>([]);
     const [nodes, setNodes] = useState<GraphNode[]>([]);
     const [edges, setEdges] = useState<GraphEdge[]>([]);
     const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ export default function RelationshipGraphPage() {
     const [animationEnabled, setAnimationEnabled] = useState(true);
 
     const animationRef = useRef<number | undefined>(undefined);
-    const _transformRef = useRef({ x: 0, y: 0, scale: 1 });
+
 
     // Fetch all relations
     useEffect(() => {
@@ -315,9 +315,6 @@ export default function RelationshipGraphPage() {
             const angle = Math.atan2(target.y - source.y, target.x - source.x);
             const arrowLength = 10;
             const arrowAngle = Math.PI / 6;
-            const _dist = Math.sqrt(
-                Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2)
-            );
             const arrowX = target.x - (Math.cos(angle) * target.radius);
             const arrowY = target.y - (Math.sin(angle) * target.radius);
 
@@ -425,7 +422,7 @@ export default function RelationshipGraphPage() {
         setHoveredNode(hovered || null);
     };
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handleMouseDown = () => {
         if (hoveredNode) {
             setIsDragging(true);
             setDraggedNode(hoveredNode);

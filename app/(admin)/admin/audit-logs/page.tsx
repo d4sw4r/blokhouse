@@ -74,7 +74,7 @@ export default function AuditLogsPage() {
     const [actionFilter, setActionFilter] = useState<string>("");
     const [entityTypeFilter, setEntityTypeFilter] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [, setDebouncedSearch] = useState("");
 
     // Detail modal state
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);

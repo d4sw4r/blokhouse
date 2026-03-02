@@ -149,14 +149,14 @@ export async function GET(request: NextRequest) {
             item.mac || "",
             item.itemType?.name || "",
             item.status,
-            item.tags?.map((t: any) => t.name).join("; ") || "",
+            item.tags?.map((t: { name: string }) => t.name).join("; ") || "",
             item.createdAt.toISOString(),
             item.updatedAt.toISOString(),
         ]);
 
         const csvContent = [
             headers.join(","),
-            ...rows.map((row: any) => row.map(escapeCSV).join(",")),
+            ...rows.map((row: string[]) => row.map(escapeCSV).join(",")),
         ].join("\n");
 
         return new Response(csvContent, {
@@ -177,8 +177,8 @@ export async function GET(request: NextRequest) {
             mac: item.mac,
             status: item.status,
             type: item.itemType?.name || null,
-            tags: item.tags?.map((t: any) => ({ name: t.name, color: t.color })) || [],
-            customFields: item.customFieldValues.map((cfv: any) => ({
+            tags: item.tags?.map((t: { name: string; color: string }) => ({ name: t.name, color: t.color })) || [],
+            customFields: item.customFieldValues.map((cfv: { customField: { name: string; label: string }; value: string }) => ({
                 name: cfv.customField.name,
                 label: cfv.customField.label,
                 value: cfv.value,

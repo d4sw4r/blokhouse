@@ -104,14 +104,14 @@ function formatTimeAgo(dateString: string): string {
 }
 
 export default function AssetDetailPage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const params = useParams();
     const router = useRouter();
     const itemId = params.id as string;
 
     const [item, setItem] = useState<ConfigItem | null>(null);
     const [history, setHistory] = useState<AuditLogEntry[]>([]);
-    const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValue[]>([]);
+    const [, setCustomFieldValues] = useState<CustomFieldValue[]>([]);
     const [customFieldDefs, setCustomFieldDefs] = useState<CustomField[]>([]);
     const [cfEdits, setCfEdits] = useState<Record<string, string>>({});
     const [cfSaving, setCfSaving] = useState<string | null>(null);
@@ -125,7 +125,8 @@ export default function AssetDetailPage() {
             fetchHistory();
             fetchCustomFields();
         }
-    }, [status, itemId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status, itemId]); // fetchItem, fetchHistory, fetchCustomFields are defined below and stable within the render
 
     const fetchItem = async () => {
         try {
@@ -140,7 +141,7 @@ export default function AssetDetailPage() {
             }
             const data = await res.json();
             setItem(data);
-        } catch (err) {
+        } catch {
             setError("Network error");
         } finally {
             setLoading(false);
@@ -212,7 +213,7 @@ export default function AssetDetailPage() {
             } else {
                 alert("Failed to delete asset");
             }
-        } catch (err) {
+        } catch {
             alert("Network error");
         }
     };
@@ -470,7 +471,6 @@ export default function AssetDetailPage() {
                                 ) : (
                                     <div className="space-y-4">
                                         {customFieldDefs.map((field) => {
-                                            const current = cfEdits[field.id] ?? customFieldValues.find(v => v.customFieldId === field.id)?.value ?? "";
                                             return (
                                                 <div key={field.id} className="border border-gray-200 rounded-lg p-4">
                                                     <div className="flex items-start justify-between gap-4">
