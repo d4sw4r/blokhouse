@@ -1,8 +1,22 @@
 import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
 
+// Override react-compiler rule severity: find the config block that owns the plugin
+const withCompilerOverride = coreWebVitals.map((cfg) => {
+    if (cfg.plugins?.["react-compiler"]) {
+        return {
+            ...cfg,
+            rules: {
+                ...cfg.rules,
+                "react-compiler/react-compiler": "warn",
+            },
+        };
+    }
+    return cfg;
+});
+
 const eslintConfig = [
-    ...coreWebVitals,
+    ...withCompilerOverride,
     ...typescript,
     {
         rules: {
@@ -12,9 +26,6 @@ const eslintConfig = [
             "react/no-unescaped-entities": "warn",
             // Allow functions to be used before declaration (hoisting)
             "@typescript-eslint/no-use-before-define": "off",
-            // React Compiler rule: async fetchData inside useEffect triggers this;
-            // downgrade from error to warn until code is refactored
-            "react-compiler/react-compiler": "warn",
         },
     },
 ];
