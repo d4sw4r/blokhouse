@@ -2,13 +2,16 @@
 import { SessionProvider } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import CommandPalette from "@/components/CommandPalette";
+import { ToastProvider } from "@/components/ToastProvider";
 
 export default function ClientWrapper({ children }) {
     return (
         <SessionProvider>
-            <CommandPalette />
-            <Navbar />
-            {children}
+            <ToastProvider>
+                <CommandPalette />
+                <Navbar />
+                {children}
+            </ToastProvider>
         </SessionProvider>
     );
 }
