@@ -11,6 +11,7 @@ import CopyButton from "@/components/CopyButton";
 import { isValidIP, isValidMAC } from "@/lib/validation";
 import { SkeletonTable, LoadingSpinner } from "@/components/Skeleton";
 import BulkOperations from "@/components/BulkOperations";
+import { useToast } from "@/components/ToastProvider";
 
 interface Tag {
     id: string;
@@ -59,6 +60,7 @@ const statusLabels: Record<AssetStatus, string> = {
 
 export default function ItemsPage() {
     const { data: session, status } = useSession();
+    const { addToast } = useToast();
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -215,16 +217,16 @@ status: "ACTIVE" as AssetStatus,
 
     const createItem = async () => {
         if (!newItem.name.trim()) {
-            alert("Name is required");
+            addToast({ type: "error", title: "Validation Error", message: "Name is required" });
             return;
         }
         // Validate IP and MAC before saving
         if (newItem.ip && !isValidIP(newItem.ip)) {
-            alert("Please enter a valid IP address");
+            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
             return;
         }
         if (newItem.mac && !isValidMAC(newItem.mac)) {
-            alert("Please enter a valid MAC address");
+            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
             return;
         }
         try {
@@ -235,22 +237,33 @@ status: "ACTIVE" as AssetStatus,
             });
             if (!res.ok) {
                 const err = await res.json();
-                alert(`Error: ${err.error || res.statusText}`);
+                addToast({ type: "error", title: "Failed to create item", message: err.error || res.statusText });
                 return;
             }
             const created = await res.json();
             setItems((prev) => [created, ...prev]);
             setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
+            addToast({ type: "success", title: "Item created", message: `"${created.name}" has been added successfully` });
             fetchItems();
         } catch (err) {
-            alert(`Network error: ${err}`);
+            addToast({ type: "error", title: "Network error", message: String(err) });
         }
     };
 
     const deleteItem = async (id: string) => {
-        await fetch(`/api/configuration-items/${id}`, { method: "DELETE" });
-        setItems((prev) => prev.filter((item) => item.id !== id));
-        fetchItems();
+        try {
+            const res = await fetch(`/api/configuration-items/${id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const err = await res.json();
+                addToast({ type: "error", title: "Failed to delete item", message: err.error || res.statusText });
+                return;
+            }
+            setItems((prev) => prev.filter((item) => item.id !== id));
+            addToast({ type: "success", title: "Item deleted", message: "The item has been removed successfully" });
+            fetchItems();
+        } catch (err) {
+            addToast({ type: "error", title: "Network error", message: String(err) });
+        }
     };
 
     const startEditing = (item: ConfigItem) => {
@@ -274,21 +287,31 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     const updateItem = async (id: string) => {
         // Validate IP and MAC before saving
         if (editingItemData.ip && !isValidIP(editingItemData.ip)) {
-            alert("Please enter a valid IP address");
+            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
             return;
         }
         if (editingItemData.mac && !isValidMAC(editingItemData.mac)) {
-            alert("Please enter a valid MAC address");
+            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
             return;
         }
-        const res = await fetch(`/api/configuration-items/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editingItemData),
-        });
-        const updated = await res.json();
-        setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
-        cancelEditing();
+        try {
+            const res = await fetch(`/api/configuration-items/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editingItemData),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                addToast({ type: "error", title: "Failed to update item", message: err.error || res.statusText });
+                return;
+            }
+            const updated = await res.json();
+            setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+            addToast({ type: "success", title: "Item updated", message: `"${updated.name}" has been updated successfully` });
+            cancelEditing();
+        } catch (err) {
+            addToast({ type: "error", title: "Network error", message: String(err) });
+        }
     };
 
     // CSV Upload Handlers
@@ -305,7 +328,10 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     };
 
     const uploadCsv = async () => {
-        if (!csvContent) return;
+        if (!csvContent) {
+            addToast({ type: "warning", title: "No file selected", message: "Please select a CSV file to upload" });
+            return;
+        }
         try {
             const res = await fetch("/api/configuration-items/upload", {
                 method: "POST",
@@ -313,18 +339,24 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 body: JSON.stringify({ csv: csvContent }),
             });
             if (res.ok) {
+                addToast({ type: "success", title: "CSV uploaded", message: "Items have been imported successfully" });
+                setCsvContent("");
                 fetchItems();
             } else {
-                console.error("CSV upload failed:", await res.text());
+                const err = await res.json();
+                addToast({ type: "error", title: "CSV upload failed", message: err.error || "Failed to import items" });
             }
         } catch (error) {
-            console.error("Error uploading CSV:", error);
+            addToast({ type: "error", title: "Upload error", message: String(error) });
         }
     };
 
     // Tag management
     const createTag = async () => {
-        if (!newTagName.trim()) return;
+        if (!newTagName.trim()) {
+            addToast({ type: "warning", title: "Tag name required", message: "Please enter a name for the tag" });
+            return;
+        }
         try {
             const res = await fetch("/api/tags", {
                 method: "POST",
@@ -342,11 +374,13 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 setNewTagColor("#3b82f6");
                 setNewTagDescription("");
                 setShowTagModal(false);
+                addToast({ type: "success", title: "Tag created", message: `"${newTag.name}" has been created successfully` });
             } else {
-                console.error("Failed to create tag:", await res.text());
+                const err = await res.json();
+                addToast({ type: "error", title: "Failed to create tag", message: err.error || "Could not create tag" });
             }
         } catch (error) {
-            console.error("Error creating tag:", error);
+            addToast({ type: "error", title: "Network error", message: String(error) });
         }
     };
 
@@ -356,11 +390,13 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             const res = await fetch(`/api/tags/${tagId}`, { method: "DELETE" });
             if (res.ok) {
                 setAvailableTags((prev) => prev.filter((t) => t.id !== tagId));
+                addToast({ type: "success", title: "Tag deleted", message: "The tag has been removed successfully" });
             } else {
-                console.error("Failed to delete tag:", await res.text());
+                const err = await res.json();
+                addToast({ type: "error", title: "Failed to delete tag", message: err.error || "Could not delete tag" });
             }
         } catch (error) {
-            console.error("Error deleting tag:", error);
+            addToast({ type: "error", title: "Network error", message: String(error) });
         }
     };
 
