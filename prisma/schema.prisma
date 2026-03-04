@@ -20,6 +20,7 @@ model User {
   ApiToken           ApiToken[]
   auditLogs          AuditLog[]
   notifications      Notification[]
+  favoriteItems      FavoriteItem[]
   role               String              @default("USER")
 }
 
@@ -103,6 +104,8 @@ model ConfigurationItem {
   relationsTo   AssetRelation[] @relation("RelationTarget")
   // Maintenance schedules
   maintenanceSchedules MaintenanceSchedule[]
+  // Favorite items
+  favoritedBy FavoriteItem[]
 }
 
 model AssetRelation {
@@ -216,4 +219,17 @@ model MaintenanceSchedule {
   @@index([configurationItemId])
   @@index([scheduledDate])
   @@index([status])
+}
+
+model FavoriteItem {
+  id                  String            @id @default(cuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  configurationItemId String
+  configurationItem   ConfigurationItem @relation(fields: [configurationItemId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now())
+
+  @@unique([userId, configurationItemId])
+  @@index([userId])
+  @@index([configurationItemId])
 }
