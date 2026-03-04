@@ -5,6 +5,11 @@ export const metadata = {
   title: "Blokhouse — Your infrastructure, block by block.",
   description: "Simple, automation-first open source CMDB",
   icons: { icon: "/favicon.ico" },
+  openGraph: {
+    title: "Blokhouse — Your infrastructure, block by block.",
+    description: "Simple, automation-first open source CMDB",
+    images: ["/logo.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
