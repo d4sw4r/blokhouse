@@ -19,6 +19,24 @@ export async function GET(req, { params }) {
             customFieldValues: {
                 include: { customField: true },
             },
+            relationsFrom: {
+                include: {
+                    target: {
+                        select: { id: true, name: true }
+                    }
+                }
+            },
+            relationsTo: {
+                include: {
+                    source: {
+                        select: { id: true, name: true }
+                    }
+                }
+            },
+            maintenanceSchedules: {
+                orderBy: { scheduledDate: 'asc' },
+                take: 10,
+            },
         },
     });
 
@@ -26,22 +44,7 @@ export async function GET(req, { params }) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
-    // Format custom fields
-    const customFields = item.customFieldValues.map((cfv) => ({
-        id: cfv.customField.id,
-        name: cfv.customField.name,
-        label: cfv.customField.label,
-        type: cfv.customField.type,
-        value: cfv.value,
-    }));
-
-    const result = {
-        ...item,
-        customFields,
-    };
-    delete result.customFieldValues;
-
-    return new Response(JSON.stringify(result), { status: 200 });
+    return new Response(JSON.stringify(item), { status: 200 });
 }
 
 export async function PUT(req, { params }) {
