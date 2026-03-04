@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { SkeletonCard, SkeletonActivity } from "@/components/Skeleton";
+import FavoritesWidget from "@/components/FavoritesWidget";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 type MaintenancePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -325,6 +326,9 @@ export default function Dashboard() {
 
                     {/* Right Column */}
                     <div className="lg:col-span-1 space-y-8">
+                        {/* Favorites Widget */}
+                        <FavoritesWidget />
+
                         {/* Upcoming Maintenance */}
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                             <div className="p-4 border-b border-gray-200">

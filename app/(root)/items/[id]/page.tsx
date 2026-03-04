@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import AssetRelations from "@/components/AssetRelations";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface Tag {
     id: string;
@@ -272,7 +273,8 @@ export default function AssetDetailPage() {
                                 <p className="text-gray-600 text-lg">{item.description}</p>
                             )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                            <FavoriteButton itemId={item.id} itemName={item.name} size="lg" />
                             <Link href={`/items?id=${item.id}`}>
                                 <Button variant="outline">Edit</Button>
                             </Link>
