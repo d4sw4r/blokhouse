@@ -148,7 +148,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2 text-brand-secondary hover:text-brand-text hover:bg-brand-primary/10 rounded-full transition-colors"
         aria-label="Notifications"
       >
         <svg
@@ -165,7 +165,7 @@ export default function NotificationBell() {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-brand-accent rounded-full">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -174,11 +174,11 @@ export default function NotificationBell() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border z-50 max-h-[80vh] flex flex-col">
           <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+            <h3 className="text-lg font-semibold text-brand-text">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-brand-primary hover:text-brand-accent font-medium"
               >
                 Mark all as read
               </button>
@@ -187,9 +187,9 @@ export default function NotificationBell() {
 
           <div className="overflow-y-auto flex-1 max-h-[60vh]">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-brand-secondary">
                 <svg
-                  className="w-12 h-12 mx-auto mb-3 text-gray-300"
+                  className="w-12 h-12 mx-auto mb-3 text-brand-secondary/50"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -208,8 +208,8 @@ export default function NotificationBell() {
                 const link = getNotificationLink(notification);
                 const content = (
                   <div
-                    className={`p-4 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
-                      !notification.read ? "bg-blue-50" : ""
+                    className={`p-4 border-b hover:bg-brand-primary/5 transition-colors cursor-pointer ${
+                      !notification.read ? "bg-brand-primary/10" : ""
                     }`}
                     onClick={() => {
                       if (!notification.read) {
@@ -229,12 +229,12 @@ export default function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-brand-text">
                             {notification.title}
                           </p>
                           <button
                             onClick={(e) => deleteNotification(notification.id, e)}
-                            className="text-gray-400 hover:text-red-500 flex-shrink-0"
+                            className="text-brand-secondary/60 hover:text-brand-accent flex-shrink-0"
                             title="Delete"
                           >
                             <svg
@@ -252,15 +252,15 @@ export default function NotificationBell() {
                             </svg>
                           </button>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="text-sm text-brand-secondary mt-1 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-brand-secondary/60 mt-1">
                           {formatTimeAgo(notification.createdAt)}
                         </p>
                       </div>
                       {!notification.read && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>
+                        <span className="w-2 h-2 bg-brand-primary rounded-full flex-shrink-0 mt-2"></span>
                       )}
                     </div>
                   </div>
@@ -282,11 +282,11 @@ export default function NotificationBell() {
             )}
           </div>
 
-          <div className="p-3 border-t bg-gray-50 rounded-b-lg">
+          <div className="p-3 border-t bg-brand-background rounded-b-lg">
             <Link
               href="/notifications"
               onClick={() => setIsOpen(false)}
-              className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="block text-center text-sm text-brand-primary hover:text-brand-accent font-medium"
             >
               View all notifications
             </Link>

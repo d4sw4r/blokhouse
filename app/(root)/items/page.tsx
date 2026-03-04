@@ -47,9 +47,9 @@ interface PaginationData {
 }
 
 const statusColors: Record<AssetStatus, string> = {
-    ACTIVE: "bg-green-100 text-green-800",
-    DEPRECATED: "bg-red-100 text-red-800",
-    MAINTENANCE: "bg-yellow-100 text-yellow-800",
+    ACTIVE: "bg-brand-primary/20 text-brand-primary",
+    DEPRECATED: "bg-brand-accent/20 text-brand-accent",
+    MAINTENANCE: "bg-brand-secondary/20 text-brand-secondary",
 };
 
 const statusLabels: Record<AssetStatus, string> = {
@@ -505,16 +505,16 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-brand-background">
             <main className="max-w-7xl mx-auto p-8 space-y-10">
                 {/* Tag Management Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold text-gray-700">Tags</h2>
+                        <h2 className="text-2xl font-semibold text-brand-text">Tags</h2>
                         <Button onClick={() => setShowTagModal(true)}>+ Create Tag</Button>
                     </div>
                     {availableTags.length === 0 ? (
-                        <p className="text-gray-500">No tags created yet.</p>
+                        <p className="text-brand-secondary">No tags created yet.</p>
                     ) : (
                         <div className="flex flex-wrap gap-2">
                             {availableTags.map((tag) => (
@@ -529,7 +529,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                     <span style={{ color: tag.color || '#374151' }}>{tag.name}</span>
                                     <button
                                         onClick={() => deleteTag(tag.id)}
-                                        className="text-gray-400 hover:text-red-500 font-bold"
+                                        className="text-brand-secondary hover:text-brand-accent font-bold"
                                     >
                                         ×
                                     </button>
@@ -543,10 +543,10 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 {showTagModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                            <h3 className="text-xl font-semibold mb-4">Create New Tag</h3>
+                            <h3 className="text-xl font-semibold text-brand-text mb-4">Create New Tag</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Name *</label>
+                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Name *</label>
                                     <input
                                         type="text"
                                         value={newTagName}
@@ -556,7 +556,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Color</label>
+                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Color</label>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="color"
@@ -564,11 +564,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                             onChange={(e) => setNewTagColor(e.target.value)}
                                             className="h-10 w-20"
                                         />
-                                        <span className="text-sm text-gray-500">{newTagColor}</span>
+                                        <span className="text-sm text-brand-secondary">{newTagColor}</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Description</label>
                                     <input
                                         type="text"
                                         value={newTagDescription}
@@ -590,7 +590,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 <section className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex items-center">
                         <Image src="file.svg" width={24} height={24} alt="file" ></Image>
-                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Upload CSV File</h2>
+                        <h2 className="text-2xl font-semibold text-brand-text mb-4">Upload CSV File</h2>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
                         <input
@@ -603,7 +603,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         {/* Info icon with tooltip */}
                         <div className="relative inline-block group ml-4">
                             <svg
-                                className="w-6 h-6 text-gray-500 cursor-help"
+                                className="w-6 h-6 text-brand-secondary cursor-help"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -611,7 +611,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
                             </svg>
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-700 text-white text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-brand-text text-brand-background text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 <p className="mb-1 font-semibold">Example CSV Format:</p>
                                 <code>Name,Description,IP,MAC,ItemTypeId,Status</code>
                                 <br />
@@ -624,7 +624,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
                 {/* New Item Form */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Add New Configuration Item</h2>
+                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Add New Configuration Item</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input
                             type="text"
@@ -676,7 +676,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     </div>
                     {/* Tags selection */}
                     <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-600 mb-2">Tags</label>
+                        <label className="block text-sm font-medium text-brand-secondary mb-2">Tags</label>
                         <div className="flex flex-wrap gap-2">
                             {availableTags.map((tag) => (
                                 <button
@@ -697,7 +697,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                 </button>
                             ))}
                             {availableTags.length === 0 && (
-                                <span className="text-sm text-gray-500">No tags available. Create some above!</span>
+                                <span className="text-sm text-brand-secondary">No tags available. Create some above!</span>
                             )}
                         </div>
                     </div>
@@ -708,10 +708,10 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
                 {/* Search and Filter Section */}
                 <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Search & Filter</h2>
+                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Search & Filter</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Search</label>
+                            <label className="block text-sm font-medium text-brand-secondary mb-1">Search</label>
                             <input
                                 type="text"
                                 placeholder="Search name, IP, MAC, description..."
@@ -721,7 +721,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by Type</label>
+                            <label className="block text-sm font-medium text-brand-secondary mb-1">Filter by Type</label>
                             <select
                                 value={selectedTypeId}
                                 onChange={(e) => {
@@ -739,7 +739,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Filter by Status</label>
+                            <label className="block text-sm font-medium text-brand-secondary mb-1">Filter by Status</label>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => {
@@ -759,11 +759,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         </div>
                     </div>
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-brand-secondary">
                             Showing {items.length} of {pagination.total} items
                         </p>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 mr-2">Export:</span>
+                            <span className="text-sm text-brand-secondary mr-2">Export:</span>
                             <Button onClick={() => exportData("json")} variant="outline" size="sm">
                                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
@@ -796,7 +796,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 {/* Items Table */}
                 <section className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="min-w-full">
-                        <thead className="bg-gray-200">
+                        <thead className="bg-brand-primary/10">
                             <tr>
                                 <th className="py-3 px-2 border text-center w-10">
                                     <input
@@ -819,7 +819,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                         <tbody>
                             {items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="py-8 px-4 text-center text-gray-500">
+                                    <td colSpan={9} className="py-8 px-4 text-center text-brand-secondary">
                                         No items found. Try adjusting your search or filters.
                                     </td>
                                 </tr>
@@ -932,7 +932,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                             </td>
                                         </tr>
                                     ) : (
-                                        <tr key={item.id} className="hover:bg-gray-50">
+                                        <tr key={item.id} className="hover:bg-brand-primary/5">
                                             <td className="py-2 px-2 border text-center">
                                                 <input
                                                     type="checkbox"
@@ -967,7 +967,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-2 px-4 border">{item.itemType ? item.itemType.name : "None"}</td>
+                                            <td className="py-2 px-4 border text-brand-secondary">{item.itemType ? item.itemType.name : "None"}</td>
                                             <td className="py-2 px-4 border">
 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
                                                     {statusLabels[item.status]}
@@ -989,7 +989,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                                                         </span>
                                                     ))}
                                                     {(!item.tags || item.tags.length === 0) && (
-                                                        <span className="text-gray-400 text-xs">-</span>
+                                                        <span className="text-brand-secondary/50 text-xs">-</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -1007,9 +1007,9 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
                     {/* Pagination Controls */}
                     {pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
+                        <div className="flex items-center justify-between px-4 py-3 bg-brand-primary/5 border-t">
                             <div className="flex items-center">
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-brand-secondary">
                                     Page {pagination.page} of {pagination.totalPages}
                                 </span>
                             </div>
@@ -1048,13 +1048,13 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 {/* Relations Modal */}
                 {showRelationsModal && relationsItem && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-gray-50 p-6 rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-brand-background p-6 rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex justify-between items-center mb-4">
                                 <div>
-                                    <h2 className="text-2xl font-semibold text-gray-700">
+                                    <h2 className="text-2xl font-semibold text-brand-text">
                                         Asset Relations: {relationsItem.name}
                                     </h2>
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-sm text-brand-secondary">
                                         Manage relationships with other configuration items
                                     </p>
                                 </div>

@@ -67,8 +67,8 @@ export default function AdminAPIPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gray-800">API Token Management</h1>
-            <p className="text-lg text-gray-600">
+            <h1 className="text-4xl font-bold text-brand-text">API Token Management</h1>
+            <p className="text-lg text-brand-secondary">
                 Create and manage API tokens for accessing your /api routes.
             </p>
             <Button onClick={generateToken} className="mt-4">
@@ -76,10 +76,10 @@ export default function AdminAPIPage() {
             </Button>
             <div className="overflow-x-auto mt-6">
                 {tokens.length === 0 ? (
-                    <p className="text-gray-600">No API tokens found.</p>
+                    <p className="text-brand-secondary">No API tokens found.</p>
                 ) : (
                     <table className="min-w-full bg-white shadow-sm rounded-sm">
-                        <thead className="bg-gray-200">
+                        <thead className="bg-brand-primary/10">
                             <tr>
                                 <th className="py-2 px-4 border">Token</th>
                                 <th className="py-2 px-4 border">Created At</th>

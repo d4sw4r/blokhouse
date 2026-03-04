@@ -8,12 +8,12 @@ import { usePathname } from "next/navigation";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isActive = (href: string) =>
-        pathname?.startsWith(href) ? "text-brandRoof font-semibold" : "hover:text-gray-300";
+        pathname?.startsWith(href) ? "text-brand-accent font-semibold" : "hover:text-brand-primary/70";
 
     return (
-        <div className="min-h-screen flex bg-gray-50">
+        <div className="min-h-screen flex bg-brand-background">
             {/* Sidebar */}
-            <aside className="w-64 bg-gray-900 text-white p-8 shadow-lg">
+            <aside className="w-64 bg-brand-text text-brand-background p-8 shadow-lg">
                 <div className="mb-8">
                     <Link href="/dashboard"><Logo /></Link>
 

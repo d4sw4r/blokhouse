@@ -2,8 +2,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
-  title: "Blokhouse",
-  description: "A modern CMDB application for your infrastructure",
+  title: "Blokhouse — Your infrastructure, block by block.",
+  description: "Simple, automation-first open source CMDB",
   icons: { icon: "/favicon.ico" },
 };
 

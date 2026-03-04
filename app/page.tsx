@@ -11,7 +11,7 @@ export default function LandingPage() {
       <ThreeBackground />
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4">
         <h1 className="text-5xl font-bold text-brand-primary mb-4">Welcome to Blokhouse</h1>
-        <p className="text-xl text-gray-700 mb-8">
+        <p className="text-xl text-brand-secondary mb-8">
           A modern CMDB solution to manage your infrastructure.
         </p>
 

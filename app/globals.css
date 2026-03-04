@@ -1,19 +1,18 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-brand-primary: #4f46e5;
-    --color-brand-secondary: #10b981;
-    --color-brand-accent: #6366f1;
-    --color-brand-background: #f3f4f6;
-    --color-brand-text: #1f2937;
+    --color-brand-primary: #8B5E3C;     /* Wood brown */
+    --color-brand-secondary: #4A5568;   /* Slate */
+    --color-brand-accent: #C0392B;      /* Red (roof) */
+    --color-brand-background: #FEFCE8;  /* Cream */
+    --color-brand-text: #2D1B0E;        /* Dark brown */
 
     --font-sans: Inter, sans-serif;
 }
 
-/* Dark mode color overrides */
 .dark {
-    --color-brand-background: #111827;
-    --color-brand-text: #f9fafb;
+    --color-brand-background: #1C1410;
+    --color-brand-text: #F5F0E8;
 }
 
 /*
@@ -38,8 +37,8 @@
 /* Dark mode base styles */
 @layer base {
     .dark body {
-        background-color: #111827;
-        color: #f9fafb;
+        background-color: #1C1410;
+        color: #F5F0E8;
     }
     
     .dark {

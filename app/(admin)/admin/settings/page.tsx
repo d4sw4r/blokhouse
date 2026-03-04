@@ -16,11 +16,11 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gray-800">Settings</h1>
+            <h1 className="text-4xl font-bold text-brand-text">Settings</h1>
             <div className="bg-white p-6 rounded-sm shadow-sm">
-                <h2 className="text-2xl font-semibold mb-4">General App Settings</h2>
+                <h2 className="text-2xl font-semibold text-brand-text mb-4">General App Settings</h2>
                 <div className="space-y-4">
-                    <label className="block text-lg text-gray-700">Example Setting:</label>
+                    <label className="block text-lg text-brand-secondary">Example Setting:</label>
                     <input
                         type="text"
                         value={newSetting}
@@ -32,7 +32,7 @@ export default function AdminSettingsPage() {
                 </div>
                 <div className="mt-4">
                     <p className="text-lg">
-                        Current Setting: <span className="font-semibold text-gray-800">{setting}</span>
+                        Current Setting: <span className="font-semibold text-brand-text">{setting}</span>
                     </p>
                 </div>
             </div>

@@ -98,16 +98,16 @@ export default function AdminUsersPage() {
         }
     };
 
-    if (loading) return <p className="text-lg">Loading users...</p>;
+    if (loading) return <p className="text-lg text-brand-text">Loading users...</p>;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-brand-background">
             <main className="max-w-7xl mx-auto p-8 space-y-8">
-                <h1 className="text-4xl font-bold text-gray-800">Manage Users</h1>
+                <h1 className="text-4xl font-bold text-brand-text">Manage Users</h1>
 
                 {/* New User Form */}
                 <div className="bg-white p-6 rounded-sm shadow-sm">
-                    <h2 className="text-2xl font-semibold mb-4">Add New User</h2>
+                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Add New User</h2>
                     <div className="space-y-4">
                         <input
                             type="text"
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
                 {/* Users Table */}
                 <div className="bg-white shadow-sm rounded-sm overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-200">
+                        <thead className="bg-brand-primary/10">
                             <tr>
                                 <th className="py-3 px-4 border">Name</th>
                                 <th className="py-3 px-4 border">Email</th>
