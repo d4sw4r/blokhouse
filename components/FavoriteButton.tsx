@@ -108,8 +108,8 @@ export default function FavoriteButton({ itemId, itemName, size = "md", showLabe
       disabled={loading}
       className={`${buttonClasses[size]} rounded-lg transition-all duration-200 ${
         isFavorited
-          ? "text-yellow-500 hover:text-yellow-600 bg-yellow-50 hover:bg-yellow-100"
-          : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+          ? "text-brand-accent hover:text-brand-accent/80 bg-brand-accent/10 hover:bg-brand-accent/20"
+          : "text-brand-secondary hover:text-brand-accent hover:bg-brand-accent/10"
       } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
       title={isFavorited ? "Remove from favorites" : "Add to favorites"}
     >

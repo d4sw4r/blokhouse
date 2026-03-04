@@ -16,14 +16,14 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-brand-primary/20 dark:hover:bg-brand-secondary/30 transition-colors"
             title={`Current theme: ${resolvedTheme} (click to toggle)`}
             type="button"
         >
             {resolvedTheme === "dark" ? (
                 // Sun icon for dark mode (click to switch to light)
                 <svg
-                    className="w-5 h-5 text-yellow-400"
+                    className="w-5 h-5 text-brand-accent"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -38,7 +38,7 @@ export default function ThemeToggle() {
             ) : (
                 // Moon icon for light mode (click to switch to dark)
                 <svg
-                    className="w-5 h-5 text-gray-700"
+                    className="w-5 h-5 text-brand-text"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

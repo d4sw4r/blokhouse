@@ -24,17 +24,17 @@ interface MaintenanceSchedule {
 }
 
 const statusColors: Record<string, string> = {
-    SCHEDULED: "bg-blue-100 text-blue-800",
-    IN_PROGRESS: "bg-yellow-100 text-yellow-800",
-    COMPLETED: "bg-green-100 text-green-800",
-    CANCELLED: "bg-gray-100 text-gray-800",
+    SCHEDULED: "bg-brand-primary/20 text-brand-primary",
+    IN_PROGRESS: "bg-brand-secondary/20 text-brand-secondary",
+    COMPLETED: "bg-brand-primary/20 text-brand-primary",
+    CANCELLED: "bg-brand-secondary/20 text-brand-secondary",
 };
 
 const priorityColors: Record<string, string> = {
-    LOW: "bg-green-100 text-green-800",
-    MEDIUM: "bg-blue-100 text-blue-800",
-    HIGH: "bg-orange-100 text-orange-800",
-    CRITICAL: "bg-red-100 text-red-800",
+    LOW: "bg-brand-secondary/20 text-brand-secondary",
+    MEDIUM: "bg-brand-primary/20 text-brand-primary",
+    HIGH: "bg-brand-accent/20 text-brand-accent",
+    CRITICAL: "bg-brand-accent/30 text-brand-accent",
 };
 
 export default function MaintenancePage() {
@@ -200,8 +200,8 @@ export default function MaintenancePage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>
-                        <h1 className="text-4xl font-bold text-gray-800">Maintenance Schedule</h1>
-                        <p className="text-gray-600 mt-1">Manage and track maintenance tasks for your assets</p>
+                        <h1 className="text-4xl font-bold text-brand-text">Maintenance Schedule</h1>
+                        <p className="text-brand-secondary mt-1">Manage and track maintenance tasks for your assets</p>
                     </div>
                     <Button onClick={() => setShowCreateModal(true)}>+ Schedule Maintenance</Button>
                 </div>
@@ -209,24 +209,24 @@ export default function MaintenancePage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Total Tasks</p>
+                        <p className="text-sm font-medium text-brand-secondary">Total Tasks</p>
                         <p className="text-2xl font-bold text-brand-primary">{stats.total}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Scheduled</p>
-                        <p className="text-2xl font-bold text-blue-600">{stats.scheduled}</p>
+                        <p className="text-sm font-medium text-brand-secondary">Scheduled</p>
+                        <p className="text-2xl font-bold text-brand-primary">{stats.scheduled}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">In Progress</p>
-                        <p className="text-2xl font-bold text-yellow-600">{stats.inProgress}</p>
+                        <p className="text-sm font-medium text-brand-secondary">In Progress</p>
+                        <p className="text-2xl font-bold text-brand-secondary">{stats.inProgress}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Completed</p>
-                        <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+                        <p className="text-sm font-medium text-brand-secondary">Completed</p>
+                        <p className="text-2xl font-bold text-brand-primary">{stats.completed}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Overdue</p>
-                        <p className={`text-2xl font-bold ${stats.overdue > 0 ? "text-red-600" : "text-gray-600"}`}>
+                        <p className="text-sm font-medium text-brand-secondary">Overdue</p>
+                        <p className={`text-2xl font-bold ${stats.overdue > 0 ? "text-brand-accent" : "text-brand-secondary"}`}>
                             {stats.overdue}
                         </p>
                     </div>
@@ -235,7 +235,7 @@ export default function MaintenancePage() {
                 {/* Filter */}
                 <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
                     <div className="flex items-center gap-4">
-                        <label className="text-sm font-medium text-gray-600">Filter by Status:</label>
+                        <label className="text-sm font-medium text-brand-secondary">Filter by Status:</label>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -253,28 +253,28 @@ export default function MaintenancePage() {
                 {/* Schedules Table */}
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                     {schedules.length === 0 ? (
-                        <div className="p-12 text-center text-gray-500">
-                            <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="p-12 text-center text-brand-secondary">
+                            <svg className="w-16 h-16 mx-auto mb-4 text-brand-secondary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
-                            <h3 className="text-lg font-medium mb-2">No Maintenance Tasks</h3>
-                            <p className="text-sm">Create your first maintenance schedule to get started</p>
+                            <h3 className="text-lg font-medium text-brand-text mb-2">No Maintenance Tasks</h3>
+                            <p className="text-sm text-brand-secondary">Create your first maintenance schedule to get started</p>
                         </div>
                     ) : (
                         <table className="min-w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-brand-primary/10">
                                 <tr>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Task</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Asset</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Scheduled Date</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Priority</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Status</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-600">Actions</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Task</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Asset</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Scheduled Date</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Priority</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Status</th>
+                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-brand-secondary/20">
                                 {schedules.map((schedule) => (
-                                    <tr key={schedule.id} className="hover:bg-gray-50">
+                                    <tr key={schedule.id} className="hover:bg-brand-primary/5">
                                         <td className="py-3 px-4">
                                             <div>
                                                 <p className="font-medium text-gray-800">{schedule.title}</p>
