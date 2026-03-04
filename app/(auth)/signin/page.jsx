@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import Logo from "@/components/Logo";
 
 export default function SignInPage() {
     const [email, setEmail] = useState("");
@@ -26,6 +27,10 @@ export default function SignInPage() {
     return (
 
         <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-center mb-4">
+                <Logo />
+            </div>
+            <p className="text-center text-gray-500 mb-6">Your infrastructure, block by block.</p>
             <h1 className="text-3xl font-bold text-center text-brandPrimary mb-6">Sign In</h1>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
