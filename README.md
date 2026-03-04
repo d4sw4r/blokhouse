@@ -1,44 +1,70 @@
-# Blokhouse
+# 🏠 Blokhouse
 
-This project aims to be a easy and simple to use CMDB, build with a automation first approach. The goal should be to have an easy to setup CMDB with all your assets, which then can be filled and read with automation tools like ansible, puppet, ect. and custom REST-API scripts, depending on your infrastructure.
+> Your infrastructure, block by block.
 
-## 🚀 Quick Start
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml/badge.svg)](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://ghcr.io/d4sw4r/blokhouse)
+[![Version](https://img.shields.io/badge/version-0.1.0-green)](https://github.com/d4sw4r/blokhouse/releases)
 
-Get Blokhouse up and running in seconds with the automated install script:
+**Blokhouse** is a simple, automation-first open source CMDB. Track your infrastructure assets and power your automation tools — Ansible, Puppet, Chef, and custom REST API scripts.
+
+## ✨ Features
+
+- **Configuration Items** — manage assets with custom fields, tags, and types
+- **Ansible Dynamic Inventory** — plug directly into your playbooks
+- **Puppet ENC** — External Node Classifier for Puppet masters
+- **Chef Integration** — node inventory and data bags
+- **REST API** — full OpenAPI/Swagger documentation at `/docs`
+- **Relationship Graph** — visualize asset dependencies
+- **Audit Logs** — track every change
+- **Maintenance Schedules** — plan downtime
+- **Notifications** — stay informed
+- **CSV Import/Export** — bulk operations
+- **Dark Mode** — for the night owls
+- **Docker support** — run anywhere
+
+## 🚀 Quick Start (Docker — recommended)
+
+```bash
+# 1. Copy the example env file and fill in your values
+curl -O https://raw.githubusercontent.com/d4sw4r/blokhouse/main/.env.example
+cp .env.example .env
+# Edit .env: set NEXTAUTH_SECRET to a random string (openssl rand -hex 32)
+
+# 2. Start with Docker Compose
+curl -O https://raw.githubusercontent.com/d4sw4r/blokhouse/main/docker-compose.yml
+docker compose up -d
+```
+
+Open [http://localhost:3000](http://localhost:3000) — default login: `admin@example.com` / `admin`
+
+## 🚀 Quick Start (Install Script)
+
+No Docker? One command:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | sudo bash
 ```
 
-Or clone and run manually:
+Requirements: Node.js >= 18, npm, git
+
+## 🔧 Manual Setup (Development)
 
 ```bash
-git clone https://github.com/d4sw4r/blokhouse.git /opt/blokhouse
-cd /opt/blokhouse
-sudo ./install.sh
+git clone https://github.com/d4sw4r/blokhouse.git
+cd blokhouse
+cp .env.example .env
+npm install
+npx prisma db push
+npx prisma db seed
+npm run dev
 ```
 
-**Requirements:**
-- Node.js >= 18
-- npm
-- git
+## 🔌 Integrations
 
-The script will:
-- ✓ Check Node.js installation
-- ✓ Install dependencies
-- ✓ Set up SQLite database
-- ✓ Build and start the application
-- ✓ Show you the access URL
+### Ansible Dynamic Inventory
 
-Once running, open [http://localhost:3000](http://localhost:3000) and login with:
-- **Email**: `admin@example.com`
-- **Password**: `admin`
-
-## Manual Setup (Node.js)
-
-If you prefer to set up manually:
-
-## ansible
 ```yaml
 # my-dynamic-inventory.yml
 plugin: uri
@@ -46,136 +72,35 @@ url: http://localhost:3000/api/ansible
 validate_certs: false
 ```
 
-(See Ansible's documentation on dynamic inventories for details.)
-
-## puppet
-
-Blokhouse acts as a **Puppet External Node Classifier (ENC)**. Configure your Puppet master to call the endpoint per-node.
+### Puppet ENC
 
 ```ini
-# /etc/puppet/puppet.conf or /etc/puppetlabs/puppet/puppet.conf
+# /etc/puppetlabs/puppet/puppet.conf
 [master]
-external_nodes = curl -sf -H 'Authorization: Bearer YOUR_API_TOKEN' http://localhost:3000/api/puppet?node=%s
+external_nodes = curl -sf -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:3000/api/puppet?node=%s
 node_terminus  = exec
 ```
 
-The ENC returns YAML with classes, parameters and environment derived from the asset's type:
-
-```yaml
----
-classes:
-  webserver:
-parameters:
-  blokhouse_id: "clxyz..."
-  blokhouse_name: "web-01"
-  ip_address: "192.168.1.10"
-  item_type: "webserver"
-  managed_by: "blokhouse"
-environment: webserver
-```
-
-List all nodes (JSON overview):
-```bash
-curl -H 'Authorization: Bearer YOUR_API_TOKEN' http://localhost:3000/api/puppet
-```
-
-## chef
-
-Blokhouse exposes a **Chef-compatible node inventory**. Use it to bootstrap node attributes or build a custom `knife` plugin.
+### Chef
 
 ```bash
-# All nodes as Chef::Node objects
-curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/api/chef
-
-# Single node (knife node show format)
-curl -H 'Authorization: Bearer TOKEN' http://localhost:3000/api/chef?node=web-01
-
-# Chef Data Bag (data_bags/blokhouse/*)
-curl -H 'Authorization: Bearer TOKEN' 'http://localhost:3000/api/chef?format=databag'
+curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:3000/api/chef
 ```
 
-Example node object returned:
+## 📖 API Documentation
 
-```json
-{
-  "name": "web-01",
-  "chef_type": "node",
-  "chef_environment": "webserver",
-  "run_list": ["role[webserver]"],
-  "automatic": { "ipaddress": "192.168.1.10", "hostname": "web-01" },
-  "normal": {
-    "blokhouse": { "id": "clxyz...", "managed": true }
-  }
-}
-```
+Visit `/docs` for the interactive Swagger UI or fetch the raw spec:
 
-## Getting Started
-
-First, create your `.env` file:
-```bash
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET="random-string"
-DATABASE_URL=file:./prisma/blokhouse.db
-```
-
-Then update schema and seed the db:
-```bash
-npm install
-npx prisma db push
-npx prisma db seed
-```
-
-Now you can start your dev instance:
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-Default admin user:
-- **Email**: `admin@example.com`
-- **Password**: `admin`
-
-
-## API Documentation
-
-Blokhouse provides interactive OpenAPI/Swagger documentation for all API endpoints.
-
-### Interactive Documentation UI
-
-Visit `/docs` in your browser for the interactive Swagger UI:
-```
-http://localhost:3000/docs
-```
-
-### OpenAPI Specification
-
-Get the raw OpenAPI JSON spec:
 ```bash
 curl http://localhost:3000/api/docs
 ```
 
-### Authentication
+Generate API tokens under **Settings → API Tokens** in the web UI.
 
-All API endpoints support two authentication methods:
-1. **Bearer Token** - For API/automation access: `Authorization: Bearer YOUR_TOKEN`
-2. **Session Cookie** - For browser-based access via NextAuth
+## 🤝 Contributing
 
-Generate API tokens in the web UI under Settings → API Tokens.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Learn More
+## 📄 License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-
+MIT — see [LICENSE](LICENSE)
