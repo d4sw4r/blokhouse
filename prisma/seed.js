@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
     const email = 'admin@example.com';
+    // Default password is randomized by install.sh — change before production use
     // Use ADMIN_PASSWORD env var (set by install.sh) or fall back to a random password
     const password = process.env.ADMIN_PASSWORD || require('crypto').randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
     const salt = bcrypt.genSaltSync(10);

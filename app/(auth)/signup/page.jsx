@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import Logo from "@/components/Logo";
 
 export default function SignUpPage() {
     const [name, setName] = useState("");
@@ -31,6 +32,10 @@ export default function SignUpPage() {
     return (
 
         <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-center mb-4">
+                <Logo />
+            </div>
+            <p className="text-center text-gray-500 mb-6">Your infrastructure, block by block.</p>
             <h1 className="text-3xl font-bold text-center text-brand-primary mb-6">Sign Up</h1>
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
