@@ -7,42 +7,42 @@
 | 0.1.x   | :white_check_mark: |
 | < 0.1.0 | :x:                |
 
-Nur die aktuellste Version (0.1.x) wird mit Security-Fixes versorgt.
+Only the latest version (0.1.x) receives security fixes.
 
 ## Reporting a Vulnerability
 
 ### Responsible Disclosure
 
-Bitte melde Sicherheitslücken **nicht** über öffentliche GitHub Issues.
+Please **do not** report security vulnerabilities via public GitHub Issues.
 
-Stattdessen nutze die **GitHub Security Advisories**:
+Instead, use **GitHub Security Advisories**:
 
-1. Gehe zum [Security Tab](https://github.com/d4sw4r/blokhouse/security) des Repositories
-2. Klicke auf "Report a vulnerability"
-3. Beschreibe das Problem so detailliert wie möglich
+1. Go to the [Security Tab](https://github.com/d4sw4r/blokhouse/security) of the repository
+2. Click "Report a vulnerability"
+3. Describe the issue as detailed as possible
 
-### Was wir versprechen
+### What We Promise
 
-- Wir behandeln alle Reports vertraulich
-- Du erhältst innerhalb von 48 Stunden eine erste Rückmeldung
-- Wir arbeiten mit dir zusammen, um das Problem zu verstehen und zu beheben
+- We treat all reports confidentially
+- You will receive an initial response within 48 hours
+- We will work with you to understand and fix the problem
 
-### Was wir erwarten
+### What We Expect
 
-- **Keine öffentlichen CVE-Reports** vor Veröffentlichung eines Fixes
-- Ausreichend Zeit zur Behebung (typischerweise 90 Tage)
-- Kooperative Kommunikation
+- **No public CVE reports** before a fix is released
+- Sufficient time to fix the issue (typically 90 days)
+- Cooperative communication
 
-### Nach dem Fix
+### After the Fix
 
-Sobald ein Fix verfügbar ist:
-- Veröffentlichen wir ein Security Advisory
-- Du wirst als Finder genannt (wenn gewünscht)
-- CVE wird beantragt
+Once a fix is available:
+- We will publish a Security Advisory
+- You will be credited as the finder (if desired)
+- CVE will be requested
 
-## Kontakt
+## Contact
 
 - **Security Reports**: [GitHub Security Tab](https://github.com/d4sw4r/blokhouse/security)
-- **Keine sensiblen Details** in öffentlichen Issues oder Discussions posten
+- **Do not post sensitive details** in public Issues or Discussions
 
-Vielen Dank für deine Hilfe, Blokhouse sicherer zu machen!
+Thank you for helping to make Blokhouse more secure!

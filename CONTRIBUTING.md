@@ -1,80 +1,80 @@
 # Contributing to Blokhouse
 
-Vielen Dank für dein Interesse an Blokhouse! Diese Anleitung hilft dir beim Einstieg.
+Thank you for your interest in Blokhouse! This guide will help you get started.
 
-## Lokales Setup
+## Local Setup
 
-### Voraussetzungen
+### Prerequisites
 - Node.js >= 18
 - Git
 
-### Schritte
+### Steps
 
-1. **Repository klonen**
+1. **Clone the repository**
    ```bash
    git clone https://github.com/d4sw4r/blokhouse.git
    cd blokhouse
    ```
 
-2. **Abhängigkeiten installieren**
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Umgebungsvariablen konfigurieren**
+3. **Configure environment variables**
    ```bash
    cp .env.example .env
-   # .env anpassen mit deinen Werten
+   # Edit .env with your values
    ```
 
-4. **Datenbank einrichten**
+4. **Set up the database**
    ```bash
    npx prisma db push
    npx prisma db seed
    ```
 
-5. **Entwicklungsserver starten**
+5. **Start the development server**
    ```bash
    npm run dev
    ```
 
-Die App läuft dann unter `http://localhost:3000`.
+The app will then be available at `http://localhost:3000`.
 
 ## Coding Guidelines
 
-- **TypeScript bevorzugt**: Wir nutzen TypeScript für bessere Code-Qualität
-- **ESLint**: Der Code muss durch ESLint laufen (`npm run lint`)
-- **Tests**: Keine Pflicht, aber willkommen. Wenn du Tests schreiben möchtest, nutze die bestehende Teststruktur
+- **TypeScript preferred**: We use TypeScript for better code quality
+- **ESLint**: Code must pass ESLint checks (`npm run lint`)
+- **Tests**: Not mandatory, but welcome. If you want to write tests, use the existing test structure
 
-## Pull Request Prozess
+## Pull Request Process
 
-1. **Branch erstellen**
+1. **Create a branch**
    ```bash
-   git checkout -b feature/deine-feature-beschreibung
+   git checkout -b feature/your-feature-description
    ```
 
-2. **Änderungen committen**
-   - Aussagekräftige Commit-Messages verwenden
-   - Kleine, fokussierte Commits bevorzugen
+2. **Commit changes**
+   - Use meaningful commit messages
+   - Prefer small, focused commits
 
-3. **PR öffnen**
-   - Beschreibenden Titel verwenden
-   - PR-Template ausfüllen (Checkliste nicht vergessen!)
-   - Auf `main` branch targeten
+3. **Open a PR**
+   - Use a descriptive title
+   - Fill out the PR template (don't forget the checklist!)
+   - Target the `main` branch
 
 4. **Review**
-   - Geduldig auf Feedback warten
-   - Angeforderte Änderungen umsetzen
+   - Wait patiently for feedback
+   - Implement requested changes
 
 ## Issue Labels
 
-| Label | Beschreibung |
-|-------|--------------|
-| `bug` | Etwas funktioniert nicht wie erwartet |
-| `enhancement` | Neue Features oder Verbesserungen |
-| `documentation` | Dokumentation betreffend |
-| `good first issue` | Gut für Einsteiger geeignet |
+| Label | Description |
+|-------|-------------|
+| `bug` | Something is not working as expected |
+| `enhancement` | New features or improvements |
+| `documentation` | Related to documentation |
+| `good first issue` | Suitable for beginners |
 
-## Fragen?
+## Questions?
 
-Bei Unklarheiten einfach ein Issue öffnen oder im PR diskutieren.
+If anything is unclear, simply open an issue or discuss in the PR.
