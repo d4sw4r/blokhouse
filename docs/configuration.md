@@ -45,6 +45,15 @@ For absolute paths:
 DATABASE_URL=file:/var/lib/blokhouse/data.db
 ```
 
+#### `ADMIN_PASSWORD` _(optional, seed only)_
+Sets the initial admin password when seeding the database. If not set, a random password is generated and printed to the console.
+
+```bash
+ADMIN_PASSWORD=my-initial-password
+```
+
+This variable is only used once during the first `prisma db seed` run. After that it has no effect.
+
 ## Complete Example
 
 ```bash
@@ -74,7 +83,7 @@ services:
 
 1. Copy `.env.example` to `.env`
 2. Generate `NEXTAUTH_SECRET`
-3. Run database migrations: `npx prisma migrate deploy`
+3. Push database schema: `npx prisma db push`
 4. Start the application: `npm run build && npm start`
 
 ## Troubleshooting

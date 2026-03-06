@@ -24,6 +24,10 @@ FROM node:24-alpine AS runner
 
 WORKDIR /app
 
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
 # 9. Copy necessary files from the builder stage
 COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/.next .next
@@ -31,6 +35,9 @@ COPY --from=builder /app/public public
 COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/prisma prisma
 COPY --from=builder /app/prisma.config.ts .
+
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
 # 10. Expose port
 EXPOSE 3000
