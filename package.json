@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "rs": "npx prisma migrate deploy && npx prisma db seed && npm run start"
+    "rs": "npx prisma db push --accept-data-loss && npx prisma db seed && npm run start"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

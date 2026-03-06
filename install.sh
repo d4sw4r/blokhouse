@@ -127,6 +127,7 @@ fi
 
 # Initialize database
 step "Initializing SQLite database..."
+set -a && source "$INSTALL_DIR/.env" && set +a
 npx prisma db push --accept-data-loss
 success "Database schema created"
 
@@ -135,7 +136,7 @@ ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
 
 # Seed database with admin user
 step "Seeding database with admin user..."
-if ADMIN_PASSWORD="$ADMIN_PASSWORD" npx prisma db seed; then
+if set -a && source "$INSTALL_DIR/.env" && set +a && ADMIN_PASSWORD="$ADMIN_PASSWORD" npx prisma db seed; then
     success "Database seeded with generated admin password"
 else
     warning "Seeding may have already been done or failed (check if admin user exists)"
