@@ -27,7 +27,7 @@
     "next": "16.1.6",
     "next-auth": "^4.24.11",
     "next-swagger-doc": "^0.4.1",
-    "prisma": "^7.0.0",
+    "prisma": "^7.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "swagger-ui-react": "^5.31.2",
