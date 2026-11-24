@@ -47,3 +47,9 @@ next-env.d.ts
 export_files.sh
 prompt.txt
 test.csv
+
+# Prisma client is generated on install/build
+/src/generated/
+
+# local data (initial admin password file, SQLite exports)
+/data/

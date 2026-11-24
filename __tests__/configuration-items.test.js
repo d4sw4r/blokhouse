@@ -181,10 +181,10 @@ describe("Configuration Items API", () => {
                 expect.objectContaining({
                     where: expect.objectContaining({
                         OR: [
-                            { name: { contains: "web" } },
-                            { description: { contains: "web" } },
-                            { ip: { contains: "web" } },
-                            { mac: { contains: "web" } },
+                            { name: { contains: "web", mode: "insensitive" } },
+                            { description: { contains: "web", mode: "insensitive" } },
+                            { ip: { contains: "web", mode: "insensitive" } },
+                            { mac: { contains: "web", mode: "insensitive" } },
                         ],
                     }),
                 })
@@ -272,10 +272,10 @@ describe("Configuration Items API", () => {
                 expect.objectContaining({
                     where: {
                         OR: [
-                            { name: { contains: "prod" } },
-                            { description: { contains: "prod" } },
-                            { ip: { contains: "prod" } },
-                            { mac: { contains: "prod" } },
+                            { name: { contains: "prod", mode: "insensitive" } },
+                            { description: { contains: "prod", mode: "insensitive" } },
+                            { ip: { contains: "prod", mode: "insensitive" } },
+                            { mac: { contains: "prod", mode: "insensitive" } },
                         ],
                         itemTypeId: "type-1",
                         status: "ACTIVE",

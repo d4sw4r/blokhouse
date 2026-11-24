@@ -3,7 +3,7 @@
 // Environment:
 //   ADMIN_EMAIL     (default: admin@example.com)
 //   ADMIN_PASSWORD  (default: randomly generated, see below)
-//   ADMIN_PASSWORD_FILE (default: <database dir>/initial-admin-password)
+//   ADMIN_PASSWORD_FILE (default: ./data/initial-admin-password)
 //
 // A generated password is never logged (logs are often shipped to central
 // systems). It is written to ADMIN_PASSWORD_FILE with mode 0600 instead.
@@ -14,17 +14,17 @@ import fs from "node:fs";
 import path from "node:path";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const databaseUrl = process.env.DATABASE_URL || "file:./prisma/blokhouse.db";
+if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set");
+}
 const prisma = new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url: databaseUrl }),
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
 function passwordFilePath() {
-    if (process.env.ADMIN_PASSWORD_FILE) return process.env.ADMIN_PASSWORD_FILE;
-    const dbFile = databaseUrl.startsWith("file:") ? databaseUrl.slice("file:".length) : "./prisma/blokhouse.db";
-    return path.join(path.dirname(path.resolve(dbFile)), "initial-admin-password");
+    return path.resolve(process.env.ADMIN_PASSWORD_FILE || "./data/initial-admin-password");
 }
 
 async function main() {

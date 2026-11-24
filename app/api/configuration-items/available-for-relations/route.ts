@@ -19,8 +19,8 @@ export async function GET(request: Request) {
         ...(search
           ? {
               OR: [
-                { name: { contains: search } },
-                { ip: { contains: search } },
+                { name: { contains: search, mode: "insensitive" } },
+                { ip: { contains: search, mode: "insensitive" } },
               ],
             }
           : {}),

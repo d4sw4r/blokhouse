@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
@@ -106,6 +106,11 @@ model ConfigurationItem {
   maintenanceSchedules MaintenanceSchedule[]
   // Favorite items
   favoritedBy FavoriteItem[]
+
+  @@index([name])
+  @@index([ip])
+  @@index([status])
+  @@index([itemTypeId])
 }
 
 model AssetRelation {
@@ -170,7 +175,7 @@ model CustomField {
   type        String          // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
   required    Boolean         @default(false)
   defaultValue String?        // Default value as string
-  options     String          @default("[]") // JSON array as string for SQLite
+  options     String          @default("[]") // JSON array, stored as text
   itemTypeId  String?         // If null, applies to all item types
   itemType    ItemType?       @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
   values      CustomFieldValue[]
