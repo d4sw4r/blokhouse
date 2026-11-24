@@ -1,13 +1,10 @@
 // app/api/types/[id]/route.js
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(request, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     const { id } = params;
     const type = await prisma.itemType.findUnique({ where: { id } });
@@ -18,10 +15,8 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     const { id } = params;
     const { name, description } = await request.json();
@@ -39,10 +34,8 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     const { id } = params;
     try {

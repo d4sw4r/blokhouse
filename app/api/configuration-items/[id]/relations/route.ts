@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/authOptions";
-import { getServerSession } from "next-auth/next";
 import { createAuditLog } from "@/lib/audit";
 import { notifyAssetChange } from "@/lib/notifications";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/configuration-items/[id]/relations - Get all relations for an item
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { response } = await requireAuth(request, "read");
+  if (response) return response;
   const { id } = await params;
 
   try {
@@ -94,11 +95,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "write");
+  if (response) return response;
 
   const { id: sourceId } = await params;
 
@@ -165,7 +163,7 @@ export async function POST(
       action: "CREATE",
       entityType: "AssetRelation",
       entityId: relation.id,
-      userId: session.user.id,
+      userId: auth.user.id,
       description: `Created ${type} relation from ${sourceItem.name} to ${targetItem.name}`,
       newValues: JSON.stringify({ sourceId, targetId, type, description }),
     });
@@ -175,8 +173,8 @@ export async function POST(
       assetId: sourceId,
       assetName: sourceItem.name,
       type: "RELATION_CREATED",
-      message: `New "${type}" relation to "${targetItem.name}" created by ${session.user.name || session.user.email}`,
-      changedByUserId: session.user.id,
+      message: `New "${type}" relation to "${targetItem.name}" created by ${auth.user.name || auth.user.email}`,
+      changedByUserId: auth.user.id,
     });
 
     return NextResponse.json({

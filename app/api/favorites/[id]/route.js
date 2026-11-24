@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 // DELETE /api/favorites/[id] - Remove an item from favorites
 export async function DELETE(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   const { id: configurationItemId } = await params;
 
@@ -16,7 +13,7 @@ export async function DELETE(request, { params }) {
     // Delete the favorite
     await prisma.favoriteItem.deleteMany({
       where: {
-        userId: session.user.id,
+        userId: auth.user.id,
         configurationItemId,
       },
     });
@@ -30,10 +27,8 @@ export async function DELETE(request, { params }) {
 
 // GET /api/favorites/[id] - Check if an item is favorited
 export async function GET(request, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   const { id: configurationItemId } = await params;
 
@@ -41,7 +36,7 @@ export async function GET(request, { params }) {
     const favorite = await prisma.favoriteItem.findUnique({
       where: {
         userId_configurationItemId: {
-          userId: session.user.id,
+          userId: auth.user.id,
           configurationItemId,
         },
       },

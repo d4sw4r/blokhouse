@@ -1,21 +1,14 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/maintenance/[id] - Get a single maintenance schedule
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     try {
         const { id } = await params;
@@ -58,14 +51,8 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     try {
         const { id } = await params;
@@ -121,14 +108,8 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     try {
         const { id } = await params;

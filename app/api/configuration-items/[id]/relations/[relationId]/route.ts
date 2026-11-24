@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/authOptions";
-import { getServerSession } from "next-auth/next";
 import { createAuditLog } from "@/lib/audit";
 import { notifyAssetChange } from "@/lib/notifications";
+import { requireAuth } from "@/lib/auth";
 
 // DELETE /api/configuration-items/[id]/relations/[relationId] - Delete a relation
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; relationId: string }> }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "write");
+  if (response) return response;
 
   const { id: itemId, relationId } = await params;
 
@@ -51,7 +47,7 @@ export async function DELETE(
       action: "DELETE",
       entityType: "AssetRelation",
       entityId: relationId,
-      userId: session.user.id,
+      userId: auth.user.id,
       description: `Deleted ${relation.type} relation between ${relation.source.name} and ${relation.target.name}`,
       oldValues: JSON.stringify({
         sourceId: relation.sourceId,
@@ -66,8 +62,8 @@ export async function DELETE(
       assetId: relation.sourceId,
       assetName: relation.source.name,
       type: "RELATION_DELETED",
-      message: `"${relation.type}" relation to "${relation.target.name}" was removed by ${session.user.name || session.user.email}`,
-      changedByUserId: session.user.id,
+      message: `"${relation.type}" relation to "${relation.target.name}" was removed by ${auth.user.name || auth.user.email}`,
+      changedByUserId: auth.user.id,
     });
 
     return NextResponse.json({ success: true });

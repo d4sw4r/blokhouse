@@ -1,17 +1,10 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { auth, response } = await requireAuth(request, "read");
+    if (response) return response;
 
     try {
         // Total counts
@@ -61,7 +54,7 @@ export async function GET(request: NextRequest) {
             }),
             prisma.notification.count({
                 where: {
-                    userId: session.user.id,
+                    userId: auth.user.id,
                     read: false,
                 },
             }),

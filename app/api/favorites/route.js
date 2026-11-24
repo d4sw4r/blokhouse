@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/favorites - Get all favorites for the current user
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(request) {
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   try {
     const favorites = await prisma.favoriteItem.findMany({
-      where: { userId: session.user.id },
+      where: { userId: auth.user.id },
       include: {
         configurationItem: {
           include: {
@@ -33,10 +30,8 @@ export async function GET() {
 
 // POST /api/favorites - Add an item to favorites
 export async function POST(request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   try {
     const body = await request.json();
@@ -58,7 +53,7 @@ export async function POST(request) {
     // Create favorite (unique constraint will prevent duplicates)
     const favorite = await prisma.favoriteItem.create({
       data: {
-        userId: session.user.id,
+        userId: auth.user.id,
         configurationItemId,
       },
       include: {

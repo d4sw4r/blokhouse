@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/authOptions";
-import { getServerSession } from "next-auth/next";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/notifications - Get all notifications for the current user
 export async function GET(request: Request) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -18,7 +14,7 @@ export async function GET(request: Request) {
 
     const notifications = await prisma.notification.findMany({
       where: {
-        userId: session.user.id,
+        userId: auth.user.id,
         ...(unreadOnly ? { read: false } : {}),
       },
       orderBy: {
@@ -29,7 +25,7 @@ export async function GET(request: Request) {
 
     const unreadCount = await prisma.notification.count({
       where: {
-        userId: session.user.id,
+        userId: auth.user.id,
         read: false,
       },
     });
@@ -49,16 +45,9 @@ export async function GET(request: Request) {
 
 // POST /api/notifications - Create a new notification (admin only)
 export async function POST(request: Request) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   // Only admins can create manual notifications
-  if (session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { response } = await requireAuth(request, "admin");
+  if (response) return response;
 
   try {
     const body = await request.json();
@@ -93,17 +82,14 @@ export async function POST(request: Request) {
 }
 
 // PATCH /api/notifications - Mark all notifications as read
-export async function PATCH() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function PATCH(request: Request) {
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   try {
     await prisma.notification.updateMany({
       where: {
-        userId: session.user.id,
+        userId: auth.user.id,
         read: false,
       },
       data: {

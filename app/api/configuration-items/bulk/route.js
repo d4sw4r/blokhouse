@@ -2,14 +2,8 @@
 // Bulk operations for configuration items - delete, update status, manage tags
 
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth } from "@/lib/auth";
 import { logItemUpdated, logItemDeleted } from "@/lib/audit";
-
-// Helper to check if the user can write (ADMIN, USER, API)
-function canWrite(role) {
-    return role === "ADMIN" || role === "USER" || role === "API";
-}
 
 /**
  * @swagger
@@ -86,42 +80,9 @@ function canWrite(role) {
  *         description: No valid items found for the provided IDs
  */
 export async function POST(request) {
-    // Check authentication
-    const authHeader = request.headers.get("authorization");
-    let userId = null;
-    let userRole = null;
-    let authorized = false;
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const apiToken = authHeader.slice("Bearer ".length).trim();
-        try {
-            const tokenRecord = await prisma.apiToken.findUnique({
-                where: { token: apiToken },
-                include: { user: true },
-            });
-            if (tokenRecord && tokenRecord.user) {
-                userId = tokenRecord.user.id;
-                userRole = tokenRecord.user.role;
-                authorized = true;
-            }
-        } catch (error) {
-            console.error("Error checking API token:", error);
-        }
-    }
-
-    if (!authorized) {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-        }
-        userId = session.user.id;
-        userRole = session.user.role;
-    }
-
-    // Check write permissions
-    if (!canWrite(userRole)) {
-        return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
-    }
+    const { auth, response } = await requireAuth(request, "write");
+    if (response) return response;
+    const userId = auth.user.id;
 
     try {
         const body = await request.json();
@@ -368,6 +329,7 @@ export async function POST(request) {
  *                         items:
  *                           type: string
  */
+// Static description of the available operations (contains no CMDB data).
 export async function GET() {
     return new Response(
         JSON.stringify({
