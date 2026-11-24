@@ -6,10 +6,14 @@ Work through this checklist before exposing Blokhouse to production traffic.
 
 - [ ] `NEXTAUTH_SECRET` is a randomly generated 32-byte hex string (`openssl rand -hex 32`)
 - [ ] `NEXTAUTH_URL` is set to your public-facing HTTPS URL
-- [ ] The admin password has been changed from the generated default (Settings → Profile)
+- [ ] The admin password has been changed from the generated default
 - [ ] Old API tokens from setup have been rotated or deleted
 - [ ] Blokhouse is running behind an HTTPS reverse proxy (see [nginx guide](nginx.md))
-- [ ] The database file is not world-readable (`chmod 600 prisma/blokhouse.db`)
+- [ ] PostgreSQL is not reachable from the internet and uses a strong, unique password
+- [ ] `.env` is readable only by the service user (`chmod 600 .env`)
+- [ ] The initial admin password file (`data/initial-admin-password`) has been deleted
+- [ ] Self-registration is disabled (`ALLOW_SIGNUP` unset) unless you need it
+- [ ] Integrations use dedicated `API` role users with least-privilege, expiring tokens
 - [ ] Docker container runs as non-root user ✅ (handled in image)
 
 ## Availability
