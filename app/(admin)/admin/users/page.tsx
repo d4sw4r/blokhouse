@@ -7,7 +7,7 @@ interface User {
     id: string;
     name: string;
     email: string;
-    role: "ADMIN" | "USER" | "API" | "AUDIT";
+    role: "ADMIN" | "USER" | "API" | "AUDIT" | "READONLY";
 }
 
 export default function AdminUsersPage() {
@@ -139,6 +139,7 @@ export default function AdminUsersPage() {
                             <option value="USER">USER</option>
                             <option value="API">API</option>
                             <option value="AUDIT">AUDIT</option>
+                            <option value="READONLY">READONLY</option>
                         </select>
                         <Button onClick={createUser}>Create User</Button>
                     </div>
@@ -191,6 +192,7 @@ export default function AdminUsersPage() {
                                                 <option value="USER">USER</option>
                                                 <option value="API">API</option>
                                                 <option value="AUDIT">AUDIT</option>
+                            <option value="READONLY">READONLY</option>
                                             </select>
                                         </td>
                                         <td className="py-2 px-4 border flex gap-2">
