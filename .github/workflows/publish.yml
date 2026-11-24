@@ -1,16 +1,29 @@
 name: Publish
 
+# Push a tag vX.Y.Z  -> build and push the image, then create or update the
+#                       GitHub release with the matching CHANGELOG section.
+# Manual run         -> with "tag" set: only (re)write the release notes of an
+#                       existing tag from the CHANGELOG on the selected branch.
+#                       Without "tag": build and push an image of the branch
+#                       (tagged sha-…, never latest).
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag (e.g. v0.2.0) to (re)write release notes for. Leave empty to build an image."
+        required: false
+        type: string
   push:
     tags:
       - "v*"
+
 permissions:
   contents: write
   packages: write
 
 jobs:
   build_publish:
+    if: github.event_name == 'push' || inputs.tag == ''
     runs-on: ubuntu-latest
 
     steps:
@@ -51,16 +64,38 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Create GitHub release from CHANGELOG
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    needs: build_publish
+    # Runs after the image on tag pushes, or alone on a manual run with a tag.
+    if: >-
+      always() &&
+      ((github.event_name == 'push' && needs.build_publish.result == 'success') ||
+       (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract release notes from CHANGELOG
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
             found { print }
           ' CHANGELOG.md > release-notes.md
-          test -s release-notes.md
-          gh release create "$GITHUB_REF_NAME" --title "Blokhouse $GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+          if [ ! -s release-notes.md ]; then
+            echo "::error::No section '## [$version]' found in CHANGELOG.md"
+            exit 1
+          fi
+
+      - name: Create or update GitHub release
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "Blokhouse $TAG" --notes-file release-notes.md
+          else
+            gh release create "$TAG" --title "Blokhouse $TAG" --notes-file release-notes.md --verify-tag
+          fi
