@@ -106,7 +106,7 @@ Visit `/docs` for the interactive Swagger UI or fetch the raw spec:
 curl http://localhost:3000/api/docs
 ```
 
-Generate API tokens under **Settings → API Tokens** in the web UI.
+Generate scoped API tokens under **Admin → API Tokens** in the web UI. See [API Reference](docs/api.md#permissions) for roles and scopes.
 
 ## 📚 Documentation
 
