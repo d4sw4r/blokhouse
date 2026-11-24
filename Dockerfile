@@ -4,17 +4,15 @@ FROM node:24-alpine AS builder
 # 2. Set the working directory
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+# 3. Copy package manifests and the Prisma schema (postinstall runs `prisma generate`)
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma ./prisma
 
 # 4. Install dependencies
 RUN npm ci
 
 # 5. Copy the rest of the application files
 COPY . .
-
-# 6. Generate prisma Client
-RUN npx prisma generate
 
 # 7. Build (lint and type checks run in CI)
 RUN npm run build
@@ -39,13 +37,11 @@ COPY --from=builder /app/src/generated src/generated
 COPY --from=builder /app/scripts scripts
 
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    DATABASE_URL=file:/app/data/blokhouse.db
+    NEXT_TELEMETRY_DISABLED=1
 
-# Persistent data lives in /app/data (mount a volume here), never in /app/prisma:
-# a volume over /app/prisma would shadow the schema shipped with new versions.
+# /app/data holds the one-time initial admin password file; all application
+# data lives in PostgreSQL (DATABASE_URL).
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app
-VOLUME ["/app/data"]
 USER nextjs
 
 # 10. Expose port
@@ -54,5 +50,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
 
-# 11. Sync schema (without implicit data loss), seed the first admin, start
+# 11. Apply migrations, seed the first admin, start
 CMD ["sh", "scripts/start.sh"]
