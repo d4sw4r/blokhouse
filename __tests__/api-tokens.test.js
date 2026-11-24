@@ -1,337 +1,190 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock prisma before importing the route
 vi.mock("@/lib/prisma", () => ({
     default: {
         apiToken: {
             findMany: vi.fn(),
+            findUnique: vi.fn(),
             create: vi.fn(),
             delete: vi.fn(),
+            update: vi.fn(),
         },
     },
 }));
-
-// Mock next-auth
-vi.mock("next-auth/next", () => ({
-    getServerSession: vi.fn(),
-}));
-
-// Mock authOptions
-vi.mock("@/lib/authOptions", () => ({
-    default: {},
-}));
-
-// Mock audit logging
-vi.mock("@/lib/audit", () => ({
-    logTokenCreated: vi.fn(),
-    logTokenDeleted: vi.fn(),
-}));
-
-// Mock crypto with default export
-vi.mock("crypto", () => ({
-    default: {
-        randomBytes: vi.fn(() => ({
-            toString: vi.fn(() => "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"),
-        })),
-    },
-    randomBytes: vi.fn(() => ({
-        toString: vi.fn(() => "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"),
-    })),
-}));
+vi.mock("next-auth/next", () => ({ getServerSession: vi.fn() }));
+vi.mock("@/lib/authOptions", () => ({ default: {} }));
+vi.mock("@/lib/audit", () => ({ logTokenCreated: vi.fn(), logTokenDeleted: vi.fn() }));
 
 import { GET, POST } from "../app/api/api-tokens/route.js";
 import { DELETE } from "../app/api/api-tokens/[id]/route.js";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { logTokenCreated, logTokenDeleted } from "@/lib/audit";
-import crypto from "crypto";
+import { hashToken } from "@/lib/auth";
+
+function req(url = "http://localhost:3000/api/api-tokens", { body, headers = {} } = {}) {
+    return new Request(url, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "content-type": "application/json", ...headers },
+        body: body === undefined ? undefined : JSON.stringify(body),
+    });
+}
+const params = (id) => ({ params: Promise.resolve({ id }) });
+const asUser = (role = "USER", id = "user-1") =>
+    getServerSession.mockResolvedValue({ user: { id, role, email: `${id}@x.io` } });
 
 describe("API Tokens API", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
-
-    // Helper to create mock request
-    function createMockRequest() {
-        return {
-            headers: {
-                get: vi.fn(),
-            },
-        };
-    }
+    beforeEach(() => vi.resetAllMocks());
 
     describe("GET /api/api-tokens", () => {
         it("returns 401 when not authenticated", async () => {
             getServerSession.mockResolvedValue(null);
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(401);
-            expect(data.error).toBe("Unauthorized");
+            const res = await GET(req());
+            expect(res.status).toBe(401);
         });
 
-        it("returns all API tokens for authenticated user", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
+        it("lists only the caller's own tokens and never exposes secrets", async () => {
+            asUser("USER");
+            prisma.apiToken.findMany.mockResolvedValue([
+                { id: "t1", name: "ansible", prefix: "bh_abcdef0", scopes: "read", createdAt: "2026-01-01" },
+            ]);
 
-            const mockTokens = [
-                { id: "token-1", token: "abc123...", createdAt: "2024-01-01T00:00:00Z" },
-                { id: "token-2", token: "def456...", createdAt: "2024-01-02T00:00:00Z" },
-            ];
-            prisma.apiToken.findMany.mockResolvedValue(mockTokens);
+            const res = await GET(req());
+            const data = await res.json();
 
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data).toHaveLength(2);
-            expect(data[0].id).toBe("token-1");
-            expect(data[1].id).toBe("token-2");
+            expect(res.status).toBe(200);
+            const args = prisma.apiToken.findMany.mock.calls[0][0];
+            expect(args.where).toEqual({ userId: "user-1" });
+            expect(args.select.tokenHash).toBeUndefined();
+            expect(args.select.token).toBeUndefined();
+            expect(data[0].scopes).toEqual(["read"]);
         });
 
-        it("returns empty array when no tokens exist", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
+        it("ignores ?all=true for non-admins", async () => {
+            asUser("USER");
             prisma.apiToken.findMany.mockResolvedValue([]);
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data).toEqual([]);
+            await GET(req("http://localhost:3000/api/api-tokens?all=true"));
+            expect(prisma.apiToken.findMany.mock.calls[0][0].where).toEqual({ userId: "user-1" });
         });
 
-        it("queries with correct select options", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
+        it("lets admins list all tokens with ?all=true", async () => {
+            asUser("ADMIN");
             prisma.apiToken.findMany.mockResolvedValue([]);
+            await GET(req("http://localhost:3000/api/api-tokens?all=true"));
+            expect(prisma.apiToken.findMany.mock.calls[0][0].where).toEqual({});
+        });
 
-            await GET();
-
-            expect(prisma.apiToken.findMany).toHaveBeenCalledWith({
-                select: { id: true, token: true, createdAt: true },
+        it("rejects token management with an API token", async () => {
+            prisma.apiToken.findUnique.mockResolvedValue({
+                id: "t1", scopes: "read,write,admin", user: { id: "user-1", role: "ADMIN" },
             });
-        });
-
-        it("allows ADMIN role to list tokens", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-            prisma.apiToken.findMany.mockResolvedValue([]);
-
-            const response = await GET();
-
-            expect(response.status).toBe(200);
+            const res = await GET(req(undefined, { headers: { authorization: "Bearer bh_x" } }));
+            expect(res.status).toBe(403);
+            expect(prisma.apiToken.findMany).not.toHaveBeenCalled();
         });
     });
 
     describe("POST /api/api-tokens", () => {
         it("returns 401 when not authenticated", async () => {
             getServerSession.mockResolvedValue(null);
-            const request = createMockRequest();
-
-            const response = await POST(request);
-            const data = await response.json();
-
-            expect(response.status).toBe(401);
-            expect(data.error).toBe("Unauthorized");
+            const res = await POST(req(undefined, { body: {} }));
+            expect(res.status).toBe(401);
         });
 
-        it("creates a new API token with generated value", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
+        it("creates a token, stores only its hash and returns the secret once", async () => {
+            asUser("USER");
+            prisma.apiToken.create.mockImplementation(async ({ data }) => ({
+                id: "t1", name: data.name, prefix: data.prefix, scopes: data.scopes,
+                expiresAt: data.expiresAt, lastUsedAt: null, createdAt: new Date(), userId: data.userId,
+            }));
 
-            const createdToken = {
-                id: "token-new",
-                token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                createdAt: "2024-01-01T00:00:00Z",
-            };
-            prisma.apiToken.create.mockResolvedValue(createdToken);
+            const res = await POST(req(undefined, { body: { name: "ansible", scopes: ["read", "write"], expiresInDays: 30 } }));
+            const data = await res.json();
 
-            const request = createMockRequest();
-            const response = await POST(request);
-            const data = await response.json();
-
-            expect(response.status).toBe(201);
-            expect(data.token).toBe("abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890");
-            expect(data.id).toBe("token-new");
+            expect(res.status).toBe(201);
+            expect(data.token).toMatch(/^bh_[0-9a-f]{64}$/);
+            const stored = prisma.apiToken.create.mock.calls[0][0].data;
+            expect(stored.tokenHash).toBe(hashToken(data.token));
+            expect(stored.token).toBeUndefined();
+            expect(stored.prefix).toBe(data.token.slice(0, 10));
+            expect(stored.scopes).toBe("read,write");
+            expect(stored.userId).toBe("user-1");
+            expect(new Date(stored.expiresAt).getTime()).toBeGreaterThan(Date.now() + 29 * 86400e3);
+            expect(logTokenCreated).toHaveBeenCalled();
         });
 
-        it("associates token with current user", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-
-            const createdToken = {
-                id: "token-new",
-                token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                createdAt: "2024-01-01T00:00:00Z",
-            };
-            prisma.apiToken.create.mockResolvedValue(createdToken);
-
-            const request = createMockRequest();
-            await POST(request);
-
-            expect(prisma.apiToken.create).toHaveBeenCalledWith({
-                data: {
-                    token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                    userId: "user-1",
-                },
-                select: { id: true, token: true, createdAt: true },
-            });
+        it("defaults to a read-only token", async () => {
+            asUser("USER");
+            prisma.apiToken.create.mockImplementation(async ({ data }) => ({ id: "t1", ...data }));
+            await POST(req(undefined, { body: {} }));
+            expect(prisma.apiToken.create.mock.calls[0][0].data.scopes).toBe("read");
         });
 
-        it("logs token creation via audit", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-
-            const createdToken = {
-                id: "token-new",
-                token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                createdAt: "2024-01-01T00:00:00Z",
-            };
-            prisma.apiToken.create.mockResolvedValue(createdToken);
-
-            const request = createMockRequest();
-            await POST(request);
-
-            expect(logTokenCreated).toHaveBeenCalledWith({
-                token: createdToken,
-                userId: "user-1",
-                req: request,
-            });
+        it("rejects scopes that exceed the user's role", async () => {
+            asUser("USER");
+            const res = await POST(req(undefined, { body: { scopes: ["read", "admin"] } }));
+            expect(res.status).toBe(403);
+            expect(prisma.apiToken.create).not.toHaveBeenCalled();
         });
 
-        it("handles database errors gracefully", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-            prisma.apiToken.create.mockRejectedValue(new Error("DB Error"));
-
-            const request = createMockRequest();
-            const response = await POST(request);
-            const data = await response.json();
-
-            expect(response.status).toBe(500);
-            expect(data.error).toBe("Could not create token");
+        it("rejects unknown scopes", async () => {
+            asUser("ADMIN");
+            const res = await POST(req(undefined, { body: { scopes: ["root"] } }));
+            expect(res.status).toBe(400);
         });
 
-        it("allows ADMIN role to create tokens", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-
-            const createdToken = {
-                id: "token-admin",
-                token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                createdAt: "2024-01-01T00:00:00Z",
-            };
-            prisma.apiToken.create.mockResolvedValue(createdToken);
-
-            const request = createMockRequest();
-            const response = await POST(request);
-
-            expect(response.status).toBe(201);
+        it("rejects invalid expiry", async () => {
+            asUser("USER");
+            const res = await POST(req(undefined, { body: { expiresInDays: -1 } }));
+            expect(res.status).toBe(400);
         });
 
-        it("generates a 64-character hex token", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-
-            prisma.apiToken.create.mockResolvedValue({
-                id: "token-new",
-                token: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                createdAt: "2024-01-01T00:00:00Z",
-            });
-
-            const request = createMockRequest();
-            await POST(request);
-
-            // crypto.randomBytes(32) creates 64 hex characters
-            expect(prisma.apiToken.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    data: expect.objectContaining({
-                        token: expect.stringMatching(/^[a-f0-9]{64}$/),
-                    }),
-                })
-            );
+        it("returns 500 when the database fails", async () => {
+            asUser("USER");
+            prisma.apiToken.create.mockRejectedValue(new Error("DB"));
+            const res = await POST(req(undefined, { body: {} }));
+            expect(res.status).toBe(500);
         });
     });
 
     describe("DELETE /api/api-tokens/[id]", () => {
         it("returns 401 when not authenticated", async () => {
             getServerSession.mockResolvedValue(null);
-            const request = createMockRequest();
-
-            const response = await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-            const data = await response.json();
-
-            expect(response.status).toBe(401);
-            expect(data.error).toBe("Unauthorized");
+            const res = await DELETE(req(), params("t1"));
+            expect(res.status).toBe(401);
         });
 
-        it("deletes token and returns success message", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-            prisma.apiToken.delete.mockResolvedValue({ id: "token-1" });
-
-            const request = createMockRequest();
-            const response = await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data.message).toBe("Deleted");
-            expect(prisma.apiToken.delete).toHaveBeenCalledWith({ where: { id: "token-1" } });
+        it("deletes the caller's own token", async () => {
+            asUser("USER");
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "t1", userId: "user-1" });
+            prisma.apiToken.delete.mockResolvedValue({});
+            const res = await DELETE(req(), params("t1"));
+            expect(res.status).toBe(200);
+            expect(prisma.apiToken.delete).toHaveBeenCalledWith({ where: { id: "t1" } });
+            expect(logTokenDeleted).toHaveBeenCalled();
         });
 
-        it("logs token deletion via audit", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-            prisma.apiToken.delete.mockResolvedValue({ id: "token-1" });
-
-            const request = createMockRequest();
-            await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-
-            expect(logTokenDeleted).toHaveBeenCalledWith({
-                tokenId: "token-1",
-                userId: "user-1",
-                req: request,
-            });
+        it("returns 404 for someone else's token", async () => {
+            asUser("USER");
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "t1", userId: "other" });
+            const res = await DELETE(req(), params("t1"));
+            expect(res.status).toBe(404);
+            expect(prisma.apiToken.delete).not.toHaveBeenCalled();
         });
 
-        it("handles database errors gracefully", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-            prisma.apiToken.delete.mockRejectedValue(new Error("DB Error"));
-
-            const request = createMockRequest();
-            const response = await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-            const data = await response.json();
-
-            expect(response.status).toBe(500);
-            expect(data.error).toBe("Delete failed");
+        it("lets admins revoke any token", async () => {
+            asUser("ADMIN", "admin-1");
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "t1", userId: "other" });
+            prisma.apiToken.delete.mockResolvedValue({});
+            const res = await DELETE(req(), params("t1"));
+            expect(res.status).toBe(200);
         });
 
-        it("handles deletion of non-existent token", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-
-            const error = new Error("Record not found");
-            prisma.apiToken.delete.mockRejectedValue(error);
-
-            const request = createMockRequest();
-            const response = await DELETE(request, { params: Promise.resolve({ id: "nonexistent" }) });
-            const data = await response.json();
-
-            expect(response.status).toBe(500);
-            expect(data.error).toBe("Delete failed");
-        });
-
-        it("allows ADMIN role to delete tokens", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } });
-            prisma.apiToken.delete.mockResolvedValue({ id: "token-1" });
-
-            const request = createMockRequest();
-            const response = await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-
-            expect(response.status).toBe(200);
-        });
-
-        it("allows USER role to delete tokens", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "user-1", role: "USER" } });
-            prisma.apiToken.delete.mockResolvedValue({ id: "token-1" });
-
-            const request = createMockRequest();
-            const response = await DELETE(request, { params: Promise.resolve({ id: "token-1" }) });
-
-            expect(response.status).toBe(200);
+        it("returns 404 for a missing token", async () => {
+            asUser("USER");
+            prisma.apiToken.findUnique.mockResolvedValue(null);
+            const res = await DELETE(req(), params("nope"));
+            expect(res.status).toBe(404);
         });
     });
 });

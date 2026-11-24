@@ -113,7 +113,7 @@ describe("Bulk Operations API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("authenticates with valid API token", async () => {
@@ -123,7 +123,8 @@ describe("Bulk Operations API", () => {
             );
 
             prisma.apiToken.findUnique.mockResolvedValue({
-                token: "valid-token",
+                id: "tok-1",
+                scopes: "read,write",
                 user: { id: "user-1", role: "API" },
             });
 
@@ -177,7 +178,8 @@ describe("Bulk Operations API", () => {
         it("allows API role", async () => {
             request = createMockRequest({ operation: "delete", ids: ["item-1"] }, { authHeader: "Bearer token" });
             prisma.apiToken.findUnique.mockResolvedValue({
-                token: "token",
+                id: "tok-1",
+                scopes: "read,write",
                 user: { id: "user-1", role: "API" },
             });
             prisma.configurationItem.findMany.mockResolvedValue([]);

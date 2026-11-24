@@ -65,7 +65,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
     describe("successful upload", () => {
         beforeEach(() => {
-            getServerSession.mockResolvedValue({ user: { id: "u1", name: "Alice" } });
+            getServerSession.mockResolvedValue({ user: { id: "u1", name: "Alice", role: "USER" } });
         });
 
         it("inserts valid rows and returns 201 with count", async () => {
@@ -137,7 +137,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
     describe("all rows invalid", () => {
         beforeEach(() => {
-            getServerSession.mockResolvedValue({ user: { id: "u1" } });
+            getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
         });
 
         it("returns 400 when parseCsv returns zero valid items", async () => {
@@ -171,7 +171,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
     describe("server errors", () => {
         beforeEach(() => {
-            getServerSession.mockResolvedValue({ user: { id: "u1" } });
+            getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
         });
 
         it("returns 500 when prisma.createMany throws", async () => {
@@ -187,7 +187,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
         });
 
         it("returns 500 when request.json() throws (malformed body)", async () => {
-            getServerSession.mockResolvedValue({ user: { id: "u1" } });
+            getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
             const badRequest = {
                 url: "http://localhost:3000/api/configuration-items/upload",
                 headers: { get: vi.fn(() => null) },
@@ -206,7 +206,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
     describe("large uploads", () => {
         beforeEach(() => {
-            getServerSession.mockResolvedValue({ user: { id: "u1" } });
+            getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
         });
 
         it("handles 500 rows correctly", async () => {

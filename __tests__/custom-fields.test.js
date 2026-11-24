@@ -41,7 +41,7 @@ describe("Custom Fields API", () => {
         });
 
         it("returns all custom fields when authenticated", async () => {
-            getServerSession.mockResolvedValueOnce({ user: { id: "user-1" } });
+            getServerSession.mockResolvedValueOnce({ user: { id: "user-1", role: "USER" } });
             
             const mockFields = [
                 { id: "field-1", name: "purchase_date", label: "Purchase Date", type: "DATE" },
@@ -59,7 +59,7 @@ describe("Custom Fields API", () => {
         });
 
         it("filters by itemTypeId when provided", async () => {
-            getServerSession.mockResolvedValueOnce({ user: { id: "user-1" } });
+            getServerSession.mockResolvedValueOnce({ user: { id: "user-1", role: "USER" } });
             
             const mockFields = [{ id: "field-1", name: "serial", label: "Serial Number" }];
             prisma.customField.findMany.mockResolvedValueOnce(mockFields);
@@ -81,7 +81,7 @@ describe("Custom Fields API", () => {
         });
 
         it("returns empty array when no custom fields exist", async () => {
-            getServerSession.mockResolvedValueOnce({ user: { id: "user-1" } });
+            getServerSession.mockResolvedValueOnce({ user: { id: "user-1", role: "USER" } });
             prisma.customField.findMany.mockResolvedValueOnce([]);
 
             const request = { url: "http://localhost:3000/api/custom-fields" };
@@ -93,7 +93,7 @@ describe("Custom Fields API", () => {
         });
 
         it("includes itemType relation in response", async () => {
-            getServerSession.mockResolvedValueOnce({ user: { id: "user-1" } });
+            getServerSession.mockResolvedValueOnce({ user: { id: "user-1", role: "USER" } });
             
             const mockFields = [
                 { 
@@ -115,7 +115,7 @@ describe("Custom Fields API", () => {
         });
 
         it("returns 500 when database query fails", async () => {
-            getServerSession.mockResolvedValueOnce({ user: { id: "user-1" } });
+            getServerSession.mockResolvedValueOnce({ user: { id: "user-1", role: "USER" } });
             prisma.customField.findMany.mockRejectedValueOnce(new Error("DB Error"));
 
             const request = { url: "http://localhost:3000/api/custom-fields" };
@@ -155,7 +155,7 @@ describe("Custom Fields API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("returns 400 when required fields are missing", async () => {

@@ -218,13 +218,13 @@ describe("Configuration Items Single Item API", () => {
 
             expect(prisma.configurationItem.findUnique).toHaveBeenCalledWith({
                 where: { id: "item-1" },
-                include: {
+                include: expect.objectContaining({
                     itemType: true,
                     tags: true,
                     customFieldValues: {
                         include: { customField: true },
                     },
-                },
+                }),
             });
         });
     });

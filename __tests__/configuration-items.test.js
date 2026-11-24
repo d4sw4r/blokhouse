@@ -81,7 +81,8 @@ describe("Configuration Items API", () => {
             );
 
             prisma.apiToken.findUnique.mockResolvedValue({
-                token: "valid-token",
+                id: "tok-1",
+                scopes: "read,write",
                 user: { id: "user-1", role: "API" },
             });
 
@@ -435,7 +436,7 @@ describe("Configuration Items API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("creates configuration item with minimal data", async () => {

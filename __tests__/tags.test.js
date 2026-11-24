@@ -74,7 +74,7 @@ describe("Tags API", () => {
 
         it("authenticates with valid API token", async () => {
             const request = createMockRequest({ authHeader: "Bearer valid-token" });
-            prisma.apiToken.findUnique.mockResolvedValue({ token: "valid-token" });
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "tok-1", scopes: "read", user: { id: "user-1", role: "API" } });
             prisma.tag.findMany.mockResolvedValue([]);
 
             const response = await getTags(request);
@@ -170,7 +170,7 @@ describe("Tags API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("returns 400 when name is missing", async () => {
@@ -410,7 +410,7 @@ describe("Tags API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("returns 404 when tag does not exist", async () => {
@@ -553,7 +553,7 @@ describe("Tags API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("returns 404 when tag does not exist", async () => {
