@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml/badge.svg)](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://ghcr.io/d4sw4r/blokhouse)
-[![Version](https://img.shields.io/badge/version-0.1.0-green)](https://github.com/d4sw4r/blokhouse/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-green)](https://github.com/d4sw4r/blokhouse/releases)
 
 **Blokhouse** is a simple, automation-first open source CMDB. Track your infrastructure assets and power your automation tools — Ansible, Puppet, Chef, and custom REST API scripts.
 
