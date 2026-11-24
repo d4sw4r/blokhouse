@@ -66,3 +66,6 @@ jobs:
           # Unauthenticated API access must be rejected
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/configuration-items)" = "401"
           docker logs bh | grep -q "admin user created"
+          # The generated password goes to a 0600 file, never to the logs
+          docker exec bh test -s /app/data/initial-admin-password
+          docker exec bh stat -c %a /app/data/initial-admin-password | grep -qx 600

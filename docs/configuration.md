@@ -46,7 +46,7 @@ DATABASE_URL=file:/var/lib/blokhouse/data.db
 ```
 
 #### `ADMIN_PASSWORD` _(optional, seed only)_
-Sets the initial admin password when seeding the database. If not set, a random password is generated and printed to the console.
+Sets the initial admin password when seeding the database. If not set, a random password is generated and written to `ADMIN_PASSWORD_FILE` (default: `initial-admin-password` next to the database file, mode 0600). It is never written to the logs.
 
 ```bash
 ADMIN_PASSWORD=my-initial-password

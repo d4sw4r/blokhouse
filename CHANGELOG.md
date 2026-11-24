@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Audit log entries were never written (objects passed to string columns); they are now stored as JSON.
-- Seed script failed with Prisma 7, so no admin user was created on fresh installs. Rewritten as `prisma/seed.ts`; supports `ADMIN_EMAIL`/`ADMIN_PASSWORD` and prints a generated password only once.
+- Seed script failed with Prisma 7, so no admin user was created on fresh installs. Rewritten as `prisma/seed.ts`; supports `ADMIN_EMAIL`/`ADMIN_PASSWORD` . A generated password is written to a 0600 file next to the database (`ADMIN_PASSWORD_FILE`), never to the logs.
 - Command palette search and relation picker failed on SQLite (`mode: "insensitive"` is unsupported).
 - `GET /api/configuration-items/:id` returns `customFields` in the same format as the list endpoint.
 - Removed stale duplicate route files (`dashboard`, `activity`, `export`, `discovery` page) that shadowed the newer implementations.
