@@ -9,8 +9,14 @@
       "automerge": true
     },
     {
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true
+      "description": "Major updates need a human review, including devDependencies",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "eslint-config-next (eslint-plugin-react) does not support ESLint 10 yet",
+      "matchPackageNames": ["eslint"],
+      "allowedVersions": "<10"
     }
   ],
   "platformAutomerge": true,
