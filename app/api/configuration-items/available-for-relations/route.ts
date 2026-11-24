@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/configuration-items/available-for-relations - Get items available for relations
 // Used for dropdown when creating relations
 export async function GET(request: Request) {
+  const { response } = await requireAuth(request, "read");
+  if (response) return response;
+
   try {
     const { searchParams } = new URL(request.url);
     const excludeId = searchParams.get("exclude");
@@ -15,8 +19,8 @@ export async function GET(request: Request) {
         ...(search
           ? {
               OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { ip: { contains: search, mode: "insensitive" } },
+                { name: { contains: search } },
+                { ip: { contains: search } },
               ],
             }
           : {}),

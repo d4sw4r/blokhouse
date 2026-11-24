@@ -6,42 +6,43 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js 24.x and cache npm dependencies
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: "npm"
 
-      # Step 3: Install dependencies
-      # Use `npm install` instead of `npm ci` so that Renovate PRs with
-      # updated package.json (but stale lockfile) don't fail at this step.
-      # The lockfile is regenerated in-place if it is out of sync.
+      # `npm install` (not `npm ci`) so that Renovate PRs with an updated
+      # package.json but stale lockfile don't fail at this step.
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Generate Prisma Client
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      # Step 5: Build the Next.js app
-      - name: Build Next.js App
-        run: npm run build
-
-      # Step 6: Run Linting (if configured)
-      - name: Run Lint
+      - name: Lint
         run: npm run lint
 
-  # Optional: Build Docker Image
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build Next.js app
+        run: npm run build
+
   docker:
     runs-on: ubuntu-latest
     needs: build
@@ -49,6 +50,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # If you want to cache Docker layers, you can add caching steps here.
-      - name: Build Docker Image
+      - name: Build Docker image
         run: docker build -t blokhouse .
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name bh -p 3000:3000 \
+            -e NEXTAUTH_SECRET=ci-secret -e NEXTAUTH_URL=http://localhost:3000 blokhouse
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health >/dev/null; then break; fi
+            sleep 2
+          done
+          docker logs bh
+          curl -fsS http://localhost:3000/api/health
+          # Unauthenticated API access must be rejected
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/configuration-items)" = "401"
+          docker logs bh | grep -q "admin user created"
+          # The generated password goes to a 0600 file, never to the logs
+          docker exec bh test -s /app/data/initial-admin-password
+          docker exec bh stat -c %a /app/data/initial-admin-password | grep -qx 600

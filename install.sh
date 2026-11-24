@@ -128,7 +128,8 @@ fi
 # Initialize database
 step "Initializing SQLite database..."
 set -a && source "$INSTALL_DIR/.env" && set +a
-npx prisma db push --accept-data-loss
+node scripts/pre-upgrade.mjs
+npx prisma db push
 success "Database schema created"
 
 # Generate a random admin password for the initial seed

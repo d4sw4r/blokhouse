@@ -13,7 +13,7 @@ model User {
   email              String?             @unique
   emailVerified      DateTime?
   image              String?
-  password           String? // For CredentialsProvider (plain text demo only)
+  password           String? // bcrypt hash (CredentialsProvider)
   accounts           Account[]
   sessions           Session[]
   configurationItems ConfigurationItem[]
@@ -125,12 +125,22 @@ model AssetRelation {
 }
 
 model ApiToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(cuid())
+  name       String    @default("API token")
+  // SHA-256 hash of the raw token. The raw token is shown exactly once on creation.
+  tokenHash  String    @unique
+  // First characters of the raw token, for display only (e.g. "bh_3f9a1c")
+  prefix     String
+  // Comma-separated scopes: read, write, admin, audit
+  scopes     String    @default("read")
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model AuditLog {

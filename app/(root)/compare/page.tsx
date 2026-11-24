@@ -16,15 +16,12 @@ interface ConfigItem {
   updatedAt: string;
   itemType?: { id: string; name: string } | null;
   tags: { id: string; name: string; color?: string | null }[];
-  customFieldValues: {
+  customFields: {
     id: string;
+    name: string;
+    label: string;
+    type: string;
     value: string;
-    customField: {
-      id: string;
-      name: string;
-      label: string;
-      type: string;
-    };
   }[];
   relationsFrom: {
     id: string;
@@ -185,7 +182,7 @@ export default function ComparePage() {
   // Collect all custom fields from all items
   const allCustomFields = Array.from(new Set(
     items.flatMap(item => 
-      item.customFieldValues?.map(cfv => cfv.customField?.name).filter(Boolean) || []
+      item.customFields?.map(cf => cf.name).filter(Boolean) || []
     )
   ));
 
@@ -193,8 +190,8 @@ export default function ComparePage() {
     key: `custom_${fieldName}`,
     label: fieldName,
     getter: (item: ConfigItem) => {
-      const cfv = item.customFieldValues?.find(v => v.customField?.name === fieldName);
-      return cfv?.value ?? '-';
+      const cf = item.customFields?.find(f => f.name === fieldName);
+      return cf?.value ?? '-';
     },
   }));
 

@@ -1,8 +1,12 @@
 node_modules
 .next
 dist
-.env.local
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+coverage
 .DS_Store
 .git
 .gitignore
-

@@ -26,7 +26,12 @@ export type AggregateApiToken = {
 
 export type ApiTokenMinAggregateOutputType = {
   id: string | null
-  token: string | null
+  name: string | null
+  tokenHash: string | null
+  prefix: string | null
+  scopes: string | null
+  expiresAt: Date | null
+  lastUsedAt: Date | null
   userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -34,7 +39,12 @@ export type ApiTokenMinAggregateOutputType = {
 
 export type ApiTokenMaxAggregateOutputType = {
   id: string | null
-  token: string | null
+  name: string | null
+  tokenHash: string | null
+  prefix: string | null
+  scopes: string | null
+  expiresAt: Date | null
+  lastUsedAt: Date | null
   userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -42,7 +52,12 @@ export type ApiTokenMaxAggregateOutputType = {
 
 export type ApiTokenCountAggregateOutputType = {
   id: number
-  token: number
+  name: number
+  tokenHash: number
+  prefix: number
+  scopes: number
+  expiresAt: number
+  lastUsedAt: number
   userId: number
   createdAt: number
   updatedAt: number
@@ -52,7 +67,12 @@ export type ApiTokenCountAggregateOutputType = {
 
 export type ApiTokenMinAggregateInputType = {
   id?: true
-  token?: true
+  name?: true
+  tokenHash?: true
+  prefix?: true
+  scopes?: true
+  expiresAt?: true
+  lastUsedAt?: true
   userId?: true
   createdAt?: true
   updatedAt?: true
@@ -60,7 +80,12 @@ export type ApiTokenMinAggregateInputType = {
 
 export type ApiTokenMaxAggregateInputType = {
   id?: true
-  token?: true
+  name?: true
+  tokenHash?: true
+  prefix?: true
+  scopes?: true
+  expiresAt?: true
+  lastUsedAt?: true
   userId?: true
   createdAt?: true
   updatedAt?: true
@@ -68,7 +93,12 @@ export type ApiTokenMaxAggregateInputType = {
 
 export type ApiTokenCountAggregateInputType = {
   id?: true
-  token?: true
+  name?: true
+  tokenHash?: true
+  prefix?: true
+  scopes?: true
+  expiresAt?: true
+  lastUsedAt?: true
   userId?: true
   createdAt?: true
   updatedAt?: true
@@ -149,8 +179,13 @@ export type ApiTokenGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 
 export type ApiTokenGroupByOutputType = {
   id: string
-  token: string
-  userId: string | null
+  name: string
+  tokenHash: string
+  prefix: string
+  scopes: string
+  expiresAt: Date | null
+  lastUsedAt: Date | null
+  userId: string
   createdAt: Date
   updatedAt: Date
   _count: ApiTokenCountAggregateOutputType | null
@@ -178,17 +213,27 @@ export type ApiTokenWhereInput = {
   OR?: Prisma.ApiTokenWhereInput[]
   NOT?: Prisma.ApiTokenWhereInput | Prisma.ApiTokenWhereInput[]
   id?: Prisma.StringFilter<"ApiToken"> | string
-  token?: Prisma.StringFilter<"ApiToken"> | string
-  userId?: Prisma.StringNullableFilter<"ApiToken"> | string | null
+  name?: Prisma.StringFilter<"ApiToken"> | string
+  tokenHash?: Prisma.StringFilter<"ApiToken"> | string
+  prefix?: Prisma.StringFilter<"ApiToken"> | string
+  scopes?: Prisma.StringFilter<"ApiToken"> | string
+  expiresAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  userId?: Prisma.StringFilter<"ApiToken"> | string
   createdAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
-  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
 export type ApiTokenOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  token?: Prisma.SortOrder
-  userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  name?: Prisma.SortOrder
+  tokenHash?: Prisma.SortOrder
+  prefix?: Prisma.SortOrder
+  scopes?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -196,20 +241,30 @@ export type ApiTokenOrderByWithRelationInput = {
 
 export type ApiTokenWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  token?: string
+  tokenHash?: string
   AND?: Prisma.ApiTokenWhereInput | Prisma.ApiTokenWhereInput[]
   OR?: Prisma.ApiTokenWhereInput[]
   NOT?: Prisma.ApiTokenWhereInput | Prisma.ApiTokenWhereInput[]
-  userId?: Prisma.StringNullableFilter<"ApiToken"> | string | null
+  name?: Prisma.StringFilter<"ApiToken"> | string
+  prefix?: Prisma.StringFilter<"ApiToken"> | string
+  scopes?: Prisma.StringFilter<"ApiToken"> | string
+  expiresAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  userId?: Prisma.StringFilter<"ApiToken"> | string
   createdAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
-  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-}, "id" | "token">
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+}, "id" | "tokenHash">
 
 export type ApiTokenOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  token?: Prisma.SortOrder
-  userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  name?: Prisma.SortOrder
+  tokenHash?: Prisma.SortOrder
+  prefix?: Prisma.SortOrder
+  scopes?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ApiTokenCountOrderByAggregateInput
@@ -222,63 +277,103 @@ export type ApiTokenScalarWhereWithAggregatesInput = {
   OR?: Prisma.ApiTokenScalarWhereWithAggregatesInput[]
   NOT?: Prisma.ApiTokenScalarWhereWithAggregatesInput | Prisma.ApiTokenScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
-  token?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
-  userId?: Prisma.StringNullableWithAggregatesFilter<"ApiToken"> | string | null
+  name?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
+  tokenHash?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
+  prefix?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
+  scopes?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
+  expiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ApiToken"> | Date | string | null
+  lastUsedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ApiToken"> | Date | string | null
+  userId?: Prisma.StringWithAggregatesFilter<"ApiToken"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ApiToken"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ApiToken"> | Date | string
 }
 
 export type ApiTokenCreateInput = {
   id?: string
-  token: string
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user?: Prisma.UserCreateNestedOneWithoutApiTokenInput
+  user: Prisma.UserCreateNestedOneWithoutApiTokenInput
 }
 
 export type ApiTokenUncheckedCreateInput = {
   id?: string
-  token: string
-  userId?: string | null
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
+  userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ApiTokenUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneWithoutApiTokenNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutApiTokenNestedInput
 }
 
 export type ApiTokenUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ApiTokenCreateManyInput = {
   id?: string
-  token: string
-  userId?: string | null
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
+  userId: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ApiTokenUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ApiTokenUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -295,7 +390,12 @@ export type ApiTokenOrderByRelationAggregateInput = {
 
 export type ApiTokenCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  token?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  tokenHash?: Prisma.SortOrder
+  prefix?: Prisma.SortOrder
+  scopes?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -303,7 +403,12 @@ export type ApiTokenCountOrderByAggregateInput = {
 
 export type ApiTokenMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  token?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  tokenHash?: Prisma.SortOrder
+  prefix?: Prisma.SortOrder
+  scopes?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -311,7 +416,12 @@ export type ApiTokenMaxOrderByAggregateInput = {
 
 export type ApiTokenMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  token?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  tokenHash?: Prisma.SortOrder
+  prefix?: Prisma.SortOrder
+  scopes?: Prisma.SortOrder
+  expiresAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -361,14 +471,24 @@ export type ApiTokenUncheckedUpdateManyWithoutUserNestedInput = {
 
 export type ApiTokenCreateWithoutUserInput = {
   id?: string
-  token: string
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ApiTokenUncheckedCreateWithoutUserInput = {
   id?: string
-  token: string
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -403,36 +523,61 @@ export type ApiTokenScalarWhereInput = {
   OR?: Prisma.ApiTokenScalarWhereInput[]
   NOT?: Prisma.ApiTokenScalarWhereInput | Prisma.ApiTokenScalarWhereInput[]
   id?: Prisma.StringFilter<"ApiToken"> | string
-  token?: Prisma.StringFilter<"ApiToken"> | string
-  userId?: Prisma.StringNullableFilter<"ApiToken"> | string | null
+  name?: Prisma.StringFilter<"ApiToken"> | string
+  tokenHash?: Prisma.StringFilter<"ApiToken"> | string
+  prefix?: Prisma.StringFilter<"ApiToken"> | string
+  scopes?: Prisma.StringFilter<"ApiToken"> | string
+  expiresAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"ApiToken"> | Date | string | null
+  userId?: Prisma.StringFilter<"ApiToken"> | string
   createdAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ApiToken"> | Date | string
 }
 
 export type ApiTokenCreateManyUserInput = {
   id?: string
-  token: string
+  name?: string
+  tokenHash: string
+  prefix: string
+  scopes?: string
+  expiresAt?: Date | string | null
+  lastUsedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ApiTokenUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ApiTokenUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ApiTokenUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  tokenHash?: Prisma.StringFieldUpdateOperationsInput | string
+  prefix?: Prisma.StringFieldUpdateOperationsInput | string
+  scopes?: Prisma.StringFieldUpdateOperationsInput | string
+  expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -441,59 +586,84 @@ export type ApiTokenUncheckedUpdateManyWithoutUserInput = {
 
 export type ApiTokenSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  token?: boolean
+  name?: boolean
+  tokenHash?: boolean
+  prefix?: boolean
+  scopes?: boolean
+  expiresAt?: boolean
+  lastUsedAt?: boolean
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["apiToken"]>
 
 export type ApiTokenSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  token?: boolean
+  name?: boolean
+  tokenHash?: boolean
+  prefix?: boolean
+  scopes?: boolean
+  expiresAt?: boolean
+  lastUsedAt?: boolean
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["apiToken"]>
 
 export type ApiTokenSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  token?: boolean
+  name?: boolean
+  tokenHash?: boolean
+  prefix?: boolean
+  scopes?: boolean
+  expiresAt?: boolean
+  lastUsedAt?: boolean
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["apiToken"]>
 
 export type ApiTokenSelectScalar = {
   id?: boolean
-  token?: boolean
+  name?: boolean
+  tokenHash?: boolean
+  prefix?: boolean
+  scopes?: boolean
+  expiresAt?: boolean
+  lastUsedAt?: boolean
   userId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ApiTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "token" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["apiToken"]>
+export type ApiTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "tokenHash" | "prefix" | "scopes" | "expiresAt" | "lastUsedAt" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["apiToken"]>
 export type ApiTokenInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type ApiTokenIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type ApiTokenIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.ApiToken$userArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 
 export type $ApiTokenPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ApiToken"
   objects: {
-    user: Prisma.$UserPayload<ExtArgs> | null
+    user: Prisma.$UserPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    token: string
-    userId: string | null
+    name: string
+    tokenHash: string
+    prefix: string
+    scopes: string
+    expiresAt: Date | null
+    lastUsedAt: Date | null
+    userId: string
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["apiToken"]>
@@ -890,7 +1060,7 @@ readonly fields: ApiTokenFieldRefs;
  */
 export interface Prisma__ApiTokenClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  user<T extends Prisma.ApiToken$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ApiToken$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -921,7 +1091,12 @@ export interface Prisma__ApiTokenClient<T, Null = never, ExtArgs extends runtime
  */
 export interface ApiTokenFieldRefs {
   readonly id: Prisma.FieldRef<"ApiToken", 'String'>
-  readonly token: Prisma.FieldRef<"ApiToken", 'String'>
+  readonly name: Prisma.FieldRef<"ApiToken", 'String'>
+  readonly tokenHash: Prisma.FieldRef<"ApiToken", 'String'>
+  readonly prefix: Prisma.FieldRef<"ApiToken", 'String'>
+  readonly scopes: Prisma.FieldRef<"ApiToken", 'String'>
+  readonly expiresAt: Prisma.FieldRef<"ApiToken", 'DateTime'>
+  readonly lastUsedAt: Prisma.FieldRef<"ApiToken", 'DateTime'>
   readonly userId: Prisma.FieldRef<"ApiToken", 'String'>
   readonly createdAt: Prisma.FieldRef<"ApiToken", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ApiToken", 'DateTime'>
@@ -1316,25 +1491,6 @@ export type ApiTokenDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many ApiTokens to delete.
    */
   limit?: number
-}
-
-/**
- * ApiToken.user
- */
-export type ApiToken$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the User
-   */
-  select?: Prisma.UserSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the User
-   */
-  omit?: Prisma.UserOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.UserInclude<ExtArgs> | null
-  where?: Prisma.UserWhereInput
 }
 
 /**

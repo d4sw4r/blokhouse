@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import Logo from "@/components/Logo";
@@ -10,6 +10,14 @@ export default function SignInPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [signupEnabled, setSignupEnabled] = useState(false);
+
+    useEffect(() => {
+        fetch("/api/auth/signup")
+            .then((r) => (r.ok ? r.json() : { enabled: false }))
+            .then((d) => setSignupEnabled(Boolean(d.enabled)))
+            .catch(() => setSignupEnabled(false));
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -54,14 +62,16 @@ export default function SignInPage() {
                     Sign In
                 </Button>
             </form>
-            <p className="mt-4 text-center text-gray-600">
-                Don&apos;t have an account?{" "}
-                <Link href="/signup">
-                    <span className="text-brandPrimary hover:underline">Sign Up</span>
-                </Link>
-            </p>
+            {signupEnabled && (
+                <p className="mt-4 text-center text-gray-600">
+                    Don&apos;t have an account?{" "}
+                    <Link href="/signup">
+                        <span className="text-brandPrimary hover:underline">Sign Up</span>
+                    </Link>
+                </p>
+            )}
             <p className="mt-2 text-center text-sm text-gray-500">
-                Note: Only accounts with role ADMIN, USER, or AUDIT can sign in via the UI. Accounts with the API role are restricted to API access.
+                Accounts with the API role are restricted to API token access.
             </p>
         </div>
 

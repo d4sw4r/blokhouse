@@ -1,18 +1,10 @@
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
-
-// Helper to check if the user can write (ADMIN, USER, API)
-function canWrite(role) {
-    return role === "ADMIN" || role === "USER" || role === "API";
-}
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/tags/[id] - Get a single tag
 export async function GET(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(req, "read");
+    if (response) return response;
 
     const { id } = await params;
     
@@ -39,13 +31,8 @@ export async function GET(req, { params }) {
 
 // PUT /api/tags/[id] - Update a tag
 export async function PUT(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-    if (!canWrite(session.user.role)) {
-        return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
-    }
+    const { response } = await requireAuth(req, "write");
+    if (response) return response;
 
     const { id } = await params;
     const { name, color, description } = await req.json();
@@ -81,13 +68,8 @@ export async function PUT(req, { params }) {
 
 // DELETE /api/tags/[id] - Delete a tag
 export async function DELETE(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-    if (!canWrite(session.user.role)) {
-        return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
-    }
+    const { response } = await requireAuth(req, "write");
+    if (response) return response;
 
     const { id } = await params;
 

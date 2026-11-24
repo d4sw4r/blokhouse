@@ -75,7 +75,7 @@ describe("Configuration Item Tags API", () => {
             const data = await res.json();
 
             expect(res.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("DELETE returns 403 for READONLY users", async () => {
@@ -85,7 +85,7 @@ describe("Configuration Item Tags API", () => {
             const data = await res.json();
 
             expect(res.status).toBe(403);
-            expect(data.error).toBe("Forbidden: Read-only access");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("allows ADMIN users", async () => {

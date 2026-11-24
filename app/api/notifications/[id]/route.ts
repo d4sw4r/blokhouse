@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/authOptions";
-import { getServerSession } from "next-auth/next";
+import { requireAuth } from "@/lib/auth";
 
 // PATCH /api/notifications/[id] - Mark a single notification as read
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   const { id } = await params;
 
@@ -20,7 +16,7 @@ export async function PATCH(
     const notification = await prisma.notification.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId: auth.user.id,
       },
     });
 
@@ -51,11 +47,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as any;
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { auth, response } = await requireAuth(request, "read");
+  if (response) return response;
 
   const { id } = await params;
 
@@ -63,7 +56,7 @@ export async function DELETE(
     const notification = await prisma.notification.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId: auth.user.id,
       },
     });
 

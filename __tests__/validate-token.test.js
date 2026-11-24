@@ -1,138 +1,62 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock prisma before importing the route
 vi.mock("@/lib/prisma", () => ({
-    default: {
-        apiToken: {
-            findUnique: vi.fn(),
-        },
-    },
+    default: { apiToken: { findUnique: vi.fn(), update: vi.fn() } },
 }));
+vi.mock("next-auth/next", () => ({ getServerSession: vi.fn() }));
+vi.mock("@/lib/authOptions", () => ({ default: {} }));
 
 import { GET } from "../app/api/validate-token/route.js";
 import prisma from "@/lib/prisma";
+import { hashToken } from "@/lib/auth";
 
-describe("Validate-Token API", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+const req = (headers = {}, url = "http://localhost:3000/api/validate-token") => new Request(url, { headers });
+
+describe("GET /api/validate-token", () => {
+    beforeEach(() => vi.resetAllMocks());
+
+    it("returns 400 without an Authorization header", async () => {
+        const res = await GET(req());
+        expect(res.status).toBe(400);
+        expect((await res.json()).valid).toBe(false);
     });
 
-    afterEach(() => {
-        vi.clearAllMocks();
+    it("does not accept tokens in the query string", async () => {
+        const res = await GET(req({}, "http://localhost:3000/api/validate-token?token=bh_abc"));
+        expect(res.status).toBe(400);
+        expect(prisma.apiToken.findUnique).not.toHaveBeenCalled();
     });
 
-    function makeRequest(token) {
-        const url = token
-            ? `http://localhost:3000/api/validate-token?token=${encodeURIComponent(token)}`
-            : "http://localhost:3000/api/validate-token";
-        return { url };
-    }
-
-    // ─── Missing token ─────────────────────────────────────────────────────────
-
-    describe("missing token parameter", () => {
-        it("returns 400 with valid=false when no token query param", async () => {
-            const res  = await GET(makeRequest(null));
-            const data = await res.json();
-
-            expect(res.status).toBe(400);
-            expect(data.valid).toBe(false);
-            expect(prisma.apiToken.findUnique).not.toHaveBeenCalled();
-        });
-
-        it("returns 400 for empty token string", async () => {
-            const res  = await GET(makeRequest(""));
-            const data = await res.json();
-
-            // empty string is falsy → same branch
-            expect(res.status).toBe(400);
-            expect(data.valid).toBe(false);
+    it("returns 401 for an unknown token", async () => {
+        prisma.apiToken.findUnique.mockResolvedValue(null);
+        const res = await GET(req({ authorization: "Bearer bh_unknown" }));
+        expect(res.status).toBe(401);
+        expect(prisma.apiToken.findUnique).toHaveBeenCalledWith({
+            where: { tokenHash: hashToken("bh_unknown") },
+            include: { user: true },
         });
     });
 
-    // ─── Valid token ───────────────────────────────────────────────────────────
-
-    describe("valid token", () => {
-        it("returns 200 with valid=true when token exists in DB", async () => {
-            prisma.apiToken.findUnique.mockResolvedValue({
-                id: "tok1",
-                token: "abc123",
-                userId: "u1",
-            });
-
-            const res  = await GET(makeRequest("abc123"));
-            const data = await res.json();
-
-            expect(res.status).toBe(200);
-            expect(data.valid).toBe(true);
+    it("returns 401 for an expired token", async () => {
+        prisma.apiToken.findUnique.mockResolvedValue({
+            id: "t1", scopes: "read", expiresAt: new Date(Date.now() - 1000), user: { id: "u1", role: "USER" },
         });
-
-        it("looks up the correct token in prisma", async () => {
-            prisma.apiToken.findUnique.mockResolvedValue({ id: "tok1", token: "mytoken" });
-
-            await GET(makeRequest("mytoken"));
-
-            expect(prisma.apiToken.findUnique).toHaveBeenCalledWith({
-                where: { token: "mytoken" },
-            });
-        });
-
-        it("handles tokens with special characters", async () => {
-            const specialToken = "tok+en/with=special&chars";
-            prisma.apiToken.findUnique.mockResolvedValue({ id: "tok2", token: specialToken });
-
-            const res  = await GET(makeRequest(specialToken));
-            const data = await res.json();
-
-            expect(res.status).toBe(200);
-            expect(data.valid).toBe(true);
-        });
+        const res = await GET(req({ authorization: "Bearer bh_old" }));
+        expect(res.status).toBe(401);
     });
 
-    // ─── Invalid / unknown token ───────────────────────────────────────────────
-
-    describe("invalid / unknown token", () => {
-        it("returns 200 with valid=false when token not found", async () => {
-            prisma.apiToken.findUnique.mockResolvedValue(null);
-
-            const res  = await GET(makeRequest("notexisting"));
-            const data = await res.json();
-
-            expect(res.status).toBe(200);
-            expect(data.valid).toBe(false);
+    it("returns the effective scopes for a valid token", async () => {
+        prisma.apiToken.findUnique.mockResolvedValue({
+            id: "t1", scopes: "read,write,admin", expiresAt: null,
+            user: { id: "u1", email: "u@x.io", role: "USER" },
         });
-
-        it("returns valid=false for a random UUID that is not in DB", async () => {
-            prisma.apiToken.findUnique.mockResolvedValue(null);
-
-            const res  = await GET(makeRequest("00000000-0000-0000-0000-000000000000"));
-            const data = await res.json();
-
-            expect(data.valid).toBe(false);
-        });
-    });
-
-    // ─── Database errors ───────────────────────────────────────────────────────
-
-    describe("database errors", () => {
-        it("returns 500 with valid=false when prisma throws", async () => {
-            prisma.apiToken.findUnique.mockRejectedValue(new Error("DB connection lost"));
-
-            const res  = await GET(makeRequest("sometoken"));
-            const data = await res.json();
-
-            expect(res.status).toBe(500);
-            expect(data.valid).toBe(false);
-            expect(data.error).toBeDefined();
-        });
-
-        it("includes error message in 500 response", async () => {
-            prisma.apiToken.findUnique.mockRejectedValue(new Error("Timeout"));
-
-            const res  = await GET(makeRequest("tok"));
-            const data = await res.json();
-
-            expect(data.error).toBe("Timeout");
-        });
+        prisma.apiToken.update.mockResolvedValue({});
+        const res = await GET(req({ authorization: "Bearer bh_good" }));
+        const data = await res.json();
+        expect(res.status).toBe(200);
+        expect(data.valid).toBe(true);
+        // admin is stripped because the owner's role (USER) does not have it
+        expect(data.scopes).toEqual(["read", "write"]);
+        expect(data.user).toEqual({ email: "u@x.io", role: "USER" });
     });
 });

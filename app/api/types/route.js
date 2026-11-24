@@ -1,71 +1,18 @@
 // app/api/types/route.js
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req) {
-    // Check if there's a Bearer token in the Authorization header
-    const authHeader = req.headers.get("authorization");
-    let authorized = false;
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const apiToken = authHeader.slice("Bearer ".length).trim();
-        try {
-            const tokenRecord = await prisma.apiToken.findUnique({
-                where: { token: apiToken },
-            });
-            if (tokenRecord) {
-                authorized = true;
-            }
-        } catch (error) {
-            console.error("Error checking API token:", error);
-        }
-    }
-
-    // If no valid API token, then check for a valid session
-    if (!authorized) {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return new Response(
-                JSON.stringify({ error: "Unauthorized" }),
-                { status: 401 }
-            );
-        }
-    }
+    const { response } = await requireAuth(req, "read");
+    if (response) return response;
 
     const types = await prisma.itemType.findMany();
     return new Response(JSON.stringify(types), { status: 200 });
 }
 
 export async function POST(request) {
-    // Check if there's a Bearer token in the Authorization header
-    const authHeader = request.headers.get("authorization");
-    let authorized = false;
-
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const apiToken = authHeader.slice("Bearer ".length).trim();
-        try {
-            const tokenRecord = await prisma.apiToken.findUnique({
-                where: { token: apiToken },
-            });
-            if (tokenRecord) {
-                authorized = true;
-            }
-        } catch (error) {
-            console.error("Error checking API token:", error);
-        }
-    }
-
-    // If no valid API token, then check for a valid session
-    if (!authorized) {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return new Response(
-                JSON.stringify({ error: "Unauthorized" }),
-                { status: 401 }
-            );
-        }
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     const { name, description } = await request.json();
 

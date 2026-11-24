@@ -39,13 +39,16 @@ echo "NEXTAUTH_SECRET=$(openssl rand -hex 32)" >> .env
 docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The admin credentials are printed in the container logs:
+Open [http://localhost:3000](http://localhost:3000) and log in as `admin@example.com`.
+A random admin password is generated on first start and written to a file inside the data volume
+(it is never printed to the logs):
 
 ```bash
-docker compose logs app | grep -i password
+docker compose exec app cat /app/data/initial-admin-password
 ```
 
-Login: `admin@example.com` / (generated password from logs)
+Delete the file after your first login (`docker compose exec app rm /app/data/initial-admin-password`),
+or set `ADMIN_PASSWORD` in `.env` before the first start to choose the password yourself.
 
 ## 🚀 Quick Start (Install Script)
 
@@ -106,7 +109,7 @@ Visit `/docs` for the interactive Swagger UI or fetch the raw spec:
 curl http://localhost:3000/api/docs
 ```
 
-Generate API tokens under **Settings → API Tokens** in the web UI.
+Generate scoped API tokens under **Admin → API Tokens** in the web UI. See [API Reference](docs/api.md#permissions) for roles and scopes.
 
 ## 📚 Documentation
 

@@ -69,7 +69,7 @@ describe("Types API (Item Types)", () => {
 
         it("authenticates with valid API token", async () => {
             const request = createMockRequest({ authHeader: "Bearer valid-token" });
-            prisma.apiToken.findUnique.mockResolvedValue({ token: "valid-token" });
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "tok-1", scopes: "read,write", user: { id: "user-1", role: "API" } });
             prisma.itemType.findMany.mockResolvedValue([]);
 
             const response = await getTypes(request);
@@ -194,7 +194,7 @@ describe("Types API (Item Types)", () => {
                 body: { name: "APIType" },
                 authHeader: "Bearer valid-token"
             });
-            prisma.apiToken.findUnique.mockResolvedValue({ token: "valid-token" });
+            prisma.apiToken.findUnique.mockResolvedValue({ id: "tok-1", scopes: "read,write", user: { id: "user-1", role: "API" } });
 
             const createdType = { id: "type-api", name: "APIType", description: null };
             prisma.itemType.create.mockResolvedValue(createdType);

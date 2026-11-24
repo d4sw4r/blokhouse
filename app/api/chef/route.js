@@ -12,33 +12,12 @@
 //   curl -H "Authorization: Bearer TOKEN" "http://blokhouse/api/chef?format=databag"
 
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth } from "@/lib/auth";
 import { buildChefNode, buildDataBagItem } from "@/lib/chef-node";
 
-async function checkAuth(req) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.slice("Bearer ".length).trim();
-        try {
-            const record = await prisma.apiToken.findUnique({ where: { token } });
-            if (record) return true;
-        } catch (e) {
-            console.error("Token check error:", e);
-        }
-    }
-    const session = await getServerSession(authOptions);
-    return !!session;
-}
-
 export async function GET(req) {
-    const authed = await checkAuth(req);
-    if (!authed) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { response } = await requireAuth(req, "read");
+    if (response) return response;
 
     const { searchParams } = new URL(req.url);
     const nodeName = searchParams.get("node");

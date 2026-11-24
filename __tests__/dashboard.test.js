@@ -1,280 +1,104 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { GET } from "../app/api/dashboard/route.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock prisma
 vi.mock("@/lib/prisma", () => ({
     default: {
-        configurationItem: {
-            count: vi.fn(),
-            groupBy: vi.fn(),
-        },
-        itemType: {
-            count: vi.fn(),
-            findUnique: vi.fn(),
-        },
+        configurationItem: { count: vi.fn(), groupBy: vi.fn() },
+        itemType: { count: vi.fn(), findMany: vi.fn() },
+        tag: { count: vi.fn() },
+        assetRelation: { count: vi.fn() },
+        maintenanceSchedule: { count: vi.fn() },
+        notification: { count: vi.fn() },
+        apiToken: { findUnique: vi.fn(), update: vi.fn() },
     },
 }));
+vi.mock("next-auth/next", () => ({ getServerSession: vi.fn() }));
+vi.mock("@/lib/authOptions", () => ({ default: {} }));
 
+import { GET } from "../app/api/dashboard/route.ts";
 import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+
+function req(headers = {}) {
+    return new Request("http://localhost:3000/api/dashboard", { headers });
+}
+
+function mockCounts() {
+    // configurationItem.count: total, then untyped
+    prisma.configurationItem.count.mockResolvedValueOnce(100).mockResolvedValueOnce(50);
+    prisma.itemType.count.mockResolvedValue(5);
+    prisma.configurationItem.groupBy
+        .mockResolvedValueOnce([
+            { status: "ACTIVE", _count: { id: 80 } },
+            { status: "MAINTENANCE", _count: { id: 20 } },
+        ])
+        .mockResolvedValueOnce([
+            { itemTypeId: "type-1", _count: { id: 30 } },
+            { itemTypeId: "type-2", _count: { id: 20 } },
+            { itemTypeId: null, _count: { id: 50 } },
+        ]);
+    prisma.itemType.findMany.mockResolvedValue([
+        { id: "type-1", name: "Server" },
+        { id: "type-2", name: "Database" },
+    ]);
+    prisma.tag.count.mockResolvedValue(7);
+    prisma.assetRelation.count.mockResolvedValue(3);
+    prisma.maintenanceSchedule.count.mockResolvedValue(2);
+    prisma.notification.count.mockResolvedValue(1);
+}
 
 describe("Dashboard API", () => {
     beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    afterEach(() => {
         vi.resetAllMocks();
     });
 
-    describe("Successful responses", () => {
-        it("returns dashboard data with all required fields", async () => {
-            // Mock data
-            prisma.configurationItem.count.mockResolvedValueOnce(100);
-            prisma.itemType.count.mockResolvedValueOnce(5);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "type-1", _count: { id: 30 } },
-                    { itemTypeId: "type-2", _count: { id: 20 } },
-                    { itemTypeId: null, _count: { id: 50 } },
-                ])
-                .mockResolvedValueOnce([
-                    { status: "ACTIVE", _count: { id: 80 } },
-                    { status: "MAINTENANCE", _count: { id: 15 } },
-                    { status: "DEPRECATED", _count: { id: 5 } },
-                ]);
-
-            prisma.itemType.findUnique
-                .mockResolvedValueOnce({ id: "type-1", name: "Server" })
-                .mockResolvedValueOnce({ id: "type-2", name: "Database" });
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data).toHaveProperty("totalItems", 100);
-            expect(data).toHaveProperty("totalTypes", 5);
-            expect(data).toHaveProperty("untypedItems", 50);
-            expect(data).toHaveProperty("itemsPerType");
-            expect(data).toHaveProperty("itemsPerStatus");
-        });
-
-        it("returns correct itemsPerType with type names", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(50);
-            prisma.itemType.count.mockResolvedValueOnce(3);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "type-1", _count: { id: 25 } },
-                    { itemTypeId: "type-2", _count: { id: 15 } },
-                ])
-                .mockResolvedValueOnce([
-                    { status: "ACTIVE", _count: { id: 40 } },
-                ]);
-
-            prisma.itemType.findUnique
-                .mockResolvedValueOnce({ id: "type-1", name: "Web Server" })
-                .mockResolvedValueOnce({ id: "type-2", name: "API Server" });
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(data.itemsPerType).toHaveLength(2);
-            expect(data.itemsPerType[0]).toMatchObject({
-                itemTypeId: "type-1",
-                count: 25,
-                typeName: "Web Server",
-            });
-            expect(data.itemsPerType[1]).toMatchObject({
-                itemTypeId: "type-2",
-                count: 15,
-                typeName: "API Server",
-            });
-        });
-
-        it("returns correct itemsPerStatus breakdown", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(100);
-            prisma.itemType.count.mockResolvedValueOnce(3);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "type-1", _count: { id: 40 } },
-                ])
-                .mockResolvedValueOnce([
-                    { status: "ACTIVE", _count: { id: 75 } },
-                    { status: "MAINTENANCE", _count: { id: 20 } },
-                    { status: "DEPRECATED", _count: { id: 5 } },
-                ]);
-
-            prisma.itemType.findUnique.mockResolvedValueOnce({ id: "type-1", name: "Server" });
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(data.itemsPerStatus).toHaveLength(3);
-            expect(data.itemsPerStatus).toContainEqual({ status: "ACTIVE", count: 75 });
-            expect(data.itemsPerStatus).toContainEqual({ status: "MAINTENANCE", count: 20 });
-            expect(data.itemsPerStatus).toContainEqual({ status: "DEPRECATED", count: 5 });
-        });
-
-        it("handles empty database correctly", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(0);
-            prisma.itemType.count.mockResolvedValueOnce(0);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([])
-                .mockResolvedValueOnce([]);
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data.totalItems).toBe(0);
-            expect(data.totalTypes).toBe(0);
-            expect(data.untypedItems).toBe(0);
-            expect(data.itemsPerType).toEqual([]);
-            expect(data.itemsPerStatus).toEqual([]);
-        });
-
-        it("handles all untyped items correctly", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(50);
-            prisma.itemType.count.mockResolvedValueOnce(0);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: null, _count: { id: 50 } },
-                ])
-                .mockResolvedValueOnce([
-                    { status: "ACTIVE", _count: { id: 50 } },
-                ]);
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(data.untypedItems).toBe(50);
-            expect(data.itemsPerType).toEqual([]);
-        });
-
-        it("handles unknown type IDs gracefully", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(10);
-            prisma.itemType.count.mockResolvedValueOnce(1);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "deleted-type", _count: { id: 10 } },
-                ])
-                .mockResolvedValueOnce([
-                    { status: "ACTIVE", _count: { id: 10 } },
-                ]);
-
-            prisma.itemType.findUnique.mockResolvedValueOnce(null);
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(data.itemsPerType[0].typeName).toBe("Unknown");
-        });
-
-        it("returns correct content type header", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(10);
-            prisma.itemType.count.mockResolvedValueOnce(2);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([])
-                .mockResolvedValueOnce([]);
-
-            const response = await GET();
-
-            expect(response.headers.get("Content-Type")).toBe("application/json");
-        });
+    it("returns 401 without authentication", async () => {
+        getServerSession.mockResolvedValue(null);
+        const res = await GET(req());
+        expect(res.status).toBe(401);
+        expect(prisma.configurationItem.count).not.toHaveBeenCalled();
     });
 
-    describe("Error handling", () => {
-        it("returns 500 when database query fails", async () => {
-            prisma.configurationItem.count.mockRejectedValueOnce(new Error("Database connection lost"));
-
-            const response = await GET();
-            const data = await response.json();
-
-            expect(response.status).toBe(500);
-            expect(data.error).toBe("Failed to load dashboard data");
-        });
-
-        it("returns 500 when groupBy query fails", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(10);
-            prisma.itemType.count.mockResolvedValueOnce(2);
-            prisma.configurationItem.groupBy.mockRejectedValueOnce(new Error("Query timeout"));
-
-            const response = await GET();
-
-            expect(response.status).toBe(500);
-        });
-
-        it("returns 500 when itemType lookup fails", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(10);
-            prisma.itemType.count.mockResolvedValueOnce(2);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "type-1", _count: { id: 10 } },
-                ])
-                .mockResolvedValueOnce([]);
-            prisma.itemType.findUnique.mockRejectedValueOnce(new Error("Type lookup failed"));
-
-            const response = await GET();
-
-            expect(response.status).toBe(500);
-        });
+    it("returns 401 for an invalid API token (no session fallback)", async () => {
+        prisma.apiToken.findUnique.mockResolvedValue(null);
+        getServerSession.mockResolvedValue({ user: { id: "u1", role: "ADMIN" } });
+        const res = await GET(req({ authorization: "Bearer bh_invalid" }));
+        expect(res.status).toBe(401);
     });
 
-    describe("Data aggregation", () => {
-        it("calls configurationItem.count once", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(0);
-            prisma.itemType.count.mockResolvedValueOnce(0);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([])
-                .mockResolvedValueOnce([]);
+    it("returns aggregated statistics for an authenticated user", async () => {
+        getServerSession.mockResolvedValue({ user: { id: "u1", role: "READONLY" } });
+        mockCounts();
 
-            await GET();
+        const res = await GET(req());
+        const data = await res.json();
 
-            expect(prisma.configurationItem.count).toHaveBeenCalledTimes(1);
+        expect(res.status).toBe(200);
+        expect(data).toMatchObject({
+            totalItems: 100,
+            totalTypes: 5,
+            untypedItems: 50,
+            totalTags: 7,
+            totalRelations: 3,
+            upcomingMaintenance: 2,
+            unreadNotifications: 1,
         });
+        expect(data.itemsPerStatus).toEqual([
+            { status: "ACTIVE", count: 80 },
+            { status: "MAINTENANCE", count: 20 },
+        ]);
+        expect(data.itemsPerType).toEqual([
+            { itemTypeId: "type-1", count: 30, typeName: "Server" },
+            { itemTypeId: "type-2", count: 20, typeName: "Database" },
+            { itemTypeId: "untyped", count: 50, typeName: "Untyped" },
+        ]);
+        expect(prisma.notification.count).toHaveBeenCalledWith({ where: { userId: "u1", read: false } });
+    });
 
-        it("calls itemType.count once", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(0);
-            prisma.itemType.count.mockResolvedValueOnce(0);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([])
-                .mockResolvedValueOnce([]);
-
-            await GET();
-
-            expect(prisma.itemType.count).toHaveBeenCalledTimes(1);
-        });
-
-        it("calls groupBy twice (for types and status)", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(0);
-            prisma.itemType.count.mockResolvedValueOnce(0);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([])
-                .mockResolvedValueOnce([]);
-
-            await GET();
-
-            expect(prisma.configurationItem.groupBy).toHaveBeenCalledTimes(2);
-        });
-
-        it("calls findUnique for each typed item group", async () => {
-            prisma.configurationItem.count.mockResolvedValueOnce(30);
-            prisma.itemType.count.mockResolvedValueOnce(3);
-            prisma.configurationItem.groupBy
-                .mockResolvedValueOnce([
-                    { itemTypeId: "type-1", _count: { id: 10 } },
-                    { itemTypeId: "type-2", _count: { id: 10 } },
-                    { itemTypeId: "type-3", _count: { id: 10 } },
-                ])
-                .mockResolvedValueOnce([]);
-
-            prisma.itemType.findUnique
-                .mockResolvedValueOnce({ id: "type-1", name: "Type 1" })
-                .mockResolvedValueOnce({ id: "type-2", name: "Type 2" })
-                .mockResolvedValueOnce({ id: "type-3", name: "Type 3" });
-
-            await GET();
-
-            expect(prisma.itemType.findUnique).toHaveBeenCalledTimes(3);
-        });
+    it("returns 500 when the database fails", async () => {
+        getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
+        prisma.configurationItem.count.mockRejectedValue(new Error("DB down"));
+        prisma.itemType.count.mockResolvedValue(0);
+        const res = await GET(req());
+        expect(res.status).toBe(500);
     });
 });

@@ -1,31 +1,6 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-
-async function getUserFromRequest(request: NextRequest) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const apiToken = authHeader.slice("Bearer ".length).trim();
-        try {
-            const tokenRecord = await prisma.apiToken.findUnique({
-                where: { token: apiToken },
-                include: { user: true },
-            });
-            if (tokenRecord?.user) {
-                return { user: tokenRecord.user, authorized: true };
-            }
-        } catch (error) {
-            console.error("Error checking API token:", error);
-        }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (session?.user) {
-        return { user: session.user, authorized: true };
-    }
-    return { authorized: false };
-}
 
 function escapeCSV(value: string | null | undefined): string {
     if (value === null || value === undefined) return "";
@@ -87,13 +62,8 @@ function escapeCSV(value: string | null | undefined): string {
  *         description: Unauthorized
  */
 export async function GET(request: NextRequest) {
-    const { authorized } = await getUserFromRequest(request);
-    if (!authorized) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { 
-            status: 401,
-            headers: { "Content-Type": "application/json" }
-        });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json";

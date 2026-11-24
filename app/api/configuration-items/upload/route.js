@@ -1,19 +1,16 @@
 // app/api/configuration-items/upload/route.js
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import { parseCsv } from "@/lib/csv-parser";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { auth, response } = await requireAuth(request, "write");
+    if (response) return response;
 
     try {
         const { csv } = await request.json();
 
-        const { items, errors, skipped } = parseCsv(csv, session.user.id);
+        const { items, errors, skipped } = parseCsv(csv, auth.user.id);
 
         // If every row failed validation, return early with a 400
         if (items.length === 0) {

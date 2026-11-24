@@ -1,14 +1,11 @@
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import { logItemUpdated, logItemDeleted } from "@/lib/audit";
 import { notifyAssetChange } from "@/lib/notifications";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(req, "read");
+    if (response) return response;
 
     const { id } = await params;
     const item = await prisma.configurationItem.findUnique({
@@ -44,14 +41,22 @@ export async function GET(req, { params }) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
-    return new Response(JSON.stringify(item), { status: 200 });
+    // Same shape as the list endpoint: flatten custom field values.
+    const { customFieldValues = [], ...rest } = item;
+    const customFields = customFieldValues.map((cfv) => ({
+        id: cfv.customField.id,
+        name: cfv.customField.name,
+        label: cfv.customField.label,
+        type: cfv.customField.type,
+        value: cfv.value,
+    }));
+
+    return new Response(JSON.stringify({ ...rest, customFields }), { status: 200 });
 }
 
 export async function PUT(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { auth, response } = await requireAuth(req, "write");
+    if (response) return response;
 
     const { id } = await params;
     const body = await req.json();
@@ -86,7 +91,7 @@ export async function PUT(req, { params }) {
     await logItemUpdated({
         oldItem,
         newItem: updated,
-        userId: session.user.id,
+        userId: auth.user.id,
         req,
     });
 
@@ -96,8 +101,8 @@ export async function PUT(req, { params }) {
             assetId: id,
             assetName: updated.name,
             type: "ASSET_STATUS_CHANGED",
-            message: `Status changed from "${oldItem.status}" to "${updated.status}" by ${session.user.name || session.user.email}`,
-            changedByUserId: session.user.id,
+            message: `Status changed from "${oldItem.status}" to "${updated.status}" by ${auth.user.name || auth.user.email}`,
+            changedByUserId: auth.user.id,
         });
     }
 
@@ -105,10 +110,8 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { auth, response } = await requireAuth(req, "write");
+    if (response) return response;
 
     const { id } = await params;
 
@@ -125,15 +128,15 @@ export async function DELETE(req, { params }) {
     await prisma.configurationItem.delete({ where: { id } });
 
     // Log the deletion
-    await logItemDeleted({ item, userId: session.user.id, req });
+    await logItemDeleted({ item, userId: auth.user.id, req });
 
     // Notify about deletion
     await notifyAssetChange({
         assetId: id,
         assetName: item.name,
         type: "ASSET_DELETED",
-        message: `Asset "${item.name}" was deleted by ${session.user.name || session.user.email}`,
-        changedByUserId: session.user.id,
+        message: `Asset "${item.name}" was deleted by ${auth.user.name || auth.user.email}`,
+        changedByUserId: auth.user.id,
     });
 
     return new Response(JSON.stringify({ message: "Deleted" }), { status: 200 });

@@ -2,13 +2,7 @@
 // Audit log viewing endpoint (read-only, admin/audit role only)
 
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
-
-// Helper to check if user can view audit logs (ADMIN or AUDIT role)
-function canViewAuditLogs(role) {
-    return role === "ADMIN" || role === "AUDIT";
-}
+import { requireAuth } from "@/lib/auth";
 
 /**
  * @swagger
@@ -73,17 +67,8 @@ function canViewAuditLogs(role) {
  *         description: Forbidden (requires Admin or Audit role)
  */
 export async function GET(request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-
-    if (!canViewAuditLogs(session.user.role)) {
-        return new Response(
-            JSON.stringify({ error: "Forbidden: Admin or Audit role required" }),
-            { status: 403 }
-        );
-    }
+    const { response } = await requireAuth(request, "audit");
+    if (response) return response;
 
     try {
         const { searchParams } = new URL(request.url);

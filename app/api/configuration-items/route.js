@@ -1,36 +1,6 @@
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth, jsonError } from "@/lib/auth";
 import { logItemCreated } from "@/lib/audit";
-
-// Helper to check if the user can write (ADMIN, USER, API)
-function canWrite(role) {
-    return role === "ADMIN" || role === "USER" || role === "API";
-}
-
-// Helper to get user ID from session or API token
-async function getUserIdFromRequest(request) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        const apiToken = authHeader.slice("Bearer ".length).trim();
-        try {
-            const tokenRecord = await prisma.apiToken.findUnique({
-                where: { token: apiToken },
-                include: { user: true },
-            });
-            if (tokenRecord && tokenRecord.user) {
-                return { userId: tokenRecord.user.id, authorized: true };
-            }
-        } catch (error) {
-            console.error("Error checking API token:", error);
-        }
-    }
-    const session = await getServerSession(authOptions);
-    if (session?.user?.id) {
-        return { userId: session.user.id, authorized: true, session };
-    }
-    return { authorized: false };
-}
 
 /**
  * @swagger
@@ -96,6 +66,7 @@ async function getUserIdFromRequest(request) {
  *     description: Create a new asset in the CMDB
  *     tags: [Configuration Items]
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     requestBody:
  *       required: true
@@ -136,18 +107,16 @@ async function getUserIdFromRequest(request) {
  *         description: Forbidden (read-only access)
  */
 export async function GET(request) {
-    const { authorized } = await getUserIdFromRequest(request);
-    if (!authorized) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     // Parse query parameters for search, filter, and pagination
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const typeId = searchParams.get("typeId") || "";
     const status = searchParams.get("status") || "";
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
 
     // Build where clause for filtering
     const where = {};
@@ -225,20 +194,24 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-    if (!canWrite(session.user.role)) {
-        return new Response(JSON.stringify({ error: "Forbidden: Read-only access" }), { status: 403 });
-    }
+    const { auth, response } = await requireAuth(request, "write");
+    if (response) return response;
 
-    const { name, description, itemTypeId, ip, mac, status, tagIds } = await request.json();
+    let body;
+    try {
+        body = await request.json();
+    } catch {
+        return jsonError(400, "Invalid JSON body");
+    }
+    const { name, description, itemTypeId, ip, mac, status, tagIds } = body || {};
+    if (typeof name !== "string" || !name.trim()) {
+        return jsonError(400, "Field 'name' is required");
+    }
     
     const data = {
         name,
         description,
-        userId: session.user.id,
+        userId: auth.user.id,
         itemTypeId: itemTypeId || null,
         ip,
         mac,
@@ -258,7 +231,7 @@ export async function POST(request) {
     });
 
     // Log the creation
-    await logItemCreated({ item, userId: session.user.id, req: request });
+    await logItemCreated({ item, userId: auth.user.id, req: request });
 
     return new Response(JSON.stringify(item), { status: 201 });
 }

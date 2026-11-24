@@ -229,6 +229,7 @@ export type ConfigurationItemWhereInput = {
   relationsFrom?: Prisma.AssetRelationListRelationFilter
   relationsTo?: Prisma.AssetRelationListRelationFilter
   maintenanceSchedules?: Prisma.MaintenanceScheduleListRelationFilter
+  favoritedBy?: Prisma.FavoriteItemListRelationFilter
 }
 
 export type ConfigurationItemOrderByWithRelationInput = {
@@ -249,6 +250,7 @@ export type ConfigurationItemOrderByWithRelationInput = {
   relationsFrom?: Prisma.AssetRelationOrderByRelationAggregateInput
   relationsTo?: Prisma.AssetRelationOrderByRelationAggregateInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleOrderByRelationAggregateInput
+  favoritedBy?: Prisma.FavoriteItemOrderByRelationAggregateInput
 }
 
 export type ConfigurationItemWhereUniqueInput = Prisma.AtLeast<{
@@ -272,6 +274,7 @@ export type ConfigurationItemWhereUniqueInput = Prisma.AtLeast<{
   relationsFrom?: Prisma.AssetRelationListRelationFilter
   relationsTo?: Prisma.AssetRelationListRelationFilter
   maintenanceSchedules?: Prisma.MaintenanceScheduleListRelationFilter
+  favoritedBy?: Prisma.FavoriteItemListRelationFilter
 }, "id">
 
 export type ConfigurationItemOrderByWithAggregationInput = {
@@ -322,6 +325,7 @@ export type ConfigurationItemCreateInput = {
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateInput = {
@@ -340,6 +344,7 @@ export type ConfigurationItemUncheckedCreateInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUpdateInput = {
@@ -358,6 +363,7 @@ export type ConfigurationItemUpdateInput = {
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateInput = {
@@ -376,6 +382,7 @@ export type ConfigurationItemUncheckedUpdateInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemCreateManyInput = {
@@ -647,6 +654,20 @@ export type ConfigurationItemUpdateOneRequiredWithoutMaintenanceSchedulesNestedI
   update?: Prisma.XOR<Prisma.XOR<Prisma.ConfigurationItemUpdateToOneWithWhereWithoutMaintenanceSchedulesInput, Prisma.ConfigurationItemUpdateWithoutMaintenanceSchedulesInput>, Prisma.ConfigurationItemUncheckedUpdateWithoutMaintenanceSchedulesInput>
 }
 
+export type ConfigurationItemCreateNestedOneWithoutFavoritedByInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedCreateWithoutFavoritedByInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutFavoritedByInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+}
+
+export type ConfigurationItemUpdateOneRequiredWithoutFavoritedByNestedInput = {
+  create?: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedCreateWithoutFavoritedByInput>
+  connectOrCreate?: Prisma.ConfigurationItemCreateOrConnectWithoutFavoritedByInput
+  upsert?: Prisma.ConfigurationItemUpsertWithoutFavoritedByInput
+  connect?: Prisma.ConfigurationItemWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ConfigurationItemUpdateToOneWithWhereWithoutFavoritedByInput, Prisma.ConfigurationItemUpdateWithoutFavoritedByInput>, Prisma.ConfigurationItemUncheckedUpdateWithoutFavoritedByInput>
+}
+
 export type ConfigurationItemCreateWithoutUserInput = {
   id?: string
   name: string
@@ -662,6 +683,7 @@ export type ConfigurationItemCreateWithoutUserInput = {
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutUserInput = {
@@ -679,6 +701,7 @@ export type ConfigurationItemUncheckedCreateWithoutUserInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutUserInput = {
@@ -737,6 +760,7 @@ export type ConfigurationItemCreateWithoutItemTypeInput = {
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutItemTypeInput = {
@@ -754,6 +778,7 @@ export type ConfigurationItemUncheckedCreateWithoutItemTypeInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutItemTypeInput = {
@@ -796,6 +821,7 @@ export type ConfigurationItemCreateWithoutTagsInput = {
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutTagsInput = {
@@ -813,6 +839,7 @@ export type ConfigurationItemUncheckedCreateWithoutTagsInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutTagsInput = {
@@ -851,6 +878,7 @@ export type ConfigurationItemCreateWithoutRelationsFromInput = {
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutRelationsFromInput = {
@@ -868,6 +896,7 @@ export type ConfigurationItemUncheckedCreateWithoutRelationsFromInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutRelationsFromInput = {
@@ -890,6 +919,7 @@ export type ConfigurationItemCreateWithoutRelationsToInput = {
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutRelationsToInput = {
@@ -907,6 +937,7 @@ export type ConfigurationItemUncheckedCreateWithoutRelationsToInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutRelationsToInput = {
@@ -940,6 +971,7 @@ export type ConfigurationItemUpdateWithoutRelationsFromInput = {
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutRelationsFromInput = {
@@ -957,6 +989,7 @@ export type ConfigurationItemUncheckedUpdateWithoutRelationsFromInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUpsertWithoutRelationsToInput = {
@@ -985,6 +1018,7 @@ export type ConfigurationItemUpdateWithoutRelationsToInput = {
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutRelationsToInput = {
@@ -1002,6 +1036,7 @@ export type ConfigurationItemUncheckedUpdateWithoutRelationsToInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemCreateWithoutCustomFieldValuesInput = {
@@ -1019,6 +1054,7 @@ export type ConfigurationItemCreateWithoutCustomFieldValuesInput = {
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutCustomFieldValuesInput = {
@@ -1036,6 +1072,7 @@ export type ConfigurationItemUncheckedCreateWithoutCustomFieldValuesInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutCustomFieldValuesInput = {
@@ -1069,6 +1106,7 @@ export type ConfigurationItemUpdateWithoutCustomFieldValuesInput = {
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutCustomFieldValuesInput = {
@@ -1086,6 +1124,7 @@ export type ConfigurationItemUncheckedUpdateWithoutCustomFieldValuesInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemCreateWithoutMaintenanceSchedulesInput = {
@@ -1103,6 +1142,7 @@ export type ConfigurationItemCreateWithoutMaintenanceSchedulesInput = {
   customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
   relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
+  favoritedBy?: Prisma.FavoriteItemCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemUncheckedCreateWithoutMaintenanceSchedulesInput = {
@@ -1120,6 +1160,7 @@ export type ConfigurationItemUncheckedCreateWithoutMaintenanceSchedulesInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
   relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
   relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutConfigurationItemInput
 }
 
 export type ConfigurationItemCreateOrConnectWithoutMaintenanceSchedulesInput = {
@@ -1153,6 +1194,7 @@ export type ConfigurationItemUpdateWithoutMaintenanceSchedulesInput = {
   customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutMaintenanceSchedulesInput = {
@@ -1170,6 +1212,95 @@ export type ConfigurationItemUncheckedUpdateWithoutMaintenanceSchedulesInput = {
   customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
+}
+
+export type ConfigurationItemCreateWithoutFavoritedByInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ip?: string | null
+  mac?: string | null
+  status?: string
+  user?: Prisma.UserCreateNestedOneWithoutConfigurationItemsInput
+  itemType?: Prisma.ItemTypeCreateNestedOneWithoutConfigurationItemsInput
+  tags?: Prisma.TagCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationCreateNestedManyWithoutTargetInput
+  maintenanceSchedules?: Prisma.MaintenanceScheduleCreateNestedManyWithoutConfigurationItemInput
+}
+
+export type ConfigurationItemUncheckedCreateWithoutFavoritedByInput = {
+  id?: string
+  name: string
+  description?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId?: string | null
+  ip?: string | null
+  mac?: string | null
+  itemTypeId?: string | null
+  status?: string
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutConfigurationItemsInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedCreateNestedManyWithoutConfigurationItemInput
+  relationsFrom?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutSourceInput
+  relationsTo?: Prisma.AssetRelationUncheckedCreateNestedManyWithoutTargetInput
+  maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedCreateNestedManyWithoutConfigurationItemInput
+}
+
+export type ConfigurationItemCreateOrConnectWithoutFavoritedByInput = {
+  where: Prisma.ConfigurationItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedCreateWithoutFavoritedByInput>
+}
+
+export type ConfigurationItemUpsertWithoutFavoritedByInput = {
+  update: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedUpdateWithoutFavoritedByInput>
+  create: Prisma.XOR<Prisma.ConfigurationItemCreateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedCreateWithoutFavoritedByInput>
+  where?: Prisma.ConfigurationItemWhereInput
+}
+
+export type ConfigurationItemUpdateToOneWithWhereWithoutFavoritedByInput = {
+  where?: Prisma.ConfigurationItemWhereInput
+  data: Prisma.XOR<Prisma.ConfigurationItemUpdateWithoutFavoritedByInput, Prisma.ConfigurationItemUncheckedUpdateWithoutFavoritedByInput>
+}
+
+export type ConfigurationItemUpdateWithoutFavoritedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneWithoutConfigurationItemsNestedInput
+  itemType?: Prisma.ItemTypeUpdateOneWithoutConfigurationItemsNestedInput
+  tags?: Prisma.TagUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
+  maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+}
+
+export type ConfigurationItemUncheckedUpdateWithoutFavoritedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mac?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  itemTypeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.TagUncheckedUpdateManyWithoutConfigurationItemsNestedInput
+  customFieldValues?: Prisma.CustomFieldValueUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
+  relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
+  maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemCreateManyUserInput = {
@@ -1199,6 +1330,7 @@ export type ConfigurationItemUpdateWithoutUserInput = {
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutUserInput = {
@@ -1216,6 +1348,7 @@ export type ConfigurationItemUncheckedUpdateWithoutUserInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutUserInput = {
@@ -1257,6 +1390,7 @@ export type ConfigurationItemUpdateWithoutItemTypeInput = {
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutItemTypeInput = {
@@ -1274,6 +1408,7 @@ export type ConfigurationItemUncheckedUpdateWithoutItemTypeInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutItemTypeInput = {
@@ -1303,6 +1438,7 @@ export type ConfigurationItemUpdateWithoutTagsInput = {
   relationsFrom?: Prisma.AssetRelationUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateWithoutTagsInput = {
@@ -1320,6 +1456,7 @@ export type ConfigurationItemUncheckedUpdateWithoutTagsInput = {
   relationsFrom?: Prisma.AssetRelationUncheckedUpdateManyWithoutSourceNestedInput
   relationsTo?: Prisma.AssetRelationUncheckedUpdateManyWithoutTargetNestedInput
   maintenanceSchedules?: Prisma.MaintenanceScheduleUncheckedUpdateManyWithoutConfigurationItemNestedInput
+  favoritedBy?: Prisma.FavoriteItemUncheckedUpdateManyWithoutConfigurationItemNestedInput
 }
 
 export type ConfigurationItemUncheckedUpdateManyWithoutTagsInput = {
@@ -1346,6 +1483,7 @@ export type ConfigurationItemCountOutputType = {
   relationsFrom: number
   relationsTo: number
   maintenanceSchedules: number
+  favoritedBy: number
 }
 
 export type ConfigurationItemCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1354,6 +1492,7 @@ export type ConfigurationItemCountOutputTypeSelect<ExtArgs extends runtime.Types
   relationsFrom?: boolean | ConfigurationItemCountOutputTypeCountRelationsFromArgs
   relationsTo?: boolean | ConfigurationItemCountOutputTypeCountRelationsToArgs
   maintenanceSchedules?: boolean | ConfigurationItemCountOutputTypeCountMaintenanceSchedulesArgs
+  favoritedBy?: boolean | ConfigurationItemCountOutputTypeCountFavoritedByArgs
 }
 
 /**
@@ -1401,6 +1540,13 @@ export type ConfigurationItemCountOutputTypeCountMaintenanceSchedulesArgs<ExtArg
   where?: Prisma.MaintenanceScheduleWhereInput
 }
 
+/**
+ * ConfigurationItemCountOutputType without action
+ */
+export type ConfigurationItemCountOutputTypeCountFavoritedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FavoriteItemWhereInput
+}
+
 
 export type ConfigurationItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1420,6 +1566,7 @@ export type ConfigurationItemSelect<ExtArgs extends runtime.Types.Extensions.Int
   relationsFrom?: boolean | Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>
   relationsTo?: boolean | Prisma.ConfigurationItem$relationsToArgs<ExtArgs>
   maintenanceSchedules?: boolean | Prisma.ConfigurationItem$maintenanceSchedulesArgs<ExtArgs>
+  favoritedBy?: boolean | Prisma.ConfigurationItem$favoritedByArgs<ExtArgs>
   _count?: boolean | Prisma.ConfigurationItemCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["configurationItem"]>
 
@@ -1475,6 +1622,7 @@ export type ConfigurationItemInclude<ExtArgs extends runtime.Types.Extensions.In
   relationsFrom?: boolean | Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>
   relationsTo?: boolean | Prisma.ConfigurationItem$relationsToArgs<ExtArgs>
   maintenanceSchedules?: boolean | Prisma.ConfigurationItem$maintenanceSchedulesArgs<ExtArgs>
+  favoritedBy?: boolean | Prisma.ConfigurationItem$favoritedByArgs<ExtArgs>
   _count?: boolean | Prisma.ConfigurationItemCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ConfigurationItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1496,6 +1644,7 @@ export type $ConfigurationItemPayload<ExtArgs extends runtime.Types.Extensions.I
     relationsFrom: Prisma.$AssetRelationPayload<ExtArgs>[]
     relationsTo: Prisma.$AssetRelationPayload<ExtArgs>[]
     maintenanceSchedules: Prisma.$MaintenanceSchedulePayload<ExtArgs>[]
+    favoritedBy: Prisma.$FavoriteItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1909,6 +2058,7 @@ export interface Prisma__ConfigurationItemClient<T, Null = never, ExtArgs extend
   relationsFrom<T extends Prisma.ConfigurationItem$relationsFromArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$relationsFromArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssetRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   relationsTo<T extends Prisma.ConfigurationItem$relationsToArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$relationsToArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssetRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   maintenanceSchedules<T extends Prisma.ConfigurationItem$maintenanceSchedulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$maintenanceSchedulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaintenanceSchedulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  favoritedBy<T extends Prisma.ConfigurationItem$favoritedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ConfigurationItem$favoritedByArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoriteItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2497,6 +2647,30 @@ export type ConfigurationItem$maintenanceSchedulesArgs<ExtArgs extends runtime.T
   take?: number
   skip?: number
   distinct?: Prisma.MaintenanceScheduleScalarFieldEnum | Prisma.MaintenanceScheduleScalarFieldEnum[]
+}
+
+/**
+ * ConfigurationItem.favoritedBy
+ */
+export type ConfigurationItem$favoritedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FavoriteItem
+   */
+  select?: Prisma.FavoriteItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FavoriteItem
+   */
+  omit?: Prisma.FavoriteItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FavoriteItemInclude<ExtArgs> | null
+  where?: Prisma.FavoriteItemWhereInput
+  orderBy?: Prisma.FavoriteItemOrderByWithRelationInput | Prisma.FavoriteItemOrderByWithRelationInput[]
+  cursor?: Prisma.FavoriteItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FavoriteItemScalarFieldEnum | Prisma.FavoriteItemScalarFieldEnum[]
 }
 
 /**

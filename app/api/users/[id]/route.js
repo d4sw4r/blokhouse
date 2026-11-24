@@ -1,58 +1,95 @@
-// app/api/users/[id]/route.js
+// app/api/users/[id]/route.js — user management (admin only)
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
+import { requireAuth, isValidRole, ROLES, jsonError } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
+import { USER_SELECT, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
 
-export async function GET(request, context) {
-    const { params } = context;
-    const { id } = params;
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-    const user = await prisma.user.findUnique({
-        where: { id },
-        select: { id: true, name: true, email: true, role: true },
-    });
-    if (!user) {
-        return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
-    }
+async function countOtherAdmins(id) {
+    return prisma.user.count({ where: { role: "ADMIN", NOT: { id } } });
+}
+
+export async function GET(request, { params }) {
+    const { response } = await requireAuth(request, "admin");
+    if (response) return response;
+    const { id } = await params;
+    const user = await prisma.user.findUnique({ where: { id }, select: USER_SELECT });
+    if (!user) return jsonError(404, "Not found");
     return new Response(JSON.stringify(user), { status: 200 });
 }
 
-export async function PUT(request, context) {
-    const { params } = context;
-    const { id } = params;
-    const { name, email, role } = await request.json();
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+export async function PUT(request, { params }) {
+    const { auth, response } = await requireAuth(request, "admin");
+    if (response) return response;
+    const { id } = await params;
+    const { name, email, role, password } = await request.json();
+
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (email !== undefined) {
+        if (!isValidEmail(email)) return jsonError(400, "A valid email is required");
+        data.email = email;
     }
+    if (role !== undefined) {
+        if (!isValidRole(role)) return jsonError(400, `Role must be one of: ${ROLES.join(", ")}`);
+        data.role = role;
+    }
+    if (password !== undefined && password !== "") {
+        const pwError = passwordProblem(password);
+        if (pwError) return jsonError(400, pwError);
+        data.password = hashPassword(password);
+    }
+
+    const existing = await prisma.user.findUnique({ where: { id }, select: USER_SELECT });
+    if (!existing) return jsonError(404, "Not found");
+    if (existing.role === "ADMIN" && data.role && data.role !== "ADMIN" && (await countOtherAdmins(id)) === 0) {
+        return jsonError(400, "Cannot demote the last administrator");
+    }
+
     try {
-        const updated = await prisma.user.update({
-            where: { id },
-            data: { name, email, role },
-            select: { id: true, name: true, email: true, role: true },
+        const updated = await prisma.user.update({ where: { id }, data, select: USER_SELECT });
+        await createAuditLog({
+            action: "USER_UPDATED",
+            entityType: "User",
+            entityId: id,
+            userId: auth.user.id,
+            description: `Updated user ${updated.email}${data.password ? " (password changed)" : ""}`,
+            oldValues: existing,
+            newValues: updated,
+            req: request,
         });
         return new Response(JSON.stringify(updated), { status: 200 });
     } catch (error) {
         console.error("Update user error:", error);
-        return new Response(JSON.stringify({ error: "Update failed" }), { status: 500 });
+        return jsonError(500, "Update failed");
     }
 }
 
-export async function DELETE(request, context) {
-    const { params } = context;
-    const { id } = params;
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+export async function DELETE(request, { params }) {
+    const { auth, response } = await requireAuth(request, "admin");
+    if (response) return response;
+    const { id } = await params;
+
+    if (id === auth.user.id) return jsonError(400, "You cannot delete your own account");
+    const existing = await prisma.user.findUnique({ where: { id }, select: USER_SELECT });
+    if (!existing) return jsonError(404, "Not found");
+    if (existing.role === "ADMIN" && (await countOtherAdmins(id)) === 0) {
+        return jsonError(400, "Cannot delete the last administrator");
     }
+
     try {
         await prisma.user.delete({ where: { id } });
+        await createAuditLog({
+            action: "USER_DELETED",
+            entityType: "User",
+            entityId: id,
+            userId: auth.user.id,
+            description: `Deleted user ${existing.email}`,
+            oldValues: existing,
+            req: request,
+        });
         return new Response(JSON.stringify({ message: "Deleted" }), { status: 200 });
     } catch (error) {
         console.error("Delete user error:", error);
-        return new Response(JSON.stringify({ error: "Delete failed" }), { status: 500 });
+        return jsonError(500, "Delete failed");
     }
 }

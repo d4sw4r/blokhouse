@@ -64,7 +64,8 @@ export const ModelName = {
   CustomField: 'CustomField',
   CustomFieldValue: 'CustomFieldValue',
   Notification: 'Notification',
-  MaintenanceSchedule: 'MaintenanceSchedule'
+  MaintenanceSchedule: 'MaintenanceSchedule',
+  FavoriteItem: 'FavoriteItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -181,7 +182,12 @@ export type AssetRelationScalarFieldEnum = (typeof AssetRelationScalarFieldEnum)
 
 export const ApiTokenScalarFieldEnum = {
   id: 'id',
-  token: 'token',
+  name: 'name',
+  tokenHash: 'tokenHash',
+  prefix: 'prefix',
+  scopes: 'scopes',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
   userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -267,6 +273,16 @@ export const MaintenanceScheduleScalarFieldEnum = {
 } as const
 
 export type MaintenanceScheduleScalarFieldEnum = (typeof MaintenanceScheduleScalarFieldEnum)[keyof typeof MaintenanceScheduleScalarFieldEnum]
+
+
+export const FavoriteItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  configurationItemId: 'configurationItemId',
+  createdAt: 'createdAt'
+} as const
+
+export type FavoriteItemScalarFieldEnum = (typeof FavoriteItemScalarFieldEnum)[keyof typeof FavoriteItemScalarFieldEnum]
 
 
 export const SortOrder = {

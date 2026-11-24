@@ -1,18 +1,11 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
 // GET /api/maintenance - List all maintenance schedules
 export async function GET(request: NextRequest) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -64,14 +57,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/maintenance - Create a new maintenance schedule
 export async function POST(request: NextRequest) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as any;
-    if (!session?.user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
+    const { auth, response } = await requireAuth(request, "write");
+    if (response) return response;
 
     try {
         const body = await request.json();
@@ -92,7 +79,7 @@ export async function POST(request: NextRequest) {
                 scheduledDate: new Date(scheduledDate),
                 priority: priority || "MEDIUM",
                 assignedTo,
-                createdBy: session.user.id,
+                createdBy: auth.user.id,
             },
             include: {
                 configurationItem: {
@@ -107,7 +94,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Create notification for the assigned user if different from creator
-        if (assignedTo && assignedTo !== session.user.id) {
+        if (assignedTo && assignedTo !== auth.user.id) {
             await prisma.notification.create({
                 data: {
                     userId: assignedTo,

@@ -46,13 +46,46 @@ DATABASE_URL=file:/var/lib/blokhouse/data.db
 ```
 
 #### `ADMIN_PASSWORD` _(optional, seed only)_
-Sets the initial admin password when seeding the database. If not set, a random password is generated and printed to the console.
+Sets the initial admin password when seeding the database. If not set, a random password is generated and written to `ADMIN_PASSWORD_FILE` (default: `initial-admin-password` next to the database file, mode 0600). It is never written to the logs.
 
 ```bash
 ADMIN_PASSWORD=my-initial-password
 ```
 
 This variable is only used once during the first `prisma db seed` run. After that it has no effect.
+
+#### `ADMIN_EMAIL` _(optional, seed only)_
+Email of the initial administrator. Default: `admin@example.com`. The seed only
+runs its logic when no `ADMIN` user exists yet.
+
+### Optional Variables
+
+#### `ALLOW_SIGNUP`
+Allow public self-registration on `/signup`. Default: `false`.
+New self-registered accounts get the `READONLY` role; an administrator must
+promote them. Leave this disabled for internet-facing instances.
+
+```bash
+ALLOW_SIGNUP=true
+```
+
+#### `DISCOVERY_ENABLED`, `NETWORK_SUBNET`, `DISCOVERY_USE_SUDO`
+Network discovery runs `nmap -sn` against a subnet and is **disabled by default**.
+It is only available to administrators.
+
+```bash
+DISCOVERY_ENABLED=true
+NETWORK_SUBNET=10.0.0.0/24      # default subnet (IPv4 CIDR, /8–/32)
+DISCOVERY_USE_SUDO=false        # set to true to run `sudo -n nmap` (needed for MAC addresses)
+```
+
+`nmap` must be installed on the host; it is not part of the Docker image.
+
+#### `DB_ACCEPT_DATA_LOSS`
+The production start script (`npm run start:prod`, used by the Docker image)
+syncs the database schema on startup. It refuses changes that would drop data.
+Set `DB_ACCEPT_DATA_LOSS=true` for a single start only if you have a backup and
+understand which data will be dropped.
 
 ## Complete Example
 
@@ -74,9 +107,9 @@ services:
     environment:
       - NEXTAUTH_URL=https://blokhouse.company.com
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - DATABASE_URL=file:/data/blokhouse.db
+      - DATABASE_URL=file:/app/data/blokhouse.db
     volumes:
-      - ./data:/data
+      - ./data:/app/data
 ```
 
 ## First Run

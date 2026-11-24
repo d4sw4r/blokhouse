@@ -48,7 +48,7 @@ describe("Audit Logs API", () => {
             const data = await response.json();
 
             expect(response.status).toBe(403);
-            expect(data.error).toContain("Admin or Audit role required");
+            expect(data.error).toContain("Forbidden");
         });
 
         it("returns 403 for API role", async () => {

@@ -2,12 +2,7 @@
 // Manage custom field definitions
 
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import authOptions from "@/lib/authOptions";
-
-function canWrite(role) {
-    return role === "ADMIN" || role === "USER" || role === "API";
-}
+import { requireAuth } from "@/lib/auth";
 
 /**
  * @swagger
@@ -98,10 +93,8 @@ function canWrite(role) {
  *         description: Conflict (field with this name already exists for type)
  */
 export async function GET(request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
+    const { response } = await requireAuth(request, "read");
+    if (response) return response;
 
     try {
         const { searchParams } = new URL(request.url);
@@ -129,13 +122,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
-    if (!canWrite(session.user.role)) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
-    }
+    const { response } = await requireAuth(request, "write");
+    if (response) return response;
 
     try {
         const { name, label, description, type, required, defaultValue, options, itemTypeId } = await request.json();

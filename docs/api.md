@@ -28,26 +28,70 @@ curl https://your-blokhouse-instance/api/docs
 
 ## Authentication
 
-### Bearer Token (Recommended for integrations)
+Every API endpoint requires authentication, except `/api/health`, `/api/docs`
+and the NextAuth endpoints under `/api/auth`.
 
-Include the token in the Authorization header:
+### Bearer Token (recommended for integrations)
+
+Send the token in the `Authorization` header. Tokens are never accepted in the URL.
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_TOKEN" \
-  https://your-blokhouse-instance/api/items
+curl -H "Authorization: Bearer bh_..." \
+  https://your-blokhouse-instance/api/configuration-items
+```
+
+Check a token and see its effective permissions:
+
+```bash
+curl -H "Authorization: Bearer bh_..." https://your-blokhouse-instance/api/validate-token
+# {"valid":true,"scopes":["read"],"user":{"email":"ci@example.com","role":"API"}}
 ```
 
 ### Session Cookie
 
 For browser-based requests, the session cookie is automatically sent when authenticated.
 
+## Permissions
+
+Access is controlled by **scopes**:
+
+| Scope   | Allows |
+|---------|--------|
+| `read`  | Read CMDB data: items, types, tags, inventories (Ansible/Puppet/Chef) |
+| `write` | Create, update and delete CMDB data |
+| `audit` | Read and export audit logs |
+| `admin` | Manage users, list all API tokens, network discovery |
+
+Each user role grants a fixed set of scopes:
+
+| Role       | Scopes |
+|------------|--------|
+| `ADMIN`    | read, write, audit, admin |
+| `USER`     | read, write |
+| `API`      | read, write (service account, cannot log in to the UI) |
+| `AUDIT`    | read, audit |
+| `READONLY` | read |
+
+An API token carries its own scopes, chosen when it is created. Its **effective**
+scopes are the intersection of the token's scopes and its owner's role, so a
+token can never do more than the user who created it. If the user is demoted,
+their tokens are demoted immediately.
+
+Missing authentication returns `401`, missing permission returns `403`.
+
 ## Generating API Tokens
 
 1. Log in to Blokhouse
-2. Go to **Settings** → **API Tokens**
-3. Click **Create Token**
-4. Give it a descriptive name
-5. Copy the token immediately (it won't be shown again)
+2. Go to **Admin** → **API Tokens**
+3. Enter a name (e.g. `ansible-prod`), select scopes and an expiry
+4. Click **Generate API Token**
+5. Copy the token immediately — only a SHA-256 hash is stored, it cannot be shown again
+
+Tokens can be revoked at any time on the same page. Tokens can only be created
+and revoked from an interactive session, not with another token.
+
+Best practice for automation: create a dedicated user with the `API` role and
+issue tokens for it, using `read` only for inventory consumers (Ansible, Puppet, Chef).
 
 ## Core Endpoints
 
@@ -55,16 +99,16 @@ For browser-based requests, the session cookie is automatically sent when authen
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/items` | List all configuration items |
-| POST | `/api/items` | Create a new item |
-| GET | `/api/items/:id` | Get a specific item |
-| PUT | `/api/items/:id` | Update an item |
-| DELETE | `/api/items/:id` | Delete an item |
+| GET | `/api/configuration-items` | List all configuration items |
+| POST | `/api/configuration-items` | Create a new item |
+| GET | `/api/configuration-items/:id` | Get a specific item |
+| PUT | `/api/configuration-items/:id` | Update an item |
+| DELETE | `/api/configuration-items/:id` | Delete an item |
 
 **Example:**
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  https://blokhouse.example.com/api/items
+  https://blokhouse.example.com/api/configuration-items
 ```
 
 ### Tags

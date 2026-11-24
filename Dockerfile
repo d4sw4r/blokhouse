@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # 4. Install dependencies
-RUN npm install --frozen-lockfile
+RUN npm ci
 
 # 5. Copy the rest of the application files
 COPY . .
@@ -16,8 +16,8 @@ COPY . .
 # 6. Generate prisma Client
 RUN npx prisma generate
 
-# 7. Disable ESLint and TypeScript errors during the build
-RUN NEXT_DISABLE_ESLINT=1 NEXT_DISABLE_TYPECHECK=1 npm run build
+# 7. Build (lint and type checks run in CI)
+RUN npm run build
 
 # 8. Use a lightweight Node.js image for production
 FROM node:24-alpine AS runner
@@ -35,12 +35,24 @@ COPY --from=builder /app/public public
 COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/prisma prisma
 COPY --from=builder /app/prisma.config.ts .
+COPY --from=builder /app/src/generated src/generated
+COPY --from=builder /app/scripts scripts
 
-RUN chown -R nextjs:nodejs /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    DATABASE_URL=file:/app/data/blokhouse.db
+
+# Persistent data lives in /app/data (mount a volume here), never in /app/prisma:
+# a volume over /app/prisma would shadow the schema shipped with new versions.
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app
+VOLUME ["/app/data"]
 USER nextjs
 
 # 10. Expose port
 EXPOSE 3000
 
-# 11. Start the Next.js application
-CMD ["npm", "run", "rs"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1
+
+# 11. Sync schema (without implicit data loss), seed the first admin, start
+CMD ["sh", "scripts/start.sh"]
