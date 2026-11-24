@@ -204,6 +204,7 @@ export type UserWhereInput = {
   ApiToken?: Prisma.ApiTokenListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  favoriteItems?: Prisma.FavoriteItemListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -220,6 +221,7 @@ export type UserOrderByWithRelationInput = {
   ApiToken?: Prisma.ApiTokenOrderByRelationAggregateInput
   auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  favoriteItems?: Prisma.FavoriteItemOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -239,6 +241,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   ApiToken?: Prisma.ApiTokenListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  favoriteItems?: Prisma.FavoriteItemListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -281,6 +284,7 @@ export type UserCreateInput = {
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -297,6 +301,7 @@ export type UserUncheckedCreateInput = {
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -313,6 +318,7 @@ export type UserUpdateInput = {
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -329,6 +335,7 @@ export type UserUncheckedUpdateInput = {
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -463,12 +470,10 @@ export type UserCreateNestedOneWithoutApiTokenInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneWithoutApiTokenNestedInput = {
+export type UserUpdateOneRequiredWithoutApiTokenNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutApiTokenInput, Prisma.UserUncheckedCreateWithoutApiTokenInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutApiTokenInput
   upsert?: Prisma.UserUpsertWithoutApiTokenInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutApiTokenInput, Prisma.UserUpdateWithoutApiTokenInput>, Prisma.UserUncheckedUpdateWithoutApiTokenInput>
 }
@@ -503,6 +508,20 @@ export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
 }
 
+export type UserCreateNestedOneWithoutFavoriteItemsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteItemsInput, Prisma.UserUncheckedCreateWithoutFavoriteItemsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteItemsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutFavoriteItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteItemsInput, Prisma.UserUncheckedCreateWithoutFavoriteItemsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteItemsInput
+  upsert?: Prisma.UserUpsertWithoutFavoriteItemsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFavoriteItemsInput, Prisma.UserUpdateWithoutFavoriteItemsInput>, Prisma.UserUncheckedUpdateWithoutFavoriteItemsInput>
+}
+
 export type UserCreateWithoutAccountsInput = {
   id?: string
   name?: string | null
@@ -516,6 +535,7 @@ export type UserCreateWithoutAccountsInput = {
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -531,6 +551,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -562,6 +583,7 @@ export type UserUpdateWithoutAccountsInput = {
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -577,6 +599,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -592,6 +615,7 @@ export type UserCreateWithoutSessionsInput = {
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -607,6 +631,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -638,6 +663,7 @@ export type UserUpdateWithoutSessionsInput = {
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -653,6 +679,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutConfigurationItemsInput = {
@@ -668,6 +695,7 @@ export type UserCreateWithoutConfigurationItemsInput = {
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutConfigurationItemsInput = {
@@ -683,6 +711,7 @@ export type UserUncheckedCreateWithoutConfigurationItemsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutConfigurationItemsInput = {
@@ -714,6 +743,7 @@ export type UserUpdateWithoutConfigurationItemsInput = {
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutConfigurationItemsInput = {
@@ -729,6 +759,7 @@ export type UserUncheckedUpdateWithoutConfigurationItemsInput = {
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutApiTokenInput = {
@@ -744,6 +775,7 @@ export type UserCreateWithoutApiTokenInput = {
   configurationItems?: Prisma.ConfigurationItemCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApiTokenInput = {
@@ -759,6 +791,7 @@ export type UserUncheckedCreateWithoutApiTokenInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApiTokenInput = {
@@ -790,6 +823,7 @@ export type UserUpdateWithoutApiTokenInput = {
   configurationItems?: Prisma.ConfigurationItemUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApiTokenInput = {
@@ -805,6 +839,7 @@ export type UserUncheckedUpdateWithoutApiTokenInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -820,6 +855,7 @@ export type UserCreateWithoutAuditLogsInput = {
   configurationItems?: Prisma.ConfigurationItemCreateNestedManyWithoutUserInput
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -835,6 +871,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedCreateNestedManyWithoutUserInput
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -866,6 +903,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   configurationItems?: Prisma.ConfigurationItemUpdateManyWithoutUserNestedInput
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -881,6 +919,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedUpdateManyWithoutUserNestedInput
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -896,6 +935,7 @@ export type UserCreateWithoutNotificationsInput = {
   configurationItems?: Prisma.ConfigurationItemCreateNestedManyWithoutUserInput
   ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -911,6 +951,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedCreateNestedManyWithoutUserInput
   ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -942,6 +983,7 @@ export type UserUpdateWithoutNotificationsInput = {
   configurationItems?: Prisma.ConfigurationItemUpdateManyWithoutUserNestedInput
   ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -957,6 +999,87 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   configurationItems?: Prisma.ConfigurationItemUncheckedUpdateManyWithoutUserNestedInput
   ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  favoriteItems?: Prisma.FavoriteItemUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutFavoriteItemsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  configurationItems?: Prisma.ConfigurationItemCreateNestedManyWithoutUserInput
+  ApiToken?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutFavoriteItemsInput = {
+  id?: string
+  name?: string | null
+  email?: string | null
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  configurationItems?: Prisma.ConfigurationItemUncheckedCreateNestedManyWithoutUserInput
+  ApiToken?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutFavoriteItemsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteItemsInput, Prisma.UserUncheckedCreateWithoutFavoriteItemsInput>
+}
+
+export type UserUpsertWithoutFavoriteItemsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteItemsInput, Prisma.UserUncheckedUpdateWithoutFavoriteItemsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteItemsInput, Prisma.UserUncheckedCreateWithoutFavoriteItemsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFavoriteItemsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteItemsInput, Prisma.UserUncheckedUpdateWithoutFavoriteItemsInput>
+}
+
+export type UserUpdateWithoutFavoriteItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  configurationItems?: Prisma.ConfigurationItemUpdateManyWithoutUserNestedInput
+  ApiToken?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFavoriteItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  configurationItems?: Prisma.ConfigurationItemUncheckedUpdateManyWithoutUserNestedInput
+  ApiToken?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -971,6 +1094,7 @@ export type UserCountOutputType = {
   ApiToken: number
   auditLogs: number
   notifications: number
+  favoriteItems: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -980,6 +1104,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   ApiToken?: boolean | UserCountOutputTypeCountApiTokenArgs
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
+  favoriteItems?: boolean | UserCountOutputTypeCountFavoriteItemsArgs
 }
 
 /**
@@ -1034,6 +1159,13 @@ export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.NotificationWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFavoriteItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FavoriteItemWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1049,6 +1181,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   ApiToken?: boolean | Prisma.User$ApiTokenArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  favoriteItems?: boolean | Prisma.User$favoriteItemsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1090,6 +1223,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   ApiToken?: boolean | Prisma.User$ApiTokenArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  favoriteItems?: boolean | Prisma.User$favoriteItemsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1104,6 +1238,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     ApiToken: Prisma.$ApiTokenPayload<ExtArgs>[]
     auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    favoriteItems: Prisma.$FavoriteItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1513,6 +1648,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   ApiToken<T extends Prisma.User$ApiTokenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ApiTokenArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ApiTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  favoriteItems<T extends Prisma.User$favoriteItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$favoriteItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoriteItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2076,6 +2212,30 @@ export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * User.favoriteItems
+ */
+export type User$favoriteItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FavoriteItem
+   */
+  select?: Prisma.FavoriteItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FavoriteItem
+   */
+  omit?: Prisma.FavoriteItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FavoriteItemInclude<ExtArgs> | null
+  where?: Prisma.FavoriteItemWhereInput
+  orderBy?: Prisma.FavoriteItemOrderByWithRelationInput | Prisma.FavoriteItemOrderByWithRelationInput[]
+  cursor?: Prisma.FavoriteItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FavoriteItemScalarFieldEnum | Prisma.FavoriteItemScalarFieldEnum[]
 }
 
 /**

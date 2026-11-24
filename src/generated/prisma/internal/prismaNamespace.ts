@@ -397,7 +397,8 @@ export const ModelName = {
   CustomField: 'CustomField',
   CustomFieldValue: 'CustomFieldValue',
   Notification: 'Notification',
-  MaintenanceSchedule: 'MaintenanceSchedule'
+  MaintenanceSchedule: 'MaintenanceSchedule',
+  FavoriteItem: 'FavoriteItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -413,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "assetRelation" | "apiToken" | "auditLog" | "customField" | "customFieldValue" | "notification" | "maintenanceSchedule"
+    modelProps: "user" | "account" | "session" | "verificationToken" | "itemType" | "tag" | "configurationItem" | "assetRelation" | "apiToken" | "auditLog" | "customField" | "customFieldValue" | "notification" | "maintenanceSchedule" | "favoriteItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1453,6 +1454,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FavoriteItem: {
+      payload: Prisma.$FavoriteItemPayload<ExtArgs>
+      fields: Prisma.FavoriteItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FavoriteItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FavoriteItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        findFirst: {
+          args: Prisma.FavoriteItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FavoriteItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        findMany: {
+          args: Prisma.FavoriteItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>[]
+        }
+        create: {
+          args: Prisma.FavoriteItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        createMany: {
+          args: Prisma.FavoriteItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FavoriteItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>[]
+        }
+        delete: {
+          args: Prisma.FavoriteItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        update: {
+          args: Prisma.FavoriteItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.FavoriteItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FavoriteItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FavoriteItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.FavoriteItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteItemPayload>
+        }
+        aggregate: {
+          args: Prisma.FavoriteItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFavoriteItem>
+        }
+        groupBy: {
+          args: Prisma.FavoriteItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FavoriteItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FavoriteItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FavoriteItemCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1590,7 +1665,12 @@ export type AssetRelationScalarFieldEnum = (typeof AssetRelationScalarFieldEnum)
 
 export const ApiTokenScalarFieldEnum = {
   id: 'id',
-  token: 'token',
+  name: 'name',
+  tokenHash: 'tokenHash',
+  prefix: 'prefix',
+  scopes: 'scopes',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
   userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1676,6 +1756,16 @@ export const MaintenanceScheduleScalarFieldEnum = {
 } as const
 
 export type MaintenanceScheduleScalarFieldEnum = (typeof MaintenanceScheduleScalarFieldEnum)[keyof typeof MaintenanceScheduleScalarFieldEnum]
+
+
+export const FavoriteItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  configurationItemId: 'configurationItemId',
+  createdAt: 'createdAt'
+} as const
+
+export type FavoriteItemScalarFieldEnum = (typeof FavoriteItemScalarFieldEnum)[keyof typeof FavoriteItemScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1843,6 +1933,7 @@ export type GlobalOmitConfig = {
   customFieldValue?: Prisma.CustomFieldValueOmit
   notification?: Prisma.NotificationOmit
   maintenanceSchedule?: Prisma.MaintenanceScheduleOmit
+  favoriteItem?: Prisma.FavoriteItemOmit
 }
 
 /* Types for Logging */

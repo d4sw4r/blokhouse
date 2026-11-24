@@ -111,3 +111,8 @@ export type Notification = Prisma.NotificationModel
  * 
  */
 export type MaintenanceSchedule = Prisma.MaintenanceScheduleModel
+/**
+ * Model FavoriteItem
+ * 
+ */
+export type FavoriteItem = Prisma.FavoriteItemModel
