@@ -1,19 +1,38 @@
-# Copy .env.example to .env and set NEXTAUTH_SECRET before running:
+# Quick start:
+#   cp .env.example .env
 #   echo "NEXTAUTH_SECRET=$(openssl rand -hex 32)" >> .env
+#   echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
+#   docker compose up -d
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: blokhouse
+      POSTGRES_USER: blokhouse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - blokhouse_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blokhouse -d blokhouse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     image: ghcr.io/d4sw4r/blokhouse:latest
     # build: .
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
     env_file:
       - .env
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=file:/app/data/blokhouse.db
-    volumes:
-      - blokhouse_data:/app/data
+      NODE_ENV: production
+      DATABASE_URL: postgresql://blokhouse:${POSTGRES_PASSWORD}@db:5432/blokhouse
 
 volumes:
-  blokhouse_data:
+  blokhouse_pg:

@@ -55,18 +55,18 @@ info "Checking Node.js installation..."
 if ! command -v node &> /dev/null; then
     error "Node.js is not installed!"
     echo ""
-    echo "Please install Node.js >= 18:"
+    echo "Please install Node.js >= 22:"
     echo "  https://nodejs.org/en/download/"
     echo ""
     echo "Or via package manager:"
-    echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+    echo "  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -"
     echo "  sudo apt-get install -y nodejs"
     exit 1
 fi
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    error "Node.js version must be >= 18 (current: $(node -v))"
+if [ "$NODE_VERSION" -lt 22 ]; then
+    error "Node.js version must be >= 22 (current: $(node -v))"
     exit 1
 fi
 success "Node.js is installed ($(node -v))"
@@ -110,38 +110,60 @@ step "Installing Node.js dependencies..."
 npm install
 success "Dependencies installed"
 
-# Create .env file if it doesn't exist
-if [ ! -f "$INSTALL_DIR/.env" ]; then
+# Database: PostgreSQL is required.
+# Either pass DATABASE_URL (e.g. DATABASE_URL=postgresql://user:pass@host:5432/blokhouse),
+# or let the installer create a local database if PostgreSQL runs on this host.
+if [ -f "$INSTALL_DIR/.env" ]; then
+    warning ".env file already exists, keeping it"
+else
     step "Creating .env configuration..."
-    NEXTAUTH_SECRET=$(openssl rand -hex 16)
-    cat > "$INSTALL_DIR/.env" << EOF
-# Blokhouse Configuration
-NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-NEXTAUTH_URL=http://localhost:3000
-DATABASE_URL=file:./prisma/blokhouse.db
-EOF
+    if [ -z "${DATABASE_URL:-}" ]; then
+        if command -v psql &> /dev/null && id postgres &> /dev/null; then
+            DB_PASSWORD=$(openssl rand -hex 16)
+            step "Creating local PostgreSQL role and database 'blokhouse'..."
+            if sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname = 'blokhouse'" | grep -q 1; then
+                sudo -u postgres psql -q -v ON_ERROR_STOP=1 -c "ALTER ROLE blokhouse PASSWORD '$DB_PASSWORD'"
+            else
+                sudo -u postgres psql -q -v ON_ERROR_STOP=1 -c "CREATE ROLE blokhouse LOGIN PASSWORD '$DB_PASSWORD'"
+            fi
+            sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname = 'blokhouse'" | grep -q 1 \
+                || sudo -u postgres createdb -O blokhouse blokhouse
+            DATABASE_URL="postgresql://blokhouse:$DB_PASSWORD@localhost:5432/blokhouse"
+            success "Local database created"
+        else
+            error "PostgreSQL is required."
+            echo ""
+            echo "Either install PostgreSQL on this host (e.g. sudo apt-get install postgresql) and re-run,"
+            echo "or pass an existing database:"
+            echo "  curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | \\"
+            echo "    sudo DATABASE_URL=postgresql://user:pass@host:5432/blokhouse bash"
+            exit 1
+        fi
+    fi
+    NEXTAUTH_SECRET=$(openssl rand -hex 32)
+    (
+        umask 077
+        {
+            echo "# Blokhouse Configuration"
+            echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET"
+            echo "NEXTAUTH_URL=http://localhost:3000"
+            echo "DATABASE_URL=$DATABASE_URL"
+        } > "$INSTALL_DIR/.env"
+    )
     success ".env file created"
-else
-    warning ".env file already exists, skipping creation"
 fi
 
-# Initialize database
-step "Initializing SQLite database..."
+# Apply database migrations
+step "Applying database migrations..."
 set -a && source "$INSTALL_DIR/.env" && set +a
-node scripts/pre-upgrade.mjs
-npx prisma db push
-success "Database schema created"
+npx prisma migrate deploy
+success "Database is up to date"
 
-# Generate a random admin password for the initial seed
-ADMIN_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
-
-# Seed database with admin user
-step "Seeding database with admin user..."
-if set -a && source "$INSTALL_DIR/.env" && set +a && ADMIN_PASSWORD="$ADMIN_PASSWORD" npx prisma db seed; then
-    success "Database seeded with generated admin password"
-else
-    warning "Seeding may have already been done or failed (check if admin user exists)"
-fi
+# Seed the initial admin (only if no admin exists yet)
+step "Ensuring an admin user exists..."
+PASSWORD_FILE="$INSTALL_DIR/data/initial-admin-password"
+ADMIN_PASSWORD_FILE="$PASSWORD_FILE" npx prisma db seed
+success "Admin user ready"
 
 # Build the application
 step "Building Next.js application..."
@@ -185,11 +207,15 @@ echo ""
 echo -e "  ${BLUE}Access Blokhouse at:${NC}"
 echo -e "  👉 ${GREEN}http://localhost:3000${NC}"
 echo ""
-echo -e "  ${BLUE}Default login credentials:${NC}"
+echo -e "  ${BLUE}Login:${NC}"
 echo -e "  📧 Email:    ${YELLOW}admin@example.com${NC}"
-echo -e "  🔑 Password: ${GREEN}$ADMIN_PASSWORD${NC}"
-echo ""
-echo -e "  ${RED}⚠  Save this password now — it won't be shown again!${NC}"
+if [ -f "$PASSWORD_FILE" ]; then
+    echo -e "  🔑 Password: ${GREEN}sudo cat $PASSWORD_FILE${NC}"
+    echo ""
+    echo -e "  ${RED}⚠  Delete that file after your first login.${NC}"
+else
+    echo -e "  🔑 Password: unchanged (admin already existed)"
+fi
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
 echo ""

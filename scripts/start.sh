@@ -7,15 +7,26 @@ if [ -z "$NEXTAUTH_SECRET" ] || [ "$NEXTAUTH_SECRET" = "your-random-secret-here"
     exit 1
 fi
 
-node scripts/pre-upgrade.mjs
+case "$DATABASE_URL" in
+    postgres://*|postgresql://*) ;;
+    *)
+        echo "ERROR: DATABASE_URL must be a postgresql:// URL (got '${DATABASE_URL%%:*}:…')." >&2
+        echo "       SQLite is no longer supported. See docs/upgrading.md to import an existing SQLite database." >&2
+        exit 1
+        ;;
+esac
 
-# Sync the schema. Never drops data implicitly: if a change would lose data,
-# this fails and you must decide explicitly (DB_ACCEPT_DATA_LOSS=true).
-if [ "$DB_ACCEPT_DATA_LOSS" = "true" ]; then
-    npx prisma db push --accept-data-loss
-else
-    npx prisma db push
-fi
+# Apply pending migrations. Retry while the database is starting up.
+attempt=1
+until npx prisma migrate deploy; do
+    if [ "$attempt" -ge 10 ]; then
+        echo "ERROR: could not apply database migrations after $attempt attempts" >&2
+        exit 1
+    fi
+    echo "Database not ready, retrying in 3s ($attempt/10)…" >&2
+    attempt=$((attempt + 1))
+    sleep 3
+done
 
 npx prisma db seed
 exec npx next start -p "${PORT:-3000}"

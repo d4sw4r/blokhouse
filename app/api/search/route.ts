@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
         const items = await prisma.configurationItem.findMany({
             where: {
                 OR: [
-                    { name: { contains: query } },
-                    { description: { contains: query } },
-                    { ip: { contains: query } },
+                    { name: { contains: query, mode: "insensitive" } },
+                    { description: { contains: query, mode: "insensitive" } },
+                    { ip: { contains: query, mode: "insensitive" } },
                 ],
             },
             select: {
@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
         const types = await prisma.itemType.findMany({
             where: {
                 OR: [
-                    { name: { contains: query } },
-                    { description: { contains: query } },
+                    { name: { contains: query, mode: "insensitive" } },
+                    { description: { contains: query, mode: "insensitive" } },
                 ],
             },
             select: {
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
         const tags = await prisma.tag.findMany({
             where: {
                 OR: [
-                    { name: { contains: query } },
-                    { description: { contains: query } },
+                    { name: { contains: query, mode: "insensitive" } },
+                    { description: { contains: query, mode: "insensitive" } },
                 ],
             },
             select: {

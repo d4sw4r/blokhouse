@@ -18,13 +18,15 @@ export async function GET(request: NextRequest) {
         const itemsPerStatus = await prisma.configurationItem.groupBy({
             by: ["status"],
             _count: { id: true },
-        }) as Array<{ status: string; _count: { id: number } }>;
+            orderBy: { status: "asc" },
+        });
 
         // Items per type with type names
         const itemsPerTypeRaw = await prisma.configurationItem.groupBy({
             by: ["itemTypeId"],
             _count: { id: true },
-        }) as Array<{ itemTypeId: string | null; _count: { id: number } }>;
+            orderBy: { itemTypeId: "asc" },
+        });
 
         const typeIds = itemsPerTypeRaw
             .map((t: { itemTypeId: string | null }) => t.itemTypeId)

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Breaking: PostgreSQL replaces SQLite.** `DATABASE_URL` must be a `postgresql://` URL. The bundled `docker-compose.yml` now starts PostgreSQL 16 alongside the app (set `POSTGRES_PASSWORD`). Existing SQLite data can be imported once with `npm run db:import-sqlite` — see [docs/upgrading.md](docs/upgrading.md).
+- **Versioned migrations** (`prisma/migrations`) applied with `prisma migrate deploy` on start, replacing `prisma db push`. CI fails if the schema and migrations drift apart.
+- Search is case-insensitive (`mode: "insensitive"`).
+- The generated Prisma client is no longer committed; it is generated on `npm install`.
+- Prisma packages are pinned to one exact version and updated together.
+- `install.sh` creates a local PostgreSQL database or uses a given `DATABASE_URL`, no longer prints the admin password and requires Node.js 22.
+
+### Added
+- `scripts/import-sqlite.ts` (`npm run db:import-sqlite`): transactional one-time import from a v0.1/v0.2 SQLite database.
+- `scripts/smoke-test.sh`: end-to-end test of the automation path (login, token, write via token, inventories); runs in CI against the Docker Compose stack.
+- Indexes on configuration item name, IP, status and type.
+- Backup guide for PostgreSQL (`pg_dump`/`pg_restore`) and an upgrade guide.
+
+### Removed
+- SQLite support, `scripts/pre-upgrade.mjs` and the `DB_ACCEPT_DATA_LOSS` option (superseded by migrations).
+
 ### Security
 - **Authentication bypass fixed:** the proxy treated `/` as a public prefix, so every page and API route was reachable without login. Routes without their own checks (e.g. `/api/dashboard`, `/api/discovery`) were fully public.
 - **Privilege escalation fixed:** any logged-in user could create `ADMIN` accounts via `POST /api/users`; user management is now admin-only, passwords are bcrypt-hashed and roles are validated. The last admin cannot be demoted or deleted.
@@ -26,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Audit log entries were never written (objects passed to string columns); they are now stored as JSON.
-- Seed script failed with Prisma 7, so no admin user was created on fresh installs. Rewritten as `prisma/seed.ts`; supports `ADMIN_EMAIL`/`ADMIN_PASSWORD` . A generated password is written to a 0600 file next to the database (`ADMIN_PASSWORD_FILE`), never to the logs.
+- Seed script failed with Prisma 7, so no admin user was created on fresh installs. Rewritten as `prisma/seed.ts`; supports `ADMIN_EMAIL`/`ADMIN_PASSWORD`. A generated password is written to a 0600 file next to the database (`ADMIN_PASSWORD_FILE`), never to the logs.
 - Command palette search and relation picker failed on SQLite (`mode: "insensitive"` is unsupported).
 - `GET /api/configuration-items/:id` returns `customFields` in the same format as the list endpoint.
 - Removed stale duplicate route files (`dashboard`, `activity`, `export`, `discovery` page) that shadowed the newer implementations.
@@ -34,8 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Breaking:** existing API tokens are revoked on upgrade (they were stored in plain text). Create new tokens under Admin → API Tokens.
-- **Breaking (Docker):** data now lives in `/app/data` instead of `/app/prisma`. A volume over `/app/prisma` shadowed the schema of newer images. The bundled `docker-compose.yml` keeps the same volume name, so existing data is picked up automatically; custom setups must change the mount point.
-- Startup never runs `prisma db push --accept-data-loss` implicitly anymore; opt in with `DB_ACCEPT_DATA_LOSS=true`.
+- Startup never runs `prisma db push --accept-data-loss` anymore.
 - The container refuses to start without `NEXTAUTH_SECRET`.
 
 ### Fixed (previously unreleased)

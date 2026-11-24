@@ -5,18 +5,36 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
       "automerge": true
     },
     {
       "description": "Major updates need a human review, including devDependencies",
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
     },
     {
       "description": "eslint-config-next (eslint-plugin-react) does not support ESLint 10 yet",
-      "matchPackageNames": ["eslint"],
+      "matchPackageNames": [
+        "eslint"
+      ],
       "allowedVersions": "<10"
+    },
+    {
+      "description": "Prisma CLI, client and driver adapter must always share one version",
+      "matchPackageNames": [
+        "prisma",
+        "@prisma/client",
+        "@prisma/adapter-pg"
+      ],
+      "groupName": "prisma"
     }
   ],
   "platformAutomerge": true,

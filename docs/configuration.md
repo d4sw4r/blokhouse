@@ -34,19 +34,20 @@ NEXTAUTH_SECRET=7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b
 **Important**: Never share this secret or commit it to version control.
 
 #### `DATABASE_URL`
-Path to the SQLite database file.
+PostgreSQL connection string (PostgreSQL 14 or newer).
 
 ```bash
-DATABASE_URL=file:./prisma/blokhouse.db
+DATABASE_URL=postgresql://blokhouse:secret@db.example.com:5432/blokhouse
 ```
 
-For absolute paths:
-```bash
-DATABASE_URL=file:/var/lib/blokhouse/data.db
-```
+Add `?sslmode=require` for TLS connections. With the bundled `docker-compose.yml` you only set
+`POSTGRES_PASSWORD`; the URL is assembled for you.
+
+Schema changes ship as Prisma migrations (`prisma/migrations`) and are applied automatically on
+start (`prisma migrate deploy`). Data is never dropped implicitly.
 
 #### `ADMIN_PASSWORD` _(optional, seed only)_
-Sets the initial admin password when seeding the database. If not set, a random password is generated and written to `ADMIN_PASSWORD_FILE` (default: `initial-admin-password` next to the database file, mode 0600). It is never written to the logs.
+Sets the initial admin password when seeding the database. If not set, a random password is generated and written to `ADMIN_PASSWORD_FILE` (default: `./data/initial-admin-password`, `/app/data/initial-admin-password` in Docker, mode 0600). It is never written to the logs.
 
 ```bash
 ADMIN_PASSWORD=my-initial-password
@@ -81,19 +82,13 @@ DISCOVERY_USE_SUDO=false        # set to true to run `sudo -n nmap` (needed for 
 
 `nmap` must be installed on the host; it is not part of the Docker image.
 
-#### `DB_ACCEPT_DATA_LOSS`
-The production start script (`npm run start:prod`, used by the Docker image)
-syncs the database schema on startup. It refuses changes that would drop data.
-Set `DB_ACCEPT_DATA_LOSS=true` for a single start only if you have a backup and
-understand which data will be dropped.
-
 ## Complete Example
 
 ```bash
 # .env
 NEXTAUTH_URL=https://cmdb.company.internal
 NEXTAUTH_SECRET=your-generated-secret-here
-DATABASE_URL=file:./prisma/blokhouse.db
+DATABASE_URL=postgresql://blokhouse:secret@localhost:5432/blokhouse
 ```
 
 ## Docker Deployment
@@ -107,16 +102,14 @@ services:
     environment:
       - NEXTAUTH_URL=https://blokhouse.company.com
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - DATABASE_URL=file:/app/data/blokhouse.db
-    volumes:
-      - ./data:/app/data
+      - DATABASE_URL=postgresql://blokhouse:${POSTGRES_PASSWORD}@db:5432/blokhouse
 ```
 
 ## First Run
 
 1. Copy `.env.example` to `.env`
 2. Generate `NEXTAUTH_SECRET`
-3. Push database schema: `npx prisma db push`
+3. Apply migrations: `npm run db:migrate`
 4. Start the application: `npm run build && npm start`
 
 ## Troubleshooting
@@ -124,5 +117,11 @@ services:
 ### "Invalid NEXTAUTH_URL" error
 Ensure the URL matches exactly what users type in their browser, including the port if non-standard.
 
-### Database permission errors
-Ensure the application has write access to the directory containing the SQLite file.
+### Database connection errors
+
+Check that PostgreSQL is reachable from the application host and that the user in
+`DATABASE_URL` owns the database (it needs to create tables when migrations run):
+
+```bash
+psql "$DATABASE_URL" -c 'select 1'
+```

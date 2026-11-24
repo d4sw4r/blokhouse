@@ -12,7 +12,7 @@ Blokhouse is a modern Configuration Management Database (CMDB) and IT Asset Mana
 | React | 19 | UI library |
 | TypeScript | - | Type-safe development |
 | Prisma | - | Database ORM |
-| SQLite | - | Database |
+| PostgreSQL | 14+ | Database |
 | NextAuth.js | - | Authentication |
 | Tailwind CSS | - | Styling |
 
@@ -100,7 +100,7 @@ Tokens for API authentication:
 
 1. **Web UI**: Next.js App Router handles server and client components
 2. **API Layer**: RESTful endpoints under `/api/*`
-3. **Database**: Prisma ORM manages SQLite queries
+3. **Database**: Prisma ORM (driver adapter `@prisma/adapter-pg`) manages PostgreSQL queries; schema changes are versioned migrations in `prisma/migrations`
 4. **Auth**: NextAuth middleware protects routes
 
 ## Security Considerations

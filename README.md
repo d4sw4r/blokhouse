@@ -32,15 +32,16 @@ curl -O https://raw.githubusercontent.com/d4sw4r/blokhouse/main/docker-compose.y
 curl -O https://raw.githubusercontent.com/d4sw4r/blokhouse/main/.env.example
 cp .env.example .env
 
-# 2. Generate a secure secret and add it to .env
+# 2. Generate secrets and add them to .env
 echo "NEXTAUTH_SECRET=$(openssl rand -hex 32)" >> .env
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
 
-# 3. Start
+# 3. Start Blokhouse and PostgreSQL
 docker compose up -d
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and log in as `admin@example.com`.
-A random admin password is generated on first start and written to a file inside the data volume
+A random admin password is generated on first start and written to a file inside the container
 (it is never printed to the logs):
 
 ```bash
@@ -58,9 +59,17 @@ No Docker? One command installs and starts Blokhouse using Node.js directly:
 curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | sudo bash
 ```
 
-Requirements: Node.js >= 18, npm, git
+Requirements: Node.js >= 22, npm, git and PostgreSQL — either on the same host (the script
+creates the database) or anywhere else via `DATABASE_URL`:
 
-The script prints the generated admin password at the end — save it.
+```bash
+curl -sSL https://raw.githubusercontent.com/d4sw4r/blokhouse/main/install.sh | \
+  sudo DATABASE_URL=postgresql://user:pass@db-host:5432/blokhouse bash
+```
+
+The script tells you where to find the generated admin password.
+
+> **Upgrading from v0.1 (SQLite)?** See [docs/upgrading.md](docs/upgrading.md).
 
 ## 🔧 Manual Setup (Development)
 
@@ -68,9 +77,11 @@ The script prints the generated admin password at the end — save it.
 git clone https://github.com/d4sw4r/blokhouse.git
 cd blokhouse
 cp .env.example .env
-# Edit .env: set NEXTAUTH_SECRET=$(openssl rand -hex 32)
-npm install
-npx prisma db push
+# Edit .env: set NEXTAUTH_SECRET and DATABASE_URL
+docker run -d --name blokhouse-db -p 5432:5432 \
+  -e POSTGRES_USER=blokhouse -e POSTGRES_PASSWORD=change-me -e POSTGRES_DB=blokhouse postgres:16-alpine
+npm install            # also generates the Prisma client
+npm run db:migrate     # prisma migrate deploy
 npx prisma db seed
 npm run dev
 ```
@@ -136,13 +147,10 @@ docker compose up -d
 </details>
 
 <details>
-<summary><code>DATABASE_URL must start with postgresql://</code></summary>
+<summary><code>DATABASE_URL must be a postgresql:// URL</code></summary>
 
-You are running a stale Docker image. Pull the latest:
-
-```bash
-docker compose pull && docker compose up -d
-```
+Blokhouse requires PostgreSQL since v0.2. If you are upgrading from a SQLite installation,
+follow [docs/upgrading.md](docs/upgrading.md) to import your data.
 
 </details>
 
@@ -153,7 +161,7 @@ The `DATABASE_URL` environment variable is not set. Make sure your `.env` file e
 
 ```bash
 cat .env | grep DATABASE_URL
-# Should show: DATABASE_URL=file:./prisma/blokhouse.db
+# Should show: DATABASE_URL=postgresql://...
 ```
 
 For the install script, re-run it — it now sources `.env` automatically.

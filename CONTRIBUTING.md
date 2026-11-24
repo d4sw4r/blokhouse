@@ -29,8 +29,16 @@ Thank you for your interest in Blokhouse! This guide will help you get started.
 
 4. **Set up the database**
    ```bash
-   npx prisma db push
+   # PostgreSQL is required, e.g.:
+   docker run -d --name blokhouse-db -p 5432:5432 \
+     -e POSTGRES_USER=blokhouse -e POSTGRES_PASSWORD=change-me -e POSTGRES_DB=blokhouse postgres:16-alpine
+   npm run db:migrate
    npx prisma db seed
+   ```
+
+   Changing `prisma/schema.prisma`? Create a migration and commit it:
+   ```bash
+   npx prisma migrate dev --name describe-your-change
    ```
 
 5. **Start the development server**
