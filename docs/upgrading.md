@@ -1,6 +1,6 @@
 # Upgrading
 
-## v0.2 → next release
+## v0.2 → v0.3
 
 Database migrations run automatically on start. Check these changes:
 
