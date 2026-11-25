@@ -109,13 +109,25 @@ ansible-inventory -i blokhouse.yml --graph
   delegate_to: localhost
 ```
 
-### Puppet ENC
+### Puppet
+
+The [Puppet module](integrations/puppet) keeps Blokhouse up to date after every Puppet run
+(report processor) and classifies nodes from the CMDB (ENC):
+
+```puppet
+class { 'blokhouse':
+  url           => 'https://cmdb.example.com',
+  token         => Sensitive(lookup('blokhouse::token')),
+  custom_fields => { 'os' => 'facts.os.name', 'puppet_status' => 'report.status' },
+}
+```
 
 ```ini
-# /etc/puppetlabs/puppet/puppet.conf
-[master]
-external_nodes = curl -sf -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:3000/api/puppet?node=%s
+# puppet.conf on the server
+[server]
+reports        = store,blokhouse
 node_terminus  = exec
+external_nodes = /etc/puppetlabs/puppet/blokhouse_enc
 ```
 
 ### Chef
