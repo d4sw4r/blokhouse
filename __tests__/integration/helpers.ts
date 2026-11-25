@@ -7,7 +7,7 @@ if (!process.env.DATABASE_URL?.startsWith("postgres")) {
 }
 
 const TABLES = [
-    "AuditLog", "Notification", "FavoriteItem", "MaintenanceSchedule", "CustomFieldValue",
+    "WebhookDelivery", "Webhook", "AuditLog", "Notification", "FavoriteItem", "MaintenanceSchedule", "CustomFieldValue",
     "CustomField", "AssetRelation", "_ConfigurationItemToTag", "ConfigurationItem", "Tag",
     "ItemType", "ApiToken", "Session", "Account", "VerificationToken", "User",
 ];

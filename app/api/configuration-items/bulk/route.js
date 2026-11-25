@@ -4,6 +4,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { logItemUpdated, logItemDeleted } from "@/lib/audit";
+import { emitItemEvents, previousForWebhooks } from "@/lib/webhooks";
 
 /**
  * @swagger
@@ -136,6 +137,10 @@ export async function POST(request) {
         const existingIds = existingItems.map(item => item.id);
         const notFoundIds = ids.filter(id => !existingIds.includes(id));
         
+        // State before the change, for webhook events (empty if no webhook is active)
+        const previous = new Map();
+        for (const { id } of existingItems) previous.set(id, await previousForWebhooks(id));
+
         let processed = 0;
         let failed = 0;
         const errors = [];
@@ -271,6 +276,18 @@ export async function POST(request) {
                 break;
             }
         }
+
+        const failedIds = new Set(errors.map((e) => e.id));
+        await emitItemEvents(
+            existingItems
+                .filter(({ id }) => !failedIds.has(id) && previous.get(id))
+                .map(({ id }) => ({
+                    event: operation === "delete" ? "item.deleted" : "item.updated",
+                    id,
+                    previous: previous.get(id),
+                    actor: { userId, via: auth.via },
+                }))
+        );
 
         // Build response
         const response = {

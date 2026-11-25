@@ -236,3 +236,81 @@ export const ErrorBody = z
     });
 
 export type ItemInput = z.infer<typeof ItemPatch>;
+
+// ---------------------------------------------------------------------------
+// Webhooks
+// ---------------------------------------------------------------------------
+
+export const WEBHOOK_EVENTS = ["item.created", "item.updated", "item.deleted"] as const;
+
+const WebhookUrl = z
+    .string()
+    .trim()
+    .max(2000)
+    .refine((v) => {
+        try {
+            const u = new URL(v);
+            return (u.protocol === "https:" || u.protocol === "http:") && !u.username && !u.password;
+        } catch {
+            return false;
+        }
+    }, "Must be an http(s) URL without credentials")
+    .openapi({ example: "https://automation.example.com/hooks/blokhouse" });
+
+const WebhookEvents = z
+    .array(z.enum([...WEBHOOK_EVENTS, "*"]))
+    .min(1)
+    .openapi({ description: 'Events to send, or `["*"]` for all', example: ["item.created", "item.updated"] });
+
+export const WebhookCreate = z
+    .object({
+        name: trimmed(100).openapi({ example: "AWX inventory sync" }),
+        url: WebhookUrl,
+        events: WebhookEvents.default(["*"]),
+        active: z.boolean().default(true),
+    })
+    .strict()
+    .openapi("WebhookCreate");
+
+export const WebhookPatch = z
+    .object({
+        name: trimmed(100).optional(),
+        url: WebhookUrl.optional(),
+        events: WebhookEvents.optional(),
+        active: z.boolean().optional(),
+        rotateSecret: z.boolean().optional().openapi({ description: "Generate a new secret; it is returned once" }),
+    })
+    .strict()
+    .openapi("WebhookPatch");
+
+export const Webhook = z
+    .object({
+        id: z.string(),
+        name: z.string(),
+        url: z.string(),
+        events: z.array(z.string()),
+        active: z.boolean(),
+        secret: z.string().optional().openapi({ description: "Only returned on creation and after rotateSecret" }),
+        lastDelivery: z
+            .object({ status: z.string(), responseStatus: z.number().nullable(), createdAt: z.string() })
+            .nullable(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+    })
+    .openapi("Webhook");
+
+export const WebhookDelivery = z
+    .object({
+        id: z.string(),
+        event: z.string(),
+        status: z.enum(["pending", "success", "failed"]),
+        attempts: z.number(),
+        responseStatus: z.number().nullable(),
+        error: z.string().nullable(),
+        durationMs: z.number().nullable(),
+        nextAttemptAt: z.string().nullable().openapi({ description: "Next attempt, while pending" }),
+        deliveredAt: z.string().nullable(),
+        createdAt: z.string(),
+        payload: z.unknown().optional().openapi({ description: "The JSON body (single delivery only)" }),
+    })
+    .openapi("WebhookDelivery");

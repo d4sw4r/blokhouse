@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock prisma before importing the route
+const ids = (n) => Array.from({ length: n }, (_, i) => ({ id: `id-${i}` }));
+
 vi.mock("@/lib/prisma", () => ({
     default: {
         configurationItem: {
-            createMany: vi.fn(),
+            createManyAndReturn: vi.fn(),
         },
     },
 }));
@@ -74,7 +76,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
                 errors:  [],
                 skipped: 0,
             });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 2 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(2));
 
             const res  = await POST(makeRequest({ csv: "name\nServer1\nServer2" }));
             const data = await res.json();
@@ -87,7 +89,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
         it("passes user ID from session to parseCsv", async () => {
             parseCsv.mockReturnValue({ items: [{ name: "S1" }], errors: [], skipped: 0 });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 1 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(1));
 
             await POST(makeRequest({ csv: "name\nS1" }));
 
@@ -100,7 +102,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
                 errors:  ["Row 2: missing name"],
                 skipped: 1,
             });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 1 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(1));
 
             const res  = await POST(makeRequest({ csv: "name\nGood\n" }));
             const data = await res.json();
@@ -113,7 +115,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
 
         it("omits errors key when all rows are valid", async () => {
             parseCsv.mockReturnValue({ items: [{ name: "S1" }], errors: [], skipped: 0 });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 1 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(1));
 
             const res  = await POST(makeRequest({ csv: "name\nS1" }));
             const data = await res.json();
@@ -122,14 +124,14 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
             expect(data.errors).toBeUndefined();
         });
 
-        it("calls prisma.configurationItem.createMany with parsed items", async () => {
+        it("calls prisma.configurationItem.createManyAndReturn with parsed items", async () => {
             const items = [{ name: "A", userId: "u1" }, { name: "B", userId: "u1" }];
             parseCsv.mockReturnValue({ items, errors: [], skipped: 0 });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 2 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(2));
 
             await POST(makeRequest({ csv: "name\nA\nB" }));
 
-            expect(prisma.configurationItem.createMany).toHaveBeenCalledWith({ data: items });
+            expect(prisma.configurationItem.createManyAndReturn).toHaveBeenCalledWith({ data: items, select: { id: true } });
         });
     });
 
@@ -153,7 +155,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
             expect(res.status).toBe(400);
             expect(data.error).toBe("No valid rows found");
             expect(data.details).toEqual(["Row 1: missing name", "Row 2: missing name"]);
-            expect(prisma.configurationItem.createMany).not.toHaveBeenCalled();
+            expect(prisma.configurationItem.createManyAndReturn).not.toHaveBeenCalled();
         });
 
         it("returns 400 for completely empty CSV", async () => {
@@ -174,9 +176,9 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
             getServerSession.mockResolvedValue({ user: { id: "u1", role: "USER" } });
         });
 
-        it("returns 500 when prisma.createMany throws", async () => {
+        it("returns 500 when prisma.createManyAndReturn throws", async () => {
             parseCsv.mockReturnValue({ items: [{ name: "S1" }], errors: [], skipped: 0 });
-            prisma.configurationItem.createMany.mockRejectedValue(new Error("DB error"));
+            prisma.configurationItem.createManyAndReturn.mockRejectedValue(new Error("DB error"));
 
             const res  = await POST(makeRequest({ csv: "name\nS1" }));
             const data = await res.json();
@@ -212,7 +214,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
         it("handles 500 rows correctly", async () => {
             const items = Array.from({ length: 500 }, (_, i) => ({ name: `Server${i}`, userId: "u1" }));
             parseCsv.mockReturnValue({ items, errors: [], skipped: 0 });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 500 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(500));
 
             const csv = "name\n" + items.map(i => i.name).join("\n");
             const res  = await POST(makeRequest({ csv }));
@@ -226,7 +228,7 @@ describe("CSV Upload API (/api/configuration-items/upload)", () => {
             const items = Array.from({ length: 300 }, (_, i) => ({ name: `S${i}` }));
             const errors = Array.from({ length: 200 }, (_, i) => `Row ${i + 301}: invalid`);
             parseCsv.mockReturnValue({ items, errors, skipped: 200 });
-            prisma.configurationItem.createMany.mockResolvedValue({ count: 300 });
+            prisma.configurationItem.createManyAndReturn.mockResolvedValue(ids(300));
 
             const res  = await POST(makeRequest({ csv: "some\ncsv" }));
             const data = await res.json();

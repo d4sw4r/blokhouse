@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { route, json, readJson, validate, ApiError, pathSegments } from "@/lib/api/v1/http";
 import { ItemUpsert } from "@/lib/api/v1/schemas";
 import { TX_OPTIONS, upsertItemTx, findByIdentity, loadItem, serializeItem, audit, type Identity } from "@/lib/api/v1/items";
+import { emitItemEvent } from "@/lib/webhooks";
 
 // Read from the raw path (see pathSegments): Next.js' own decoding of dynamic
 // segments breaks values containing "%".
@@ -40,6 +41,11 @@ export const PUT = route("write", async ({ req, auth }) => {
     const after = (await loadItem(id))!;
     if (result !== "unchanged") {
         await audit(result === "created" ? "CREATE" : "UPDATE", before, after, auth.user.id, req, auth.via);
+        await emitItemEvent(result === "created" ? "item.created" : "item.updated", {
+            item: serializeItem(after),
+            previous: before ? serializeItem(before) : null,
+            actor: { userId: auth.user.id, via: auth.via },
+        });
     }
     return json({ result, data: serializeItem(after) }, result === "created" ? 201 : 200);
 });

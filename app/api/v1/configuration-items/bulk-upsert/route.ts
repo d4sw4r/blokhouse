@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { route, json, readJson, validate, ApiError } from "@/lib/api/v1/http";
 import { BulkUpsertRequest } from "@/lib/api/v1/schemas";
 import { upsertItemTx, type Identity, type UpsertOutcome } from "@/lib/api/v1/items";
+import { emitItemEvents, type SerializedItem } from "@/lib/webhooks";
 
 export const POST = route("write", async ({ req, auth }) => {
     const { items } = validate(BulkUpsertRequest, await readJson(req, 20 * 1024 * 1024));
@@ -23,14 +24,14 @@ export const POST = route("write", async ({ req, auth }) => {
 
     const results = await prisma.$transaction(
         async (tx) => {
-            const out: { index: number; result: UpsertOutcome; id: string }[] = [];
+            const out: { index: number; result: UpsertOutcome; id: string; previous: SerializedItem | null; item: SerializedItem | null }[] = [];
             for (const [index, { match, ...input }] of items.entries()) {
                 const identity: Identity =
                     match === "name"
                         ? { by: "name", name: input.name! }
                         : { by: "externalId", source: input.source!, externalId: input.externalId! };
                 const r = await upsertItemTx(tx, identity, input, { userId: auth.user.id, pathPrefix: `items.${index}.` });
-                out.push({ index, ...r });
+                out.push({ index, result: r.result, id: r.id, previous: r.before, item: r.after });
             }
             return out;
         },
@@ -53,5 +54,17 @@ export const POST = route("write", async ({ req, auth }) => {
         })),
     });
 
-    return json({ data: results, meta });
+    await emitItemEvents(
+        results
+            .filter((r) => r.result !== "unchanged")
+            .map((r) => ({
+                event: r.result === "created" ? ("item.created" as const) : ("item.updated" as const),
+                id: r.id,
+                item: r.item,
+                previous: r.previous,
+                actor: { userId: auth.user.id, via: auth.via },
+            }))
+    );
+
+    return json({ data: results.map(({ index, result, id }) => ({ index, result, id })), meta });
 });

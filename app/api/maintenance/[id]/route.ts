@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { emitItemEvent, previousForWebhooks } from "@/lib/webhooks";
 
 // GET /api/maintenance/[id] - Get a single maintenance schedule
 export async function GET(
@@ -51,7 +52,7 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const { response } = await requireAuth(request, "write");
+    const { auth, response } = await requireAuth(request, "write");
     if (response) return response;
 
     try {
@@ -84,10 +85,18 @@ export async function PUT(
 
         // If status changed to COMPLETED, update asset status back to ACTIVE
         if (status === "COMPLETED") {
+            const previous = await previousForWebhooks(schedule.configurationItemId);
             await prisma.configurationItem.update({
                 where: { id: schedule.configurationItemId },
                 data: { status: "ACTIVE" },
             });
+            if (previous) {
+                await emitItemEvent("item.updated", {
+                    id: schedule.configurationItemId,
+                    previous,
+                    actor: { userId: auth!.user.id, via: auth!.via },
+                });
+            }
         }
 
         return new Response(JSON.stringify(schedule), {

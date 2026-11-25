@@ -6,6 +6,7 @@ import { route, json, readJson, validate, ApiError } from "@/lib/api/v1/http";
 import { ItemPatch } from "@/lib/api/v1/schemas";
 import { TX_OPTIONS, updateItemTx, loadItem, serializeItem, audit } from "@/lib/api/v1/items";
 import { notifyAssetChange } from "@/lib/notifications";
+import { emitItemEvent } from "@/lib/webhooks";
 
 type Params = { id: string };
 
@@ -32,6 +33,11 @@ export const PATCH = route<Params>("write", async ({ req, auth, params }) => {
     await prisma.$transaction((tx) => updateItemTx(tx, before, input, { userId: auth.user.id }), TX_OPTIONS);
     const after = (await loadItem(params.id))!;
     await audit("UPDATE", before, after, auth.user.id, req, auth.via);
+    await emitItemEvent("item.updated", {
+        item: serializeItem(after),
+        previous: serializeItem(before),
+        actor: { userId: auth.user.id, via: auth.via },
+    });
     if (before.status !== after.status) {
         await notifyAssetChange({
             assetId: after.id,
@@ -48,5 +54,6 @@ export const DELETE = route<Params>("write", async ({ req, auth, params }) => {
     const before = await mustLoad(params.id);
     await prisma.configurationItem.delete({ where: { id: params.id } });
     await audit("DELETE", before, null, auth.user.id, req, auth.via);
+    await emitItemEvent("item.deleted", { previous: serializeItem(before), actor: { userId: auth.user.id, via: auth.via } });
     return new Response(null, { status: 204 });
 });

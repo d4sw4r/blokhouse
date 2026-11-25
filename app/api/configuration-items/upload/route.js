@@ -2,6 +2,7 @@
 import prisma from "@/lib/prisma";
 import { parseCsv } from "@/lib/csv-parser";
 import { requireAuth } from "@/lib/auth";
+import { emitItemEvents } from "@/lib/webhooks";
 
 export async function POST(request) {
     const { auth, response } = await requireAuth(request, "write");
@@ -20,12 +21,15 @@ export async function POST(request) {
             );
         }
 
-        const result = await prisma.configurationItem.createMany({ data: items });
+        const created = await prisma.configurationItem.createManyAndReturn({ data: items, select: { id: true } });
+        await emitItemEvents(
+            created.map(({ id }) => ({ event: "item.created", id, actor: { userId: auth.user.id, via: auth.via } }))
+        );
 
         return new Response(
             JSON.stringify({
                 message: "CSV processed",
-                inserted: result.count,
+                inserted: created.length,
                 skipped,
                 errors: errors.length > 0 ? errors : undefined,
             }),
