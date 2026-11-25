@@ -210,6 +210,19 @@ curl -X POST "$BLOKHOUSE_URL/api/v1/configuration-items/bulk-upsert" \
 
 Both list `itemCount`. Creating an existing name (case-insensitive) returns 409.
 
+### Webhooks
+
+| Method | Path | Scope |
+|--------|------|-------|
+| GET / POST | `/api/v1/webhooks` | admin |
+| GET / PATCH / DELETE | `/api/v1/webhooks/{id}` | admin |
+| POST | `/api/v1/webhooks/{id}/ping` | admin |
+| GET | `/api/v1/webhooks/{id}/deliveries` | admin |
+| POST | `/api/v1/webhooks/{id}/deliveries/{deliveryId}/redeliver` | admin |
+
+Blokhouse calls webhooks when items are created, changed or deleted. Payload, signature and
+retries: [Webhooks](webhooks.md).
+
 ### Audit trail
 
 Every write through v1 is recorded in the audit log, including whether it came from a session

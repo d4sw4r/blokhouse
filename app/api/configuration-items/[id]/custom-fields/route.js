@@ -4,6 +4,7 @@
 import prisma from "@/lib/prisma";
 import { parseOptions } from "@/lib/custom-field-options";
 import { requireAuth } from "@/lib/auth";
+import { emitItemEvent, previousForWebhooks } from "@/lib/webhooks";
 
 /**
  * @swagger
@@ -138,7 +139,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-    const { response } = await requireAuth(req, "write");
+    const { auth, response } = await requireAuth(req, "write");
     if (response) return response;
 
     const { id } = await params;
@@ -170,6 +171,7 @@ export async function PUT(req, { params }) {
         });
 
         const applicableFieldIds = applicableFields.map((f) => f.id);
+        const previous = await previousForWebhooks(id);
         const results = [];
 
         // Process each value
@@ -210,6 +212,9 @@ export async function PUT(req, { params }) {
             results.push(fieldValue);
         }
 
+        if (previous && results.length) {
+            await emitItemEvent("item.updated", { id, previous, actor: { userId: auth.user.id, via: auth.via } });
+        }
         return new Response(JSON.stringify(results), { status: 200 });
     } catch (error) {
         console.error("Error updating custom field values:", error);

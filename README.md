@@ -15,6 +15,7 @@
 - **Ansible collection** — dynamic inventory plus modules that report hosts back to the CMDB
 - **Puppet module** — node classifier (ENC) and a report processor that updates the CMDB after every run
 - **REST API** — full OpenAPI/Swagger documentation at `/docs`
+- **Webhooks** — signed HTTP callbacks when items are created, changed or deleted, with retries and a delivery log
 - **Relationship Graph** — visualize asset dependencies
 - **Audit Logs** — track every change
 - **Maintenance Schedules** — plan downtime
@@ -150,6 +151,7 @@ Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
 - [API Reference](docs/api.md) — endpoints and authentication
 - [Ansible Integration](docs/integrations/ansible.md)
 - [Puppet Integration](docs/integrations/puppet.md)
+- [Webhooks](docs/webhooks.md)
 - [Deployment Guide](docs/deployment/) — nginx, systemd, backups
 
 ## ❓ Troubleshooting

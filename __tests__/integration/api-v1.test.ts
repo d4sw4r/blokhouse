@@ -362,6 +362,11 @@ describe("OpenAPI document", () => {
                 "/configuration-items/bulk-upsert",
                 "/types",
                 "/tags",
+                "/webhooks",
+                "/webhooks/{id}",
+                "/webhooks/{id}/ping",
+                "/webhooks/{id}/deliveries",
+                "/webhooks/{id}/deliveries/{deliveryId}/redeliver",
             ])
         );
         expect(doc.components.schemas.Item.properties.customFields).toBeDefined();

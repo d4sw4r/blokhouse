@@ -50,4 +50,20 @@ BULK=$(curl -s -X POST "$B/api/v1/configuration-items/bulk-upsert" -H "$H" -H 'c
     -d '{"items":[{"name":"bulk-1"},{"match":"externalId","source":"smoke","externalId":"id-2","name":"bulk-2"}]}')
 [ "$(echo "$BULK" | json meta.created)" = 2 ] || fail "v1 bulk upsert ($BULK)"
 
+# Webhooks: the background worker must pick up events without being asked.
+# The URL points to a closed port, so the attempt fails, which is fine: it must be recorded.
+HOOK=$(curl -s -b "$JAR" -X POST "$B/api/v1/webhooks" -H 'content-type: application/json' \
+    -d '{"name":"smoke","url":"http://127.0.0.1:65000/hook"}')
+HOOK_ID=$(echo "$HOOK" | json data.id)
+[ -n "$(echo "$HOOK" | json data.secret)" ] || fail "v1 create webhook ($HOOK)"
+curl -s -o /dev/null -X PUT "$B/api/v1/configuration-items/by-name/smoke-hook" -H "$H" -H 'content-type: application/json' -d '{}'
+ATTEMPTS=0
+for _ in $(seq 1 20); do
+    ATTEMPTS=$(curl -s -b "$JAR" "$B/api/v1/webhooks/$HOOK_ID/deliveries" | json data.0.attempts)
+    [ "${ATTEMPTS:-0}" -ge 1 ] 2>/dev/null && break
+    sleep 1
+done
+[ "${ATTEMPTS:-0}" -ge 1 ] 2>/dev/null || fail "webhook worker did not attempt the delivery"
+[ "$(code -H "$H" "$B/api/v1/webhooks")" = 403 ] || fail "webhooks must be admin-only"
+
 echo "Smoke test passed"

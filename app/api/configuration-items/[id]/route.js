@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { logItemUpdated, logItemDeleted } from "@/lib/audit";
 import { notifyAssetChange } from "@/lib/notifications";
+import { emitItemEvent, previousForWebhooks } from "@/lib/webhooks";
 import { requireAuth } from "@/lib/auth";
 
 export async function GET(req, { params }) {
@@ -72,6 +73,7 @@ export async function PUT(req, { params }) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
+    const previous = await previousForWebhooks(id);
     const data = { name, description, ip, mac, itemTypeId, status };
 
     // Handle tag updates if provided
@@ -94,6 +96,8 @@ export async function PUT(req, { params }) {
         userId: auth.user.id,
         req,
     });
+
+    await emitItemEvent("item.updated", { id, previous, actor: { userId: auth.user.id, via: auth.via } });
 
     // Send notification if status changed
     if (oldItem.status !== updated.status) {
@@ -125,7 +129,9 @@ export async function DELETE(req, { params }) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
+    const previous = await previousForWebhooks(id);
     await prisma.configurationItem.delete({ where: { id } });
+    if (previous) await emitItemEvent("item.deleted", { previous, actor: { userId: auth.user.id, via: auth.via } });
 
     // Log the deletion
     await logItemDeleted({ item, userId: auth.user.id, req });

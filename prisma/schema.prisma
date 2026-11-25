@@ -71,7 +71,7 @@ model ItemType {
 model Tag {
   id                 String              @id @default(cuid())
   name               String              @unique
-  color              String?             // Optional hex color for UI display
+  color              String? // Optional hex color for UI display
   description        String?
   createdAt          DateTime            @default(now())
   // Many-to-many relation with Configuration Items
@@ -79,39 +79,39 @@ model Tag {
 }
 
 model ConfigurationItem {
-  id          String      @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  userId      String?
-  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id                   String                @id @default(cuid())
+  name                 String
+  description          String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  userId               String?
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
   // New fields for network information:
-  ip          String?
-  mac         String?
+  ip                   String?
+  mac                  String?
   // New relation: optional type assignment
-  itemTypeId  String?
-  itemType    ItemType?   @relation(fields: [itemTypeId], references: [id])
+  itemTypeId           String?
+  itemType             ItemType?             @relation(fields: [itemTypeId], references: [id])
   // Asset status field
-  status      String      @default("ACTIVE")
+  status               String                @default("ACTIVE")
   // Identity in an external system (e.g. source "puppet", externalId = certname),
   // used by automation to upsert items without knowing Blokhouse IDs.
-  source      String?
-  externalId  String?
+  source               String?
+  externalId           String?
   // Last time an automation run reported this item
-  lastSeenAt  DateTime?
+  lastSeenAt           DateTime?
   // Many-to-many relation with Tags
-  tags        Tag[]
+  tags                 Tag[]
   // Custom field values
-  customFieldValues CustomFieldValue[]
+  customFieldValues    CustomFieldValue[]
   // Asset relationships (outgoing relations)
-  relationsFrom AssetRelation[] @relation("RelationSource")
+  relationsFrom        AssetRelation[]       @relation("RelationSource")
   // Asset relationships (incoming relations)
-  relationsTo   AssetRelation[] @relation("RelationTarget")
+  relationsTo          AssetRelation[]       @relation("RelationTarget")
   // Maintenance schedules
   maintenanceSchedules MaintenanceSchedule[]
   // Favorite items
-  favoritedBy FavoriteItem[]
+  favoritedBy          FavoriteItem[]
 
   @@unique([source, externalId])
   @@index([name])
@@ -122,11 +122,11 @@ model ConfigurationItem {
 
 model AssetRelation {
   id          String            @id @default(cuid())
-  sourceId    String            // Source ConfigurationItem
+  sourceId    String // Source ConfigurationItem
   source      ConfigurationItem @relation("RelationSource", fields: [sourceId], references: [id], onDelete: Cascade)
-  targetId    String            // Target ConfigurationItem
+  targetId    String // Target ConfigurationItem
   target      ConfigurationItem @relation("RelationTarget", fields: [targetId], references: [id], onDelete: Cascade)
-  type        String            // e.g., "DEPENDS_ON", "RUNS_ON", "CONNECTED_TO", "CONTAINS"
+  type        String // e.g., "DEPENDS_ON", "RUNS_ON", "CONNECTED_TO", "CONTAINS"
   description String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -156,18 +156,18 @@ model ApiToken {
 }
 
 model AuditLog {
-  id          String      @id @default(cuid())
+  id          String   @id @default(cuid())
   action      String
-  entityType  String      // e.g., "ConfigurationItem", "User", "ApiToken"
-  entityId    String?     // ID of the affected entity (optional for global actions)
-  userId      String?     // Who performed the action
-  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  description String?     // Human-readable description
-  oldValues   String?     // Previous values (for updates/deletes)
-  newValues   String?     // New values (for creates/updates)
-  ipAddress   String?     // Client IP address
-  userAgent   String?     // Client user agent
-  createdAt   DateTime    @default(now())
+  entityType  String // e.g., "ConfigurationItem", "User", "ApiToken"
+  entityId    String? // ID of the affected entity (optional for global actions)
+  userId      String? // Who performed the action
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  description String? // Human-readable description
+  oldValues   String? // Previous values (for updates/deletes)
+  newValues   String? // New values (for creates/updates)
+  ipAddress   String? // Client IP address
+  userAgent   String? // Client user agent
+  createdAt   DateTime @default(now())
 
   @@index([createdAt])
   @@index([userId])
@@ -175,49 +175,49 @@ model AuditLog {
 }
 
 model CustomField {
-  id          String          @id @default(cuid())
-  name        String          // Field name (e.g., "purchase_date")
-  label       String          // Display label (e.g., "Purchase Date")
-  description String?
-  type        String          // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
-  required    Boolean         @default(false)
-  defaultValue String?        // Default value as string
-  options     String          @default("[]") // JSON array, stored as text
-  itemTypeId  String?         // If null, applies to all item types
-  itemType    ItemType?       @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
-  values      CustomFieldValue[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id           String             @id @default(cuid())
+  name         String // Field name (e.g., "purchase_date")
+  label        String // Display label (e.g., "Purchase Date")
+  description  String?
+  type         String // STRING, NUMBER, BOOLEAN, DATE, URL, EMAIL
+  required     Boolean            @default(false)
+  defaultValue String? // Default value as string
+  options      String             @default("[]") // JSON array, stored as text
+  itemTypeId   String? // If null, applies to all item types
+  itemType     ItemType?          @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
+  values       CustomFieldValue[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
   @@unique([name, itemTypeId])
   @@index([itemTypeId])
 }
 
 model CustomFieldValue {
-  id                  String          @id @default(cuid())
-  value               String          // Stored as string, parsed based on field type
+  id                  String            @id @default(cuid())
+  value               String // Stored as string, parsed based on field type
   customFieldId       String
-  customField         CustomField     @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  customField         CustomField       @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
   configurationItemId String
   configurationItem   ConfigurationItem @relation(fields: [configurationItemId], references: [id], onDelete: Cascade)
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   @@unique([customFieldId, configurationItemId])
   @@index([configurationItemId])
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // e.g., "ASSET_STATUS_CHANGED", "RELATION_CREATED", "MAINTENANCE_DUE"
-  title       String
-  message     String
-  entityType  String?  // Related entity type (e.g., "ConfigurationItem")
-  entityId    String?  // Related entity ID
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String // e.g., "ASSET_STATUS_CHANGED", "RELATION_CREATED", "MAINTENANCE_DUE"
+  title      String
+  message    String
+  entityType String? // Related entity type (e.g., "ConfigurationItem")
+  entityId   String? // Related entity ID
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([userId, read])
   @@index([createdAt])
@@ -232,9 +232,9 @@ model MaintenanceSchedule {
   scheduledDate       DateTime
   completedDate       DateTime?
   status              String            @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
-  priority            String            @default("MEDIUM")     // LOW, MEDIUM, HIGH, CRITICAL
-  assignedTo          String?           // User ID or name
-  createdBy           String?           // User ID
+  priority            String            @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  assignedTo          String? // User ID or name
+  createdBy           String? // User ID
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
@@ -254,4 +254,44 @@ model FavoriteItem {
   @@unique([userId, configurationItemId])
   @@index([userId])
   @@index([configurationItemId])
+}
+
+// Outgoing webhooks: Blokhouse POSTs signed JSON to `url` when items change.
+model Webhook {
+  id          String            @id @default(cuid())
+  name        String
+  url         String
+  // Shared secret for the HMAC signature. Shown once on creation (like API tokens);
+  // stored as is because signing needs it.
+  secret      String
+  // Comma-separated event names (item.created, item.updated, item.deleted) or "*"
+  events      String            @default("*")
+  active      Boolean           @default(true)
+  createdById String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deliveries  WebhookDelivery[]
+}
+
+// One event for one webhook. Sent by the delivery worker (lib/webhooks), retried with backoff.
+model WebhookDelivery {
+  id             String    @id @default(cuid())
+  webhookId      String
+  webhook        Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event          String
+  // JSON body as sent
+  payload        String
+  // pending: waiting for (re)delivery; success; failed: gave up after the last attempt
+  status         String    @default("pending")
+  attempts       Int       @default(0)
+  // When the worker may pick it up next; also a lease while an attempt is running
+  nextAttemptAt  DateTime  @default(now())
+  responseStatus Int?
+  error          String?
+  durationMs     Int?
+  deliveredAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([webhookId, createdAt])
 }

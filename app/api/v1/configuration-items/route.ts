@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { route, json, readJson, validate, pagination, pageMeta } from "@/lib/api/v1/http";
 import { ItemCreate, ItemQuery } from "@/lib/api/v1/schemas";
 import { ITEM_INCLUDE, TX_OPTIONS, createItemTx, loadItem, serializeItem, audit } from "@/lib/api/v1/items";
+import { emitItemEvent } from "@/lib/webhooks";
 
 export const GET = route("read", async ({ req }) => {
     const url = new URL(req.url);
@@ -40,5 +41,6 @@ export const POST = route("write", async ({ req, auth }) => {
     const id = await prisma.$transaction((tx) => createItemTx(tx, input, { userId: auth.user.id }), TX_OPTIONS);
     const item = (await loadItem(id))!;
     await audit("CREATE", null, item, auth.user.id, req, auth.via);
+    await emitItemEvent("item.created", { item: serializeItem(item), actor: { userId: auth.user.id, via: auth.via } });
     return json({ data: serializeItem(item) }, 201, { Location: `/api/v1/configuration-items/${id}` });
 });

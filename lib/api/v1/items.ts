@@ -298,7 +298,7 @@ export async function upsertItemTx(tx: Tx, identity: Identity, input: ItemInput,
         // Reporting the same state again only refreshes lastSeenAt; callers such as
         // Ansible use "unchanged" to report changed=false, and no audit row is written.
         const result = sameContent(before, after) ? ("unchanged" as const) : ("updated" as const);
-        return { id: existing.id, result };
+        return { id: existing.id, result, before: serializeItem(before), after: serializeItem(after) };
     }
     if (!merged.name) {
         throw new ApiError("validation_failed", "name is required to create a new item", [
@@ -306,7 +306,7 @@ export async function upsertItemTx(tx: Tx, identity: Identity, input: ItemInput,
         ]);
     }
     const id = await createItemTx(tx, merged, opts);
-    return { id, result: "created" as const };
+    return { id, result: "created" as const, before: null, after: null };
 }
 
 export const TX_OPTIONS = { timeout: 60_000, maxWait: 10_000 };

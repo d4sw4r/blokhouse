@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth, jsonError } from "@/lib/auth";
 import { logItemCreated } from "@/lib/audit";
+import { emitItemEvent } from "@/lib/webhooks";
 
 /**
  * @swagger
@@ -232,6 +233,7 @@ export async function POST(request) {
 
     // Log the creation
     await logItemCreated({ item, userId: auth.user.id, req: request });
+    await emitItemEvent("item.created", { id: item.id, actor: { userId: auth.user.id, via: auth.via } });
 
     return new Response(JSON.stringify(item), { status: 201 });
 }
