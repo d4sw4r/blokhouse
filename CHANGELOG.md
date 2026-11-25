@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **API v1** under `/api/v1` — the stable, versioned API for automation:
+  - Configuration items: list (search, filters, pagination), create, get, PATCH, delete
+  - Idempotent upserts: `PUT …/by-name/{name}` and `PUT …/by-external-id/{source}/{externalId}`; upserts set `lastSeenAt`
+  - `POST …/bulk-upsert`: up to 1000 items in one atomic transaction
+  - Types, tags and custom fields referenced by name; custom field values validated by field type
+  - One error format `{ "error": { "code", "message", "details" } }` with per-field details
+  - OpenAPI 3.1 document generated from the validation schemas at `/api/v1/openapi.json`; `/docs` shows it by default
+  - Every v1 write is recorded in the audit log
+- Configuration items have `source`, `externalId` (unique together) and `lastSeenAt`.
+- Integration tests against a real PostgreSQL database (`npm run test:integration`), run in CI.
+
+### Fixed
+- **Custom fields could not be created**: `POST /api/custom-fields` passed `options` as an array into a text column and always failed, so the Custom Fields admin page did not work. Options are now stored as JSON and returned as arrays, and "must be one of" validation compares whole values instead of substrings.
+- `docs/api.md` documented a response format and rate limiting that did not exist.
+
 ## [0.2.0] - 2026-11-24
 
 Security and platform release. **Read the upgrade notes before updating** — see [docs/upgrading.md](https://github.com/d4sw4r/blokhouse/blob/main/docs/upgrading.md).
