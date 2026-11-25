@@ -31,7 +31,7 @@ H="Authorization: Bearer $TOKEN"
 FOUND=$(curl -s -H "$H" "$B/api/configuration-items?search=smoke-web" | json pagination.total)
 [ "$FOUND" = 1 ] || fail "case-insensitive search (got '$FOUND')"
 curl -s -H "$H" "$B/api/ansible" | grep -q '"ansible_host": "10.99.0.1"' || fail "ansible inventory"
-curl -s -H "$H" "$B/api/puppet?node=Smoke-Web-01" | grep -q 'ip_address: "10.99.0.1"' || fail "puppet ENC"
+curl -s -H "$H" "$B/api/puppet?node=Smoke-Web-01" | grep -q '"ip_address": "10.99.0.1"' || fail "puppet ENC"
 [ "$(code -H "$H" "$B/api/users")" = 403 ] || fail "write token must not reach admin endpoints"
 
 # API v1

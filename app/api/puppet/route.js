@@ -1,18 +1,39 @@
 // app/api/puppet/route.js
 // Puppet External Node Classifier (ENC) endpoint
 //
-// Configure Puppet master (puppet.conf):
-//   [master]
-//   external_nodes = curl -sf -H "Authorization: Bearer TOKEN" http://blokhouse/api/puppet?node=%s
-//   node_terminus = exec
-//
-// Endpoints:
 //   GET /api/puppet              → JSON list of all nodes
-//   GET /api/puppet?node=<name>  → YAML ENC for a specific node (by name or IP)
+//   GET /api/puppet?node=<name>  → ENC document (YAML) for one node
+//
+// Use the ENC script of the Puppet module in integrations/puppet, or:
+//   [server]
+//   node_terminus  = exec
+//   external_nodes = /usr/local/bin/blokhouse-enc   (curl -fsS ... "/api/puppet?node=$1")
+//
+// A node is found by, in this order: source "puppet" + externalId = certname
+// (set by the Blokhouse report processor), name (case-insensitive), IP address.
 
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { buildENCYaml, buildDefaultENCYaml } from "@/lib/puppet-enc";
+import { ITEM_INCLUDE, serializeItem } from "@/lib/api/v1/items";
+import { buildENC, buildUnknownENC, encToYaml, ENVIRONMENT_FIELD, CLASSES_FIELD, parseClassList } from "@/lib/puppet-enc";
+
+const ORDER = [{ createdAt: "asc" }, { id: "asc" }];
+
+async function findNode(certname) {
+    const byExternalId = await prisma.configurationItem.findUnique({
+        where: { source_externalId: { source: "puppet", externalId: certname } },
+        include: ITEM_INCLUDE,
+    });
+    if (byExternalId) return byExternalId;
+    return (
+        (await prisma.configurationItem.findFirst({
+            where: { name: { equals: certname, mode: "insensitive" } },
+            include: ITEM_INCLUDE,
+            orderBy: ORDER,
+        })) ??
+        (await prisma.configurationItem.findFirst({ where: { ip: certname }, include: ITEM_INCLUDE, orderBy: ORDER }))
+    );
+}
 
 export async function GET(req) {
     const { response } = await requireAuth(req, "read");
@@ -22,62 +43,40 @@ export async function GET(req) {
     const nodeName = searchParams.get("node");
 
     // --- Single-node ENC mode ---
-    if (nodeName) {
-        const item = await prisma.configurationItem.findFirst({
-            where: {
-                OR: [
-                    { name: nodeName },
-                    { ip: nodeName },
-                ],
-            },
-            include: { itemType: true },
-        });
-
-        const yaml = item ? buildENCYaml(item) : buildDefaultENCYaml();
-        return new Response(yaml, {
+    if (nodeName !== null) {
+        const item = nodeName ? await findNode(nodeName) : null;
+        const enc = item ? buildENC(serializeItem(item)) : buildUnknownENC();
+        return new Response(encToYaml(enc), {
             status: 200,
-            headers: { "Content-Type": "text/yaml" },
+            headers: { "Content-Type": "text/yaml; charset=utf-8" },
         });
     }
 
     // --- Full node list (JSON overview) ---
-    const items = await prisma.configurationItem.findMany({
-        include: { itemType: true },
-        orderBy: { name: "asc" },
+    const items = await prisma.configurationItem.findMany({ include: ITEM_INCLUDE, orderBy: { name: "asc" } });
+
+    const nodes = items.map((raw) => {
+        const item = serializeItem(raw);
+        return {
+            name: item.name,
+            ip: item.ip,
+            mac: item.mac,
+            description: item.description,
+            type: item.type,
+            certname: item.source === "puppet" ? item.externalId : null,
+            classes: parseClassList(item.customFields[CLASSES_FIELD]),
+            environment: item.customFields[ENVIRONMENT_FIELD]?.trim() || null,
+            enc_url: `/api/puppet?node=${encodeURIComponent(item.source === "puppet" ? item.externalId : item.name)}`,
+        };
     });
 
-    const nodes = items.map((item) => ({
-        name: item.name,
-        ip: item.ip || null,
-        mac: item.mac || null,
-        description: item.description || null,
-        type: item.itemType ? item.itemType.name : null,
-        environment: item.itemType
-            ? item.itemType.name.toLowerCase().replace(/[^a-z0-9]+/g, "_")
-            : "production",
-        enc_url: `/api/puppet?node=${encodeURIComponent(item.name)}`,
-    }));
-
-    return new Response(
-        JSON.stringify(
-            {
-                total: nodes.length,
-                nodes,
-                usage: {
-                    puppet_conf: [
-                        "[master]",
-                        "external_nodes = curl -sf -H 'Authorization: Bearer TOKEN' http://blokhouse/api/puppet?node=%s",
-                        "node_terminus = exec",
-                    ],
-                    note: "Query ?node=<hostname|ip> to get YAML ENC for a specific node",
-                },
-            },
-            null,
-            2
-        ),
-        {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        }
-    );
+    return Response.json({
+        total: nodes.length,
+        nodes,
+        usage: {
+            enc: "GET /api/puppet?node=<certname> returns the ENC document for a node",
+            classification: `Set the custom fields '${CLASSES_FIELD}' and '${ENVIRONMENT_FIELD}' on an item to assign classes and an environment`,
+            docs: "docs/integrations/puppet.md",
+        },
+    });
 }
