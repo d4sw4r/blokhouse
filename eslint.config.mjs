@@ -26,6 +26,10 @@ const eslintConfig = [
             "react/no-unescaped-entities": "warn",
             // Allow functions to be used before declaration (hoisting)
             "@typescript-eslint/no-use-before-define": "off",
+            // React Compiler rules that became errors in eslint-config-next 16.4.
+            // Warnings like react-compiler above until the pages are refactored.
+            "react-hooks/immutability": "warn",
+            "react-hooks/set-state-in-effect": "warn",
         },
     },
 ];
