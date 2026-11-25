@@ -6,7 +6,7 @@
 import prisma from "@/lib/prisma";
 import { route, json, readJson, validate, ApiError } from "@/lib/api/v1/http";
 import { BulkUpsertRequest } from "@/lib/api/v1/schemas";
-import { upsertItemTx, type Identity } from "@/lib/api/v1/items";
+import { upsertItemTx, type Identity, type UpsertOutcome } from "@/lib/api/v1/items";
 
 export const POST = route("write", async ({ req, auth }) => {
     const { items } = validate(BulkUpsertRequest, await readJson(req, 20 * 1024 * 1024));
@@ -23,7 +23,7 @@ export const POST = route("write", async ({ req, auth }) => {
 
     const results = await prisma.$transaction(
         async (tx) => {
-            const out: { index: number; result: "created" | "updated"; id: string }[] = [];
+            const out: { index: number; result: UpsertOutcome; id: string }[] = [];
             for (const [index, { match, ...input }] of items.entries()) {
                 const identity: Identity =
                     match === "name"
@@ -37,12 +37,12 @@ export const POST = route("write", async ({ req, auth }) => {
         { timeout: 300_000, maxWait: 10_000 }
     );
 
-    const created = results.filter((r) => r.result === "created").length;
-    const updated = results.length - created;
+    const count = (result: UpsertOutcome) => results.filter((r) => r.result === result).length;
+    const meta = { created: count("created"), updated: count("updated"), unchanged: count("unchanged") };
 
-    // One audit row per item, written in a single statement.
+    // One audit row per item that actually changed, written in a single statement.
     await prisma.auditLog.createMany({
-        data: results.map((r) => ({
+        data: results.filter((r) => r.result !== "unchanged").map((r) => ({
             action: r.result === "created" ? "CREATE" : "UPDATE",
             entityType: "ConfigurationItem",
             entityId: r.id,
@@ -53,5 +53,5 @@ export const POST = route("write", async ({ req, auth }) => {
         })),
     });
 
-    return json({ data: results, meta: { created, updated } });
+    return json({ data: results, meta });
 });

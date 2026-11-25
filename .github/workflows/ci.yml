@@ -67,6 +67,36 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
+  ansible-collection:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Oldest supported (meta/runtime.yml) and current
+        ansible: ["2.17", "2.22"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ansible-core ${{ matrix.ansible }}
+        run: pipx install "ansible-core~=${{ matrix.ansible }}.0"
+
+      # ansible-test needs the collection at ansible_collections/<namespace>/<name>
+      - name: Place collection
+        run: |
+          mkdir -p "$RUNNER_TEMP/ac/ansible_collections/blokhouse"
+          cp -r integrations/ansible "$RUNNER_TEMP/ac/ansible_collections/blokhouse/cmdb"
+          cd "$RUNNER_TEMP/ac/ansible_collections/blokhouse/cmdb"
+          git init -q && git add -A
+
+      - name: Sanity tests
+        working-directory: ${{ runner.temp }}/ac/ansible_collections/blokhouse/cmdb
+        run: ansible-test sanity --docker default -v
+
+      - name: Unit tests
+        working-directory: ${{ runner.temp }}/ac/ansible_collections/blokhouse/cmdb
+        run: ansible-test units --docker default -v
+
   docker:
     runs-on: ubuntu-latest
     needs: build
@@ -94,6 +124,11 @@ jobs:
 
       - name: Smoke test
         run: ADMIN_PASSWORD=ci-admin-password sh scripts/smoke-test.sh
+
+      - name: Ansible collection end-to-end test
+        run: |
+          pipx install "ansible-core~=2.22.0"
+          ADMIN_PASSWORD=ci-admin-password sh integrations/ansible/tests/e2e/run.sh
 
       - name: Generated admin password goes to a 0600 file, not the logs
         run: |

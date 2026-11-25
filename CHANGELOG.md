@@ -15,13 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Types, tags and custom fields referenced by name; custom field values validated by field type
   - One error format `{ "error": { "code", "message", "details" } }` with per-field details
   - OpenAPI 3.1 document generated from the validation schemas at `/api/v1/openapi.json`; `/docs` shows it by default
-  - Every v1 write is recorded in the audit log
+  - Every v1 write is recorded in the audit log. Upserts that change nothing return `"result": "unchanged"`, only refresh `lastSeenAt` and write no audit entry
 - Configuration items have `source`, `externalId` (unique together) and `lastSeenAt`.
 - Integration tests against a real PostgreSQL database (`npm run test:integration`), run in CI.
+- **Ansible collection `blokhouse.cmdb`** in `integrations/ansible` (GPL-3.0-or-later):
+  - Inventory plugin with groups by type, tag and status, `blokhouse_*` host variables including custom fields, filters, `compose`/`keyed_groups` and caching
+  - `configuration_item` module: idempotent create/update/delete by name or external ID, with check and diff mode
+  - `configuration_item_info` module
+  - Tested in CI with `ansible-test` (sanity, units on ansible-core 2.17 and 2.22) and end to end against the Docker Compose stack
 
 ### Fixed
 - **Custom fields could not be created**: `POST /api/custom-fields` passed `options` as an array into a text column and always failed, so the Custom Fields admin page did not work. Options are now stored as JSON and returned as arrays, and "must be one of" validation compares whole values instead of substrings.
 - `docs/api.md` documented a response format and rate limiting that did not exist.
+- The Ansible docs described an inventory script for `/api/integrations/ansible` and a `uri` inventory plugin, neither of which exists.
 
 ## [0.2.0] - 2026-11-24
 

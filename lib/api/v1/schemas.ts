@@ -149,14 +149,17 @@ export const PageMeta = z
 
 export const ItemList = z.object({ data: z.array(Item), meta: PageMeta }).openapi("ItemList");
 
+// "unchanged": the item already matched; only lastSeenAt was refreshed and no audit entry was written.
+const UpsertOutcome = z.enum(["created", "updated", "unchanged"]);
+
 export const UpsertResult = z
-    .object({ result: z.enum(["created", "updated"]), data: Item })
+    .object({ result: UpsertOutcome, data: Item })
     .openapi("UpsertResult");
 
 export const BulkUpsertResponse = z
     .object({
-        data: z.array(z.object({ index: z.number(), result: z.enum(["created", "updated"]), id: z.string() })),
-        meta: z.object({ created: z.number(), updated: z.number() }),
+        data: z.array(z.object({ index: z.number(), result: UpsertOutcome, id: z.string() })),
+        meta: z.object({ created: z.number(), updated: z.number(), unchanged: z.number() }),
     })
     .openapi("BulkUpsertResponse");
 

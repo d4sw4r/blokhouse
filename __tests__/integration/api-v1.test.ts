@@ -192,6 +192,27 @@ describe("upsert by name", () => {
         expect(get.body.data.id).toBe(first.body.data.id);
     });
 
+    it("reports 'unchanged' for the same state, refreshes lastSeenAt and writes no audit entry", async () => {
+        await prisma.customField.create({ data: { name: "cpus", label: "CPUs", type: "NUMBER" } });
+        const body = { ip: "10.0.0.1", type: "Server", tags: ["web", "Prod"], customFields: { cpus: 4 } };
+        const first = await call(ByName.PUT, { token: rw, method: "PUT", url: byName("web-01"), body });
+        const audits = await prisma.auditLog.count();
+
+        // Same values, different spelling and order: still the same state.
+        const again = await call(ByName.PUT, {
+            token: rw, method: "PUT", url: byName("web-01"),
+            body: { ...body, type: "server", tags: ["prod", "WEB"], customFields: { cpus: "4" } },
+        });
+        expect(again.status).toBe(200);
+        expect(again.body.result).toBe("unchanged");
+        expect(new Date(again.body.data.lastSeenAt).getTime()).toBeGreaterThanOrEqual(new Date(first.body.data.lastSeenAt).getTime());
+        expect(await prisma.auditLog.count()).toBe(audits);
+
+        const changed = await call(ByName.PUT, { token: rw, method: "PUT", url: byName("web-01"), body: { tags: ["web"] } });
+        expect(changed.body.result).toBe("updated");
+        expect(await prisma.auditLog.count()).toBe(audits + 1);
+    });
+
     it.each(["50%off", "%41", "web 01", "a/b", "Ümlaut+x"])("handles the name %s exactly", async (name) => {
         const put = await call(ByName.PUT, { token: rw, method: "PUT", url: byName(name), body: {} });
         expect(put.status).toBe(201);
@@ -262,7 +283,7 @@ describe("bulk upsert", () => {
             },
         });
         expect(r.status).toBe(200);
-        expect(r.body.meta).toEqual({ created: 2, updated: 1 });
+        expect(r.body.meta).toEqual({ created: 2, updated: 1, unchanged: 0 });
         expect(r.body.data.map((d: { result: string }) => d.result)).toEqual(["updated", "created", "created"]);
         expect(await prisma.configurationItem.count()).toBe(3);
         expect(await prisma.auditLog.count({ where: { description: { contains: "bulk upsert" } } })).toBe(3);
@@ -303,7 +324,7 @@ describe("bulk upsert", () => {
         expect(r.status).toBe(200);
         expect(r.body.meta.created).toBe(500);
         const again = await call(Bulk.POST, { token: rw, body: { items } });
-        expect(again.body.meta).toEqual({ created: 0, updated: 500 });
+        expect(again.body.meta).toEqual({ created: 0, updated: 0, unchanged: 500 });
         expect(Date.now() - t0).toBeLessThan(60_000);
     });
 });

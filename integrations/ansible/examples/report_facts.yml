@@ -1,0 +1,26 @@
+---
+# Report every host to Blokhouse with facts gathered by Ansible.
+# Run it regularly (e.g. from AWX or cron): hosts that did not report for a
+# while show an old "last seen" date in Blokhouse.
+#
+#   export BLOKHOUSE_URL=https://cmdb.example.com BLOKHOUSE_TOKEN=bh_...
+#   ansible-playbook -i inventory examples/report_facts.yml
+#
+# The custom fields used below (os, kernel, cpus, memory_mb) must exist in
+# Blokhouse (Admin > Custom Fields); remove the ones you do not need.
+- name: Report hosts to the CMDB
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Create or update the configuration item
+      blokhouse.cmdb.configuration_item:
+        name: "{{ inventory_hostname }}"
+        ip: "{{ ansible_default_ipv4.address | default(omit) }}"
+        mac: "{{ ansible_default_ipv4.macaddress | default(omit) }}"
+        type: "{{ 'VM' if ansible_virtualization_role | default('') == 'guest' else 'Server' }}"
+        custom_fields:
+          os: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+          kernel: "{{ ansible_kernel }}"
+          cpus: "{{ ansible_processor_vcpus }}"
+          memory_mb: "{{ ansible_memtotal_mb }}"
+      delegate_to: localhost
