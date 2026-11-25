@@ -12,6 +12,7 @@ export function GET() {
                 configurationItems: "/api/v1/configuration-items",
                 types: "/api/v1/types",
                 tags: "/api/v1/tags",
+                webhooks: "/api/v1/webhooks",
             },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }

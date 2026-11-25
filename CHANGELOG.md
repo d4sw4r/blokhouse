@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `configuration_item` module: idempotent create/update/delete by name or external ID, with check and diff mode
   - `configuration_item_info` module
   - Tested in CI with `ansible-test` (sanity, units on ansible-core 2.17 and 2.22) and end to end against the Docker Compose stack
+- **Webhooks:** signed HTTP callbacks (`item.created`, `item.updated`, `item.deleted`) for every change to an item, from any write path. HMAC-SHA256 signatures with timestamp, retries with backoff for about 7 hours, ordered delivery per webhook, a delivery log with redelivery, and a test button. Managed under Admin → Webhooks or `/api/v1/webhooks` (admin scope). Deliveries are stored before sending and are safe with several app replicas. See docs/webhooks.md.
 - **Puppet module** in `integrations/puppet` (Puppet/OpenVox 7 and 8, no dependencies):
   - Report processor `blokhouse`: updates IP, MAC, last seen and configured custom fields (from facts or the run) after every run; creates new nodes, adopts existing items with the node's name instead of duplicating them, and never fails a run
   - ENC script that keeps the token out of `puppet.conf`

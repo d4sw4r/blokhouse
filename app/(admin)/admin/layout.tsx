@@ -36,6 +36,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </Link>
                         </li>
                         <li>
+                            <Link href="/admin/webhooks">
+                                <span className={isActive("/admin/webhooks")}>Webhooks</span>
+                            </Link>
+                        </li>
+                        <li>
                             <Link href="/admin/settings">
                                 <span className={isActive("/admin/settings")}>Settings</span>
                             </Link>

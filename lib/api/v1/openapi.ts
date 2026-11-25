@@ -131,6 +131,75 @@ registry.registerPath({
     responses: { 201: ok(data(S.Tag), "Created"), ...common, 409: err("Exists") },
 });
 
+const HookId = z.object({ id: z.string().openapi({ description: "Webhook id" }) });
+const webhookDescription =
+    "Blokhouse POSTs JSON to the webhook URL when configuration items change (all write paths, including " +
+    "the web UI and bulk operations). Requires the `admin` scope.\n\n" +
+    "Body: `{ id, event, occurredAt, data: { item, previous, changes }, actor: { userId, via } }`. " +
+    "Headers: `X-Blokhouse-Event`, `X-Blokhouse-Delivery`, `X-Blokhouse-Timestamp` and " +
+    "`X-Blokhouse-Signature: sha256=<HMAC-SHA256(secret, \"<timestamp>.<body>\")>`. " +
+    "Any 2xx response is a success; otherwise the delivery is retried up to 6 times over about 7 hours.";
+
+registry.registerPath({
+    method: "get", path: "/webhooks", tags: ["Webhooks"], security,
+    summary: "List webhooks",
+    description: webhookDescription,
+    responses: { 200: ok(data(z.array(S.Webhook))), ...common },
+});
+registry.registerPath({
+    method: "post", path: "/webhooks", tags: ["Webhooks"], security,
+    summary: "Create a webhook",
+    description: "The response contains the signing `secret`. It is not shown again.",
+    request: { body: body(S.WebhookCreate) },
+    responses: { 201: ok(data(S.Webhook), "Created"), ...common },
+});
+registry.registerPath({
+    method: "get", path: "/webhooks/{id}", tags: ["Webhooks"], security,
+    summary: "Get a webhook",
+    request: { params: HookId },
+    responses: { 200: ok(data(S.Webhook)), ...common, 404: err("Not found") },
+});
+registry.registerPath({
+    method: "patch", path: "/webhooks/{id}", tags: ["Webhooks"], security,
+    summary: "Update a webhook",
+    description: "With `rotateSecret: true` a new secret is generated and returned once.",
+    request: { params: HookId, body: body(S.WebhookPatch) },
+    responses: { 200: ok(data(S.Webhook)), ...common, 404: err("Not found") },
+});
+registry.registerPath({
+    method: "delete", path: "/webhooks/{id}", tags: ["Webhooks"], security,
+    summary: "Delete a webhook and its delivery log",
+    request: { params: HookId },
+    responses: { 204: { description: "Deleted" }, ...common, 404: err("Not found") },
+});
+registry.registerPath({
+    method: "post", path: "/webhooks/{id}/ping", tags: ["Webhooks"], security,
+    summary: "Send a test event",
+    description: "Sends a `ping` event right away and returns the delivery, so you can see whether the receiver works.",
+    request: { params: HookId },
+    responses: { 200: ok(data(S.WebhookDelivery)), ...common, 404: err("Not found") },
+});
+registry.registerPath({
+    method: "get", path: "/webhooks/{id}/deliveries", tags: ["Webhooks"], security,
+    summary: "Delivery log",
+    description: "Newest first, with payloads. Successful deliveries are kept 14 days, failed ones 30 days.",
+    request: {
+        params: HookId,
+        query: z.object({
+            status: z.enum(["pending", "success", "failed"]).optional(),
+            page: z.coerce.number().int().min(1).optional(),
+            per_page: z.coerce.number().int().min(1).max(500).optional(),
+        }),
+    },
+    responses: { 200: ok(z.object({ data: z.array(S.WebhookDelivery), meta: S.PageMeta })), ...common, 404: err("Not found") },
+});
+registry.registerPath({
+    method: "post", path: "/webhooks/{id}/deliveries/{deliveryId}/redeliver", tags: ["Webhooks"], security,
+    summary: "Send a delivery again",
+    request: { params: HookId.extend({ deliveryId: z.string() }) },
+    responses: { 200: ok(data(S.WebhookDelivery)), ...common, 404: err("Not found") },
+});
+
 let cached: ReturnType<OpenApiGeneratorV31["generateDocument"]> | null = null;
 
 export function openApiDocument(version: string) {

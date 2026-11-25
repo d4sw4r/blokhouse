@@ -82,6 +82,11 @@ DISCOVERY_USE_SUDO=false        # set to true to run `sudo -n nmap` (needed for 
 
 `nmap` must be installed on the host; it is not part of the Docker image.
 
+#### `WEBHOOK_WORKER`
+Every app process sends [webhooks](webhooks.md) in the background. Set `WEBHOOK_WORKER=false`
+on replicas that should not send them. Several replicas with the worker enabled are fine: each
+delivery is sent by exactly one of them.
+
 ## Complete Example
 
 ```bash
