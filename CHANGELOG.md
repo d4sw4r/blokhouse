@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - End-to-end test with real `puppet apply` runs in CI
 - ENC: the variable `$blokhouse` with all fields of the item (type, tags, status, custom fields, …), classes from the custom field `puppet_classes`, environment from `puppet_environment`. Nodes are found by certname (external ID), then name, then IP.
 
+### Removed
+- **Chef support:** the `/api/chef` endpoint (node list, single node, data bag) and its documentation. Chef is rarely used today, and Chef Infra Client cannot even be run for testing without accepting a commercial license. Use the API v1 (`/api/v1/configuration-items`) from Chef recipes if you need the data.
+
 ### Changed
 - **Puppet ENC no longer derives classes or the environment from the item type.** Set the custom fields `puppet_classes` and `puppet_environment` instead (see docs/integrations/puppet.md). Unknown nodes get an empty classification instead of class `base` and environment `production`.
 

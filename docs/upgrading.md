@@ -1,5 +1,17 @@
 # Upgrading
 
+## v0.2 → next release
+
+Database migrations run automatically on start. Check these changes:
+
+- **Puppet ENC:** classes and the environment no longer come from the item type. Set the
+  custom fields `puppet_classes` and `puppet_environment` on items that need them. See
+  [Puppet](integrations/puppet.md#upgrading-from-blokhouse-02).
+- **Chef support was removed** (`/api/chef`). Read items from the API v1
+  (`GET /api/v1/configuration-items`) instead.
+- New integrations should use the API v1 (`/api/v1`), the
+  [Ansible collection](integrations/ansible.md) and the [Puppet module](integrations/puppet.md).
+
 ## v0.1 (SQLite) → v0.2 (PostgreSQL)
 
 v0.2 replaces SQLite with PostgreSQL and introduces versioned database migrations.

@@ -13,7 +13,6 @@
     "inventory",
     "ansible",
     "puppet",
-    "chef",
     "devops"
   ],
   "scripts": {

@@ -7,14 +7,13 @@
 [![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://ghcr.io/d4sw4r/blokhouse)
 [![Version](https://img.shields.io/badge/version-0.2.0-green)](https://github.com/d4sw4r/blokhouse/releases)
 
-**Blokhouse** is a simple, automation-first open source CMDB. Track your infrastructure assets and power your automation tools — Ansible, Puppet, Chef, and custom REST API scripts.
+**Blokhouse** is a simple, automation-first open source CMDB. Track your infrastructure assets and power your automation tools — Ansible, Puppet and your own scripts through a versioned REST API.
 
 ## ✨ Features
 
 - **Configuration Items** — manage assets with custom fields, tags, and types
 - **Ansible collection** — dynamic inventory plus modules that report hosts back to the CMDB
-- **Puppet ENC** — External Node Classifier for Puppet masters
-- **Chef Integration** — node inventory and data bags
+- **Puppet module** — node classifier (ENC) and a report processor that updates the CMDB after every run
 - **REST API** — full OpenAPI/Swagger documentation at `/docs`
 - **Relationship Graph** — visualize asset dependencies
 - **Audit Logs** — track every change
@@ -130,12 +129,6 @@ node_terminus  = exec
 external_nodes = /etc/puppetlabs/puppet/blokhouse_enc
 ```
 
-### Chef
-
-```bash
-curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:3000/api/chef
-```
-
 ## 📖 API
 
 Automation should use the versioned **API v1** — idempotent upserts by name or external ID,
@@ -157,7 +150,6 @@ Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
 - [API Reference](docs/api.md) — endpoints and authentication
 - [Ansible Integration](docs/integrations/ansible.md)
 - [Puppet Integration](docs/integrations/puppet.md)
-- [Chef Integration](docs/integrations/chef.md)
 - [Deployment Guide](docs/deployment/) — nginx, systemd, backups
 
 ## ❓ Troubleshooting
