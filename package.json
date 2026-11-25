@@ -39,7 +39,7 @@
     "better-sqlite3": "^12.6.2",
     "next": "16.4.5",
     "next-auth": "^4.24.11",
-    "next-swagger-doc": "^0.4.1",
+    "next-swagger-doc": "^0.5.0",
     "pg": "^8.23.1",
     "prisma": "7.4.2",
     "react": "^19.0.0",
