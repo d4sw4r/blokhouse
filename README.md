@@ -112,15 +112,19 @@ node_terminus  = exec
 curl -H 'Authorization: Bearer YOUR_TOKEN' http://localhost:3000/api/chef
 ```
 
-## 📖 API Documentation
+## 📖 API
 
-Visit `/docs` for the interactive Swagger UI or fetch the raw spec:
+Automation should use the versioned **API v1** — idempotent upserts by name or external ID,
+bulk upsert of up to 1000 items in one transaction, types/tags/custom fields by name:
 
 ```bash
-curl http://localhost:3000/api/docs
+curl -X PUT http://localhost:3000/api/v1/configuration-items/by-name/web-01 \
+  -H "Authorization: Bearer $BLOKHOUSE_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"ip": "10.0.0.15", "type": "Server", "tags": ["prod"]}'
 ```
 
-Generate scoped API tokens under **Admin → API Tokens** in the web UI. See [API Reference](docs/api.md#permissions) for roles and scopes.
+Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
+[docs/api.md](docs/api.md). Generate scoped API tokens under **Admin → API Tokens**.
 
 ## 📚 Documentation
 

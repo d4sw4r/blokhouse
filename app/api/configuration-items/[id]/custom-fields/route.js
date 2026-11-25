@@ -2,6 +2,7 @@
 // Manage custom field values for a configuration item
 
 import prisma from "@/lib/prisma";
+import { parseOptions } from "@/lib/custom-field-options";
 import { requireAuth } from "@/lib/auth";
 
 /**
@@ -124,7 +125,7 @@ export async function GET(req, { params }) {
             type: field.type,
             required: field.required,
             defaultValue: field.defaultValue,
-            options: field.options,
+            options: parseOptions(field.options),
             value: field.values[0]?.value || field.defaultValue || null,
             valueId: field.values[0]?.id || null,
         }));
@@ -258,8 +259,11 @@ function validateValue(value, field) {
             break;
         case "STRING":
             // Check if value is in options (if defined)
-            if (field.options && field.options.length > 0 && !field.options.includes(strValue)) {
-                return { valid: false, error: `Must be one of: ${field.options.join(", ")}` };
+            {
+                const options = parseOptions(field.options);
+                if (options.length > 0 && !options.includes(strValue)) {
+                    return { valid: false, error: `Must be one of: ${options.join(", ")}` };
+                }
             }
             break;
     }

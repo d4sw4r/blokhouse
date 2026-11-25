@@ -1,6 +1,7 @@
 // app/api/custom-fields/[id]/route.js
 
 import prisma from "@/lib/prisma";
+import { serializeOptions, withParsedOptions } from "@/lib/custom-field-options";
 import { requireAuth } from "@/lib/auth";
 
 /**
@@ -96,7 +97,7 @@ export async function GET(req, { params }) {
             return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
         }
 
-        return new Response(JSON.stringify(field), { status: 200 });
+        return new Response(JSON.stringify(withParsedOptions(field)), { status: 200 });
     } catch (error) {
         console.error("Error fetching custom field:", error);
         return new Response(JSON.stringify({ error: "Failed to fetch custom field" }), { status: 500 });
@@ -109,6 +110,9 @@ export async function PUT(req, { params }) {
 
     const { id } = await params;
     const { label, description, required, defaultValue, options } = await req.json();
+    if (options !== undefined && options !== null && !Array.isArray(options)) {
+        return new Response(JSON.stringify({ error: "options must be an array of strings" }), { status: 400 });
+    }
 
     try {
         const field = await prisma.customField.update({
@@ -118,12 +122,12 @@ export async function PUT(req, { params }) {
                 ...(description !== undefined && { description }),
                 ...(required !== undefined && { required }),
                 ...(defaultValue !== undefined && { defaultValue }),
-                ...(options !== undefined && { options }),
+                ...(options !== undefined && { options: serializeOptions(options) }),
             },
             include: { itemType: true },
         });
 
-        return new Response(JSON.stringify(field), { status: 200 });
+        return new Response(JSON.stringify(withParsedOptions(field)), { status: 200 });
     } catch (error) {
         if (error.code === "P2025") {
             return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });

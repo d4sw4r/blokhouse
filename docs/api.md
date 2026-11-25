@@ -2,7 +2,9 @@
 
 ## Overview
 
-Blokhouse provides a RESTful API for programmatic access to all resources. The API supports both session-based authentication (for web UI) and bearer token authentication (for integrations).
+Blokhouse is automation-first: everything you can do in the UI you can do over HTTP. Integrations
+should use the versioned **[API v1](#api-v1-recommended)**. The API supports bearer token
+authentication (for integrations) and session cookies (for the web UI).
 
 ## API Documentation UI
 
@@ -20,16 +22,17 @@ This Swagger UI allows you to:
 
 ## Raw OpenAPI Specification
 
-To get the raw OpenAPI JSON spec:
-
 ```bash
-curl https://your-blokhouse-instance/api/docs
+curl https://your-blokhouse-instance/api/v1/openapi.json   # API v1 (OpenAPI 3.1)
+curl https://your-blokhouse-instance/api/docs              # legacy API
 ```
+
+Point code generators (`openapi-generator`, `oapi-codegen`, …) at the v1 document.
 
 ## Authentication
 
-Every API endpoint requires authentication, except `/api/health`, `/api/docs`
-and the NextAuth endpoints under `/api/auth`.
+Every API endpoint requires authentication, except `/api/health`, `/api/docs`,
+`/api/v1`, `/api/v1/openapi.json` and the NextAuth endpoints under `/api/auth`.
 
 ### Bearer Token (recommended for integrations)
 
@@ -93,94 +96,129 @@ and revoked from an interactive session, not with another token.
 Best practice for automation: create a dedicated user with the `API` role and
 issue tokens for it, using `read` only for inventory consumers (Ansible, Puppet, Chef).
 
-## Core Endpoints
+## API v1 (recommended)
 
-### Configuration Items
+All new integrations should use the versioned API under `/api/v1`. It is stable within v1:
+fields and endpoints are only added, never removed or changed in meaning.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/configuration-items` | List all configuration items |
-| POST | `/api/configuration-items` | Create a new item |
-| GET | `/api/configuration-items/:id` | Get a specific item |
-| PUT | `/api/configuration-items/:id` | Update an item |
-| DELETE | `/api/configuration-items/:id` | Delete an item |
+- Entry point: `GET /api/v1` (public)
+- OpenAPI 3.1: `GET /api/v1/openapi.json` (public) — generated from the same schemas that
+  validate requests, so it always matches the implementation
+- Interactive docs: `/docs` (API v1 tab)
 
-**Example:**
+### Conventions
+
+**Responses** wrap data in `data`. Lists add `meta`:
+
+```json
+{
+  "data": [{ "id": "…", "name": "web-01", "type": "Server", "tags": ["prod"], "customFields": { "os": "Debian 12" } }],
+  "meta": { "page": 1, "per_page": 50, "total": 1, "total_pages": 1 }
+}
+```
+
+**Errors** always have the same shape. `details` lists every invalid field:
+
+```json
+{
+  "error": {
+    "code": "validation_failed",
+    "message": "Request body is invalid",
+    "details": [{ "path": "ip", "message": "Must be a valid IPv4 or IPv6 address" }]
+  }
+}
+```
+
+| HTTP | `code` | Meaning |
+|------|--------|---------|
+| 400 | `validation_failed`, `invalid_json` | Fix the request |
+| 401 | `unauthorized` | Missing or invalid token |
+| 403 | `forbidden` | Token lacks the required scope |
+| 404 | `not_found` | |
+| 409 | `conflict` | Unique value taken, or a name matches several items |
+| 413 | `payload_too_large` | Body over 5 MB (20 MB for bulk upsert) |
+
+**References by name.** `type` and `tags` are names, not IDs; missing types and tags are
+created. Custom fields are an object keyed by field name, e.g. `{"rack_unit": 14}`.
+Values are validated against the field type (`NUMBER`, `BOOLEAN`, `DATE`, `URL`, `EMAIL`, `STRING`)
+and `null` removes a value.
+
+**Pagination:** `?page=1&per_page=50` (max 500).
+
+### Configuration items
+
+| Method | Path | Scope | Description |
+|--------|------|-------|-------------|
+| GET | `/api/v1/configuration-items` | read | List. Filters: `q` (search), `status`, `type`, `tag`, `source` |
+| POST | `/api/v1/configuration-items` | write | Create |
+| GET | `/api/v1/configuration-items/{id}` | read | Get |
+| PATCH | `/api/v1/configuration-items/{id}` | write | Change only the fields sent |
+| DELETE | `/api/v1/configuration-items/{id}` | write | Delete |
+
+### Upsert for automation
+
+Automation rarely knows Blokhouse IDs. These endpoints create an item if it does not exist and
+otherwise update **only the fields sent**. They are idempotent, so running the same job twice
+changes nothing, and they set `lastSeenAt` to now unless you send it.
+
+| Method | Path | Identity |
+|--------|------|----------|
+| PUT | `/api/v1/configuration-items/by-name/{name}` | Item name (409 if several items share it) |
+| PUT | `/api/v1/configuration-items/by-external-id/{source}/{externalId}` | `source` + `externalId`, unique |
+| POST | `/api/v1/configuration-items/bulk-upsert` | Per item: `"match": "name"` or `"externalId"` |
+
+Use **by-name** when hostnames are unique (e.g. Ansible's `inventory_hostname`). Use
+**by-external-id** when another system owns the identity — a Puppet certname, a VMware UUID,
+a cloud instance ID. It survives renames.
+
 ```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  https://blokhouse.example.com/api/configuration-items
+# Ansible / shell: report a host
+curl -X PUT "$BLOKHOUSE_URL/api/v1/configuration-items/by-name/web-01" \
+  -H "Authorization: Bearer $BLOKHOUSE_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"ip": "10.0.0.15", "type": "Server", "tags": ["prod", "web"], "customFields": {"os": "Debian 12"}}'
+
+# Puppet: identity is the certname
+curl -X PUT "$BLOKHOUSE_URL/api/v1/configuration-items/by-external-id/puppet/web-01.example.com" \
+  -H "Authorization: Bearer $BLOKHOUSE_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name": "web-01", "ip": "10.0.0.15"}'
 ```
 
-### Tags
+The response says what happened: `201 {"result": "created", "data": {…}}` or
+`200 {"result": "updated", "data": {…}}`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/tags` | List all tags |
-| POST | `/api/tags` | Create a tag |
-| GET | `/api/tags/:id` | Get tag details |
-| PUT | `/api/tags/:id` | Update a tag |
-| DELETE | `/api/tags/:id` | Delete a tag |
+**Bulk upsert** writes up to 1000 items in **one transaction** — if any item is invalid, nothing
+is written and `details` points at the item (`items.3.ip`):
 
-### Item Types
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/types` | List all item types |
-| POST | `/api/types` | Create a type |
-| GET | `/api/types/:id` | Get type details |
-| PUT | `/api/types/:id` | Update a type |
-| DELETE | `/api/types/:id` | Delete a type |
-
-### Users
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/users` | List all users (admin only) |
-| POST | `/api/users` | Create a user |
-| GET | `/api/users/:id` | Get user details |
-| PUT | `/api/users/:id` | Update user |
-| DELETE | `/api/users/:id` | Delete user |
-
-### Audit Logs
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/audit-logs` | Query audit logs |
-| GET | `/api/audit-logs/:id` | Get specific log entry |
-
-Query parameters for filtering:
-- `userId` - Filter by user
-- `itemId` - Filter by configuration item
-- `action` - Filter by action type (CREATE, UPDATE, DELETE)
-- `from`, `to` - Date range
-
-## Response Format
-
-All responses are JSON. Successful responses include:
-
-```json
-{
-  "success": true,
-  "data": { ... }
-}
+```bash
+curl -X POST "$BLOKHOUSE_URL/api/v1/configuration-items/bulk-upsert" \
+  -H "Authorization: Bearer $BLOKHOUSE_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"items": [
+        {"name": "web-01", "ip": "10.0.0.15"},
+        {"match": "externalId", "source": "vmware", "externalId": "4211-8a7b", "name": "db-01"}
+      ]}'
+# {"data": [{"index": 0, "result": "updated", "id": "…"}, …], "meta": {"created": 1, "updated": 1}}
 ```
 
-Error responses:
+### Types and tags
 
-```json
-{
-  "success": false,
-  "error": "Error message",
-  "code": "ERROR_CODE"
-}
-```
+| Method | Path | Scope |
+|--------|------|-------|
+| GET / POST | `/api/v1/types` | read / write |
+| GET / POST | `/api/v1/tags` | read / write |
 
-## Rate Limiting
+Both list `itemCount`. Creating an existing name (case-insensitive) returns 409.
 
-API requests are limited to 100 requests per minute per token. Rate limit headers are included in responses:
+### Audit trail
 
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1699999999
-```
+Every write through v1 is recorded in the audit log, including whether it came from a session
+or a token.
+
+## Legacy API
+
+The unversioned endpoints under `/api/…` (e.g. `/api/configuration-items`, `/api/tags`,
+`/api/ansible`, `/api/puppet`, `/api/chef`) are used by the web UI and the existing
+integrations. They keep working, but their request and response formats may change between
+releases. Use API v1 for new integrations. Their reference is the **Legacy API** tab at `/docs`.
+
+Rate limiting is not built in yet; put a reverse proxy in front of Blokhouse if you need it
+(see [nginx guide](deployment/nginx.md)).

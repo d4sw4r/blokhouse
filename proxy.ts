@@ -10,7 +10,10 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // Exact public paths and public prefixes. Never add "/" as a prefix.
-const PUBLIC_EXACT = new Set(["/", "/signin", "/signup", "/logo.svg", "/logo.png", "/favicon.ico"]);
+const PUBLIC_EXACT = new Set([
+    "/", "/signin", "/signup", "/logo.svg", "/logo.png", "/favicon.ico",
+    "/api/v1", "/api/v1/openapi.json", "/api/v1/openapi",
+]);
 // Matched as the exact path or a sub-path ("/api/health" does NOT match "/api/healthz").
 const PUBLIC_PREFIXES = ["/api/auth", "/api/health", "/api/docs"];
 
@@ -46,7 +49,10 @@ export async function proxy(req: NextRequest) {
 
     if (pathname.startsWith("/api/")) {
         if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            const body = pathname.startsWith("/api/v1/")
+                ? { error: { code: "unauthorized", message: "Authentication required (session or Bearer token)" } }
+                : { error: "Unauthorized" };
+            return NextResponse.json(body, { status: 401 });
         }
         return NextResponse.next();
     }
