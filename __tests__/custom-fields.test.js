@@ -295,13 +295,16 @@ describe("Custom Fields API", () => {
                 }),
             };
             const response = await POST(request);
+            const data = await response.json();
 
+            // Stored as JSON text (the column is a String), returned as an array
             expect(prisma.customField.create).toHaveBeenCalledWith({
                 data: expect.objectContaining({
-                    options: ["active", "inactive", "pending"],
+                    options: JSON.stringify(["active", "inactive", "pending"]),
                 }),
                 include: { itemType: true },
             });
+            expect(data.options).toEqual(["active", "inactive", "pending"]);
         });
 
         it("assigns field to specific item type", async () => {
@@ -424,7 +427,7 @@ describe("Custom Fields API", () => {
                 data: expect.objectContaining({
                     required: false,
                     defaultValue: undefined,
-                    options: [],
+                    options: "[]",
                     itemTypeId: null,
                 }),
                 include: { itemType: true },

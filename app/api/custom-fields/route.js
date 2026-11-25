@@ -2,6 +2,7 @@
 // Manage custom field definitions
 
 import prisma from "@/lib/prisma";
+import { serializeOptions, withParsedOptions } from "@/lib/custom-field-options";
 import { requireAuth } from "@/lib/auth";
 
 /**
@@ -114,7 +115,7 @@ export async function GET(request) {
             orderBy: { name: "asc" },
         });
 
-        return new Response(JSON.stringify(fields), { status: 200 });
+        return new Response(JSON.stringify(fields.map(withParsedOptions)), { status: 200 });
     } catch (error) {
         console.error("Error fetching custom fields:", error);
         return new Response(JSON.stringify({ error: "Failed to fetch custom fields" }), { status: 500 });
@@ -133,6 +134,10 @@ export async function POST(request) {
         }
 
         // Validate type
+        if (options !== undefined && options !== null && !Array.isArray(options)) {
+            return new Response(JSON.stringify({ error: "options must be an array of strings" }), { status: 400 });
+        }
+
         const validTypes = ["STRING", "NUMBER", "BOOLEAN", "DATE", "URL", "EMAIL"];
         if (!validTypes.includes(type)) {
             return new Response(JSON.stringify({ error: `Invalid type. Must be one of: ${validTypes.join(", ")}` }), { status: 400 });
@@ -149,13 +154,13 @@ export async function POST(request) {
                 type,
                 required: required || false,
                 defaultValue,
-                options: options || [],
+                options: serializeOptions(options),
                 itemTypeId: itemTypeId || null,
             },
             include: { itemType: true },
         });
 
-        return new Response(JSON.stringify(field), { status: 201 });
+        return new Response(JSON.stringify(withParsedOptions(field)), { status: 201 });
     } catch (error) {
         if (error.code === "P2002") {
             return new Response(JSON.stringify({ error: "Custom field with this name already exists for this item type" }), { status: 409 });
