@@ -12,7 +12,7 @@
 ## ✨ Features
 
 - **Configuration Items** — manage assets with custom fields, tags, and types
-- **Ansible Dynamic Inventory** — plug directly into your playbooks
+- **Ansible collection** — dynamic inventory plus modules that report hosts back to the CMDB
 - **Puppet ENC** — External Node Classifier for Puppet masters
 - **Chef Integration** — node inventory and data bags
 - **REST API** — full OpenAPI/Swagger documentation at `/docs`
@@ -88,13 +88,25 @@ npm run dev
 
 ## 🔌 Integrations
 
-### Ansible Dynamic Inventory
+### Ansible
+
+The [`blokhouse.cmdb` collection](integrations/ansible) brings an inventory plugin and modules
+to report hosts back to the CMDB:
+
+```bash
+ansible-galaxy collection install "git+https://github.com/d4sw4r/blokhouse.git#/integrations/ansible,main"
+export BLOKHOUSE_URL=http://localhost:3000 BLOKHOUSE_TOKEN=bh_...
+echo 'plugin: blokhouse.cmdb.inventory' > blokhouse.yml
+ansible-inventory -i blokhouse.yml --graph
+```
 
 ```yaml
-# my-dynamic-inventory.yml
-plugin: uri
-url: http://localhost:3000/api/ansible
-validate_certs: false
+- blokhouse.cmdb.configuration_item:
+    name: "{{ inventory_hostname }}"
+    ip: "{{ ansible_default_ipv4.address }}"
+    type: Server
+    tags: [prod]
+  delegate_to: localhost
 ```
 
 ### Puppet ENC

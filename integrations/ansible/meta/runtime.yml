@@ -1,0 +1,7 @@
+---
+requires_ansible: ">=2.17.0"
+action_groups:
+  # module_defaults: { group/blokhouse.cmdb.all: { url: ..., token: ... } }
+  all:
+    - configuration_item
+    - configuration_item_info

@@ -1,0 +1,23 @@
+namespace: blokhouse
+name: cmdb
+version: 0.1.0
+readme: README.md
+authors:
+  - Dennis (@d4sw4r)
+description: Dynamic inventory and modules for the Blokhouse CMDB (API v1)
+license:
+  - GPL-3.0-or-later
+tags:
+  - cmdb
+  - inventory
+  - blokhouse
+  - infrastructure
+dependencies: {}
+repository: https://github.com/d4sw4r/blokhouse
+documentation: https://github.com/d4sw4r/blokhouse/tree/main/integrations/ansible
+issues: https://github.com/d4sw4r/blokhouse/issues
+build_ignore:
+  - tests/e2e
+  - tests/output
+  - .gitignore
+  - "*.tar.gz"

@@ -1,0 +1,169 @@
+---
+# Run by tests/e2e/run.sh with BLOKHOUSE_URL and BLOKHOUSE_TOKEN set.
+- name: Blokhouse collection end-to-end test
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  module_defaults:
+    group/blokhouse.cmdb.all: {}
+  vars:
+    web:
+      name: e2e-web-01
+      ip: 10.98.0.1
+      type: Server
+      tags: [e2e, web]
+      custom_fields:
+        e2e_cpus: 4
+  tasks:
+    - name: Start clean
+      blokhouse.cmdb.configuration_item:
+        name: "{{ item }}"
+        state: absent
+      loop: [e2e-web-01, "e2e/odd name 50%", e2e-old, e2e-renamed, e2e-untagged]
+
+    - name: Create (check mode) predicts a change and writes nothing
+      blokhouse.cmdb.configuration_item: "{{ web }}"
+      check_mode: true
+      register: r
+    - blokhouse.cmdb.configuration_item_info:
+        name: e2e-web-01
+      register: info
+    - ansible.builtin.assert:
+        that:
+          - r is changed
+          - r.result == "created"
+          - info.configuration_items == []
+
+    - name: Create
+      blokhouse.cmdb.configuration_item: "{{ web }}"
+      register: r
+    - ansible.builtin.assert:
+        that:
+          - r is changed
+          - r.result == "created"
+          - r.item.ip == "10.98.0.1"
+          - r.item.customFields.e2e_cpus == "4"
+          - r.item.lastSeenAt is not none
+
+    - name: Same values again are not a change (tags in another order and case)
+      blokhouse.cmdb.configuration_item: "{{ web | combine({'tags': ['WEB', 'e2e'], 'type': 'server'}) }}"
+      register: r
+    - ansible.builtin.assert:
+        that:
+          - r is not changed
+          - r.result == "unchanged"
+
+    - name: Check mode also predicts no change
+      blokhouse.cmdb.configuration_item: "{{ web }}"
+      check_mode: true
+      register: r
+    - ansible.builtin.assert:
+        that:
+          - r is not changed
+
+    - name: Change one field, leave the others
+      blokhouse.cmdb.configuration_item:
+        name: e2e-web-01
+        description: managed by ansible
+      register: r
+      diff: true
+    - ansible.builtin.assert:
+        that:
+          - r is changed
+          - r.result == "updated"
+          - r.item.ip == "10.98.0.1"
+          - r.item.tags | sort == ["e2e", "web"]
+          - r.diff.before.description is none
+          - r.diff.after.description == "managed by ansible"
+
+    - name: Names with "/" and "%" work
+      blokhouse.cmdb.configuration_item:
+        name: e2e/odd name 50%
+        status: MAINTENANCE
+        tags: [e2e]
+      register: r
+    - ansible.builtin.assert:
+        that:
+          - r.item.name == "e2e/odd name 50%"
+
+    - name: Deprecated items are not in the inventory
+      blokhouse.cmdb.configuration_item:
+        name: e2e-old
+        status: DEPRECATED
+        tags: [e2e]
+
+    - name: Items without the e2e tag are not in the inventory
+      blokhouse.cmdb.configuration_item:
+        name: e2e-untagged
+
+    - name: External ID survives a rename
+      blokhouse.cmdb.configuration_item:
+        source: e2e
+        external_id: vm-1
+        name: e2e-vm
+      register: created
+    - blokhouse.cmdb.configuration_item:
+        source: e2e
+        external_id: vm-1
+        name: e2e-renamed
+      register: renamed
+    - ansible.builtin.assert:
+        that:
+          - renamed is changed
+          - renamed.item.id == created.item.id
+          - renamed.item.name == "e2e-renamed"
+
+    - name: Look up by external ID and by filter
+      blokhouse.cmdb.configuration_item_info:
+        source: e2e
+        external_id: vm-1
+      register: by_ext
+    - blokhouse.cmdb.configuration_item_info:
+        tag: e2e
+      register: tagged
+    - ansible.builtin.assert:
+        that:
+          - by_ext.configuration_items[0].name == "e2e-renamed"
+          - tagged.configuration_items | map(attribute='name') | sort == ["e2e-old", "e2e-web-01", "e2e/odd name 50%"]
+
+    - name: Validation errors name the field
+      blokhouse.cmdb.configuration_item:
+        name: e2e-bad
+        ip: 999.1.1.1
+      register: bad
+      ignore_errors: true
+    - ansible.builtin.assert:
+        that:
+          - bad is failed
+          - bad.status == 400
+          - bad.code == "validation_failed"
+          - "'ip' in bad.msg"
+
+    - name: A wrong token fails clearly
+      blokhouse.cmdb.configuration_item_info:
+        name: e2e-web-01
+        token: bh_wrong
+      register: denied
+      ignore_errors: true
+    - ansible.builtin.assert:
+        that:
+          - denied is failed
+          - denied.status == 401
+
+    - name: Delete
+      blokhouse.cmdb.configuration_item:
+        source: e2e
+        external_id: vm-1
+        state: absent
+      register: r
+    - blokhouse.cmdb.configuration_item:
+        source: e2e
+        external_id: vm-1
+        state: absent
+      register: r2
+    - ansible.builtin.assert:
+        that:
+          - r is changed
+          - r.result == "deleted"
+          - r2 is not changed
+          - r2.result == "absent"

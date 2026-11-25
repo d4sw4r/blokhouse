@@ -1,0 +1,19 @@
+# Inventory from Blokhouse. Run with:
+#   export BLOKHOUSE_URL=https://cmdb.example.com BLOKHOUSE_TOKEN=bh_...
+#   ansible-inventory -i examples/blokhouse.yml --graph
+plugin: blokhouse.cmdb.inventory
+# Leave out deprecated items (the default) and only take production hosts.
+status: [ACTIVE, MAINTENANCE]
+tags: [prod]
+# Extra groups from custom fields, e.g. os_debian_12
+keyed_groups:
+  - key: blokhouse_custom_fields.os | default('unknown')
+    prefix: os
+# Host variables from custom fields
+compose:
+  ansible_user: blokhouse_custom_fields.ssh_user | default(omit)
+# Cache the CMDB response for 5 minutes
+cache: true
+cache_plugin: ansible.builtin.jsonfile
+cache_connection: ~/.cache/blokhouse-inventory
+cache_timeout: 300
