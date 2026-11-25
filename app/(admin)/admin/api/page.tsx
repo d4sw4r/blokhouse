@@ -102,7 +102,7 @@ export default function AdminAPIPage() {
         <div className="space-y-6">
             <h1 className="text-4xl font-bold text-brand-text">API Tokens</h1>
             <p className="text-lg text-brand-secondary">
-                Tokens authenticate automation (Ansible, Puppet, Chef, scripts) via{" "}
+                Tokens authenticate automation (Ansible, Puppet, scripts) via{" "}
                 <code className="font-mono">Authorization: Bearer &lt;token&gt;</code>. A token can never have
                 more permissions than your own role.
             </p>

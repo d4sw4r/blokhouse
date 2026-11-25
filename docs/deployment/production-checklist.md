@@ -42,5 +42,5 @@ Work through this checklist before exposing Blokhouse to production traffic.
 
 - [ ] Log in with the admin account and verify all features work
 - [ ] Create a non-admin user for daily use
-- [ ] Generate an API token and test an integration (Ansible, Puppet, or Chef)
+- [ ] Generate an API token and test an integration (Ansible or Puppet)
 - [ ] Run a CSV import to verify bulk operations work

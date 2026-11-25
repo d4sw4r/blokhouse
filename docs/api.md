@@ -60,7 +60,7 @@ Access is controlled by **scopes**:
 
 | Scope   | Allows |
 |---------|--------|
-| `read`  | Read CMDB data: items, types, tags, inventories (Ansible/Puppet/Chef) |
+| `read`  | Read CMDB data: items, types, tags, inventories (Ansible/Puppet) |
 | `write` | Create, update and delete CMDB data |
 | `audit` | Read and export audit logs |
 | `admin` | Manage users, list all API tokens, network discovery |
@@ -94,7 +94,7 @@ Tokens can be revoked at any time on the same page. Tokens can only be created
 and revoked from an interactive session, not with another token.
 
 Best practice for automation: create a dedicated user with the `API` role and
-issue tokens for it, using `read` only for inventory consumers (Ansible, Puppet, Chef).
+issue tokens for it, using `read` only for inventory consumers (Ansible, Puppet).
 
 ## API v1 (recommended)
 
@@ -218,7 +218,7 @@ or a token.
 ## Legacy API
 
 The unversioned endpoints under `/api/…` (e.g. `/api/configuration-items`, `/api/tags`,
-`/api/ansible`, `/api/puppet`, `/api/chef`) are used by the web UI and the existing
+`/api/ansible`, `/api/puppet`) are used by the web UI and the existing
 integrations. They keep working, but their request and response formats may change between
 releases. Use API v1 for new integrations. Their reference is the **Legacy API** tab at `/docs`.
 
