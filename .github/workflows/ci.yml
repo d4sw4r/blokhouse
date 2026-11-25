@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -76,7 +76,7 @@ jobs:
         ansible: ["2.17", "2.22"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install ansible-core ${{ matrix.ansible }}
         run: pipx install "ansible-core~=${{ matrix.ansible }}.0"
@@ -102,7 +102,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build Docker image
         run: docker build -t ghcr.io/d4sw4r/blokhouse:latest .
