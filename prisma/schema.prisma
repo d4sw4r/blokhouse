@@ -94,6 +94,12 @@ model ConfigurationItem {
   itemType    ItemType?   @relation(fields: [itemTypeId], references: [id])
   // Asset status field
   status      String      @default("ACTIVE")
+  // Identity in an external system (e.g. source "puppet", externalId = certname),
+  // used by automation to upsert items without knowing Blokhouse IDs.
+  source      String?
+  externalId  String?
+  // Last time an automation run reported this item
+  lastSeenAt  DateTime?
   // Many-to-many relation with Tags
   tags        Tag[]
   // Custom field values
@@ -107,6 +113,7 @@ model ConfigurationItem {
   // Favorite items
   favoritedBy FavoriteItem[]
 
+  @@unique([source, externalId])
   @@index([name])
   @@index([ip])
   @@index([status])
