@@ -183,8 +183,10 @@ curl -X PUT "$BLOKHOUSE_URL/api/v1/configuration-items/by-external-id/puppet/web
   -d '{"name": "web-01", "ip": "10.0.0.15"}'
 ```
 
-The response says what happened: `201 {"result": "created", "data": {…}}` or
-`200 {"result": "updated", "data": {…}}`.
+The response says what happened: `201 {"result": "created", "data": {…}}`,
+`200 {"result": "updated", "data": {…}}` or `200 {"result": "unchanged", "data": {…}}`.
+"unchanged" means the item already had these values: only `lastSeenAt` was refreshed and no
+audit entry was written. Tools like Ansible use it to report `changed: false`.
 
 **Bulk upsert** writes up to 1000 items in **one transaction** — if any item is invalid, nothing
 is written and `details` points at the item (`items.3.ip`):
@@ -196,7 +198,7 @@ curl -X POST "$BLOKHOUSE_URL/api/v1/configuration-items/bulk-upsert" \
         {"name": "web-01", "ip": "10.0.0.15"},
         {"match": "externalId", "source": "vmware", "externalId": "4211-8a7b", "name": "db-01"}
       ]}'
-# {"data": [{"index": 0, "result": "updated", "id": "…"}, …], "meta": {"created": 1, "updated": 1}}
+# {"data": [{"index": 0, "result": "updated", "id": "…"}, …], "meta": {"created": 1, "updated": 1, "unchanged": 0}}
 ```
 
 ### Types and tags

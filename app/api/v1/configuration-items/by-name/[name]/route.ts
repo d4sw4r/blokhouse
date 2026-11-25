@@ -37,6 +37,8 @@ export const PUT = route("write", async ({ req, auth }) => {
         TX_OPTIONS
     );
     const after = (await loadItem(id))!;
-    await audit(result === "created" ? "CREATE" : "UPDATE", before, after, auth.user.id, req, auth.via);
+    if (result !== "unchanged") {
+        await audit(result === "created" ? "CREATE" : "UPDATE", before, after, auth.user.id, req, auth.via);
+    }
     return json({ result, data: serializeItem(after) }, result === "created" ? 201 : 200);
 });

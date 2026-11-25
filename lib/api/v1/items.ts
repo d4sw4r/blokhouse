@@ -59,6 +59,23 @@ function snapshot(item: LoadedItem | null) {
     return { ...s, createdAt: undefined, updatedAt: undefined };
 }
 
+/** True if two versions differ at most in timestamps (lastSeenAt, updatedAt). */
+export function sameContent(a: LoadedItem, b: LoadedItem): boolean {
+    const content = (item: LoadedItem) => {
+        const s = serializeItem(item);
+        return JSON.stringify({
+            ...s,
+            lastSeenAt: undefined,
+            updatedAt: undefined,
+            createdAt: undefined,
+            customFields: Object.entries(s.customFields).sort(([x], [y]) => x.localeCompare(y)),
+        });
+    };
+    return content(a) === content(b);
+}
+
+export type UpsertOutcome = "created" | "updated" | "unchanged";
+
 // ---------------------------------------------------------------------------
 // Name-based references
 // ---------------------------------------------------------------------------
@@ -274,8 +291,14 @@ export async function upsertItemTx(tx: Tx, identity: Identity, input: ItemInput,
     };
     const existing = await findByIdentity(tx, identity);
     if (existing) {
+        const load = () => tx.configurationItem.findUnique({ where: { id: existing.id }, include: ITEM_INCLUDE });
+        const before = (await load()) as LoadedItem;
         await updateItemTx(tx, existing, merged, opts);
-        return { id: existing.id, result: "updated" as const };
+        const after = (await load()) as LoadedItem;
+        // Reporting the same state again only refreshes lastSeenAt; callers such as
+        // Ansible use "unchanged" to report changed=false, and no audit row is written.
+        const result = sameContent(before, after) ? ("unchanged" as const) : ("updated" as const);
+        return { id: existing.id, result };
     }
     if (!merged.name) {
         throw new ApiError("validation_failed", "name is required to create a new item", [
