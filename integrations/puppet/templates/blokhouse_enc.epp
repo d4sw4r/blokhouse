@@ -1,0 +1,41 @@
+<%- | String $ruby, String $config | -%>
+#!<%= $ruby %>
+# frozen_string_literal: true
+# Blokhouse External Node Classifier. Managed by Puppet (class blokhouse).
+#
+#   puppet.conf [server]: node_terminus = exec, external_nodes = <this file>
+#
+# Prints the ENC document for the certname given as argument. Exits non-zero
+# if Blokhouse cannot be asked, so Puppet does not compile an unclassified
+# catalog by mistake.
+require 'net/http'
+require 'openssl'
+require 'uri'
+require 'yaml'
+
+certname = ARGV.fetch(0) { abort 'usage: blokhouse_enc <certname>' }
+config = YAML.safe_load(File.read(ENV['BLOKHOUSE_CONFIG'] || '<%= $config %>'))
+uri = URI.parse("#{config.fetch('url').sub(%r{/+\z}, '').sub(%r{/api/v1\z}, '')}/api/puppet")
+uri.query = URI.encode_www_form(node: certname)
+
+http = Net::HTTP.new(uri.host, uri.port)
+http.open_timeout = http.read_timeout = Integer(config.fetch('timeout', 10))
+if uri.scheme == 'https'
+  http.use_ssl = true
+  http.verify_mode = config.fetch('verify_ssl', true) ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+  http.ca_file = config['ca_file'] if config['ca_file']
+end
+request = Net::HTTP::Get.new(uri.request_uri)
+request['Authorization'] = "Bearer #{config.fetch('token')}"
+request['User-Agent'] = 'blokhouse-puppet-enc/0.1.0'
+
+begin
+  response = http.request(request)
+rescue StandardError => e
+  abort "Blokhouse ENC: cannot reach #{uri.host}: #{e.message}"
+end
+abort "Blokhouse ENC: HTTP #{response.code} for #{certname}: #{response.body}" unless response.is_a?(Net::HTTPSuccess)
+
+# Validate before handing it to Puppet.
+YAML.safe_load(response.body)
+puts response.body

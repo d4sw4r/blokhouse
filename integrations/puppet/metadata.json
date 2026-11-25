@@ -1,0 +1,21 @@
+{
+  "name": "d4sw4r-blokhouse",
+  "version": "0.1.0",
+  "author": "d4sw4r",
+  "summary": "Blokhouse CMDB: node classifier (ENC) and a report processor that keeps the CMDB up to date",
+  "license": "MIT",
+  "source": "https://github.com/d4sw4r/blokhouse",
+  "project_page": "https://github.com/d4sw4r/blokhouse/tree/main/integrations/puppet",
+  "issues_url": "https://github.com/d4sw4r/blokhouse/issues",
+  "dependencies": [],
+  "operatingsystem_support": [
+    { "operatingsystem": "RedHat" },
+    { "operatingsystem": "Debian" },
+    { "operatingsystem": "Ubuntu" },
+    { "operatingsystem": "SLES" }
+  ],
+  "requirements": [
+    { "name": "puppet", "version_requirement": ">= 7.0.0 < 9.0.0" },
+    { "name": "openvox", "version_requirement": ">= 7.0.0 < 9.0.0" }
+  ]
+}

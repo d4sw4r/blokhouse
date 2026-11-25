@@ -23,10 +23,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `configuration_item` module: idempotent create/update/delete by name or external ID, with check and diff mode
   - `configuration_item_info` module
   - Tested in CI with `ansible-test` (sanity, units on ansible-core 2.17 and 2.22) and end to end against the Docker Compose stack
+- **Puppet module** in `integrations/puppet` (Puppet/OpenVox 7 and 8, no dependencies):
+  - Report processor `blokhouse`: updates IP, MAC, last seen and configured custom fields (from facts or the run) after every run; creates new nodes, adopts existing items with the node's name instead of duplicating them, and never fails a run
+  - ENC script that keeps the token out of `puppet.conf`
+  - Class `blokhouse` to configure both
+  - End-to-end test with real `puppet apply` runs in CI
+- ENC: the variable `$blokhouse` with all fields of the item (type, tags, status, custom fields, …), classes from the custom field `puppet_classes`, environment from `puppet_environment`. Nodes are found by certname (external ID), then name, then IP.
+
+### Changed
+- **Puppet ENC no longer derives classes or the environment from the item type.** Set the custom fields `puppet_classes` and `puppet_environment` instead (see docs/integrations/puppet.md). Unknown nodes get an empty classification instead of class `base` and environment `production`.
 
 ### Fixed
+- **Puppet runs failed for every node classified by Blokhouse:** the ENC assigned the item type as environment and class (e.g. environment `server`, class `server`), and class `base` with environment `production` to all other nodes; Puppet aborts when they do not exist. Its YAML was also built by hand and broke on backslashes and newlines in descriptions.
 - **Custom fields could not be created**: `POST /api/custom-fields` passed `options` as an array into a text column and always failed, so the Custom Fields admin page did not work. Options are now stored as JSON and returned as arrays, and "must be one of" validation compares whole values instead of substrings.
 - `docs/api.md` documented a response format and rate limiting that did not exist.
+- The Puppet docs described endpoints and settings pages that do not exist.
 - The Ansible docs described an inventory script for `/api/integrations/ansible` and a `uri` inventory plugin, neither of which exists.
 
 ## [0.2.0] - 2026-11-24

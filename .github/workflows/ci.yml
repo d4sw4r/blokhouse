@@ -130,6 +130,13 @@ jobs:
           pipx install "ansible-core~=2.22.0"
           ADMIN_PASSWORD=ci-admin-password sh integrations/ansible/tests/e2e/run.sh
 
+      - name: Puppet module lint and end-to-end test
+        run: |
+          sudo gem install --no-document puppet -v '~> 8.10'
+          sudo gem install --no-document puppet-lint
+          (cd integrations/puppet && puppet parser validate manifests && puppet epp validate templates/*.epp && puppet-lint manifests)
+          ADMIN_PASSWORD=ci-admin-password sh integrations/puppet/tests/e2e/run.sh
+
       - name: Generated admin password goes to a 0600 file, not the logs
         run: |
           docker compose down -v
