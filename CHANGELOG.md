@@ -7,42 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
+Automation release: a stable API for automation, an Ansible collection, a Puppet module and
+webhooks. **Read the upgrade notes** if you use the Puppet ENC or the Chef endpoint, see
+[docs/upgrading.md](https://github.com/d4sw4r/blokhouse/blob/main/docs/upgrading.md).
+
+### Upgrade notes (breaking)
+- **Puppet ENC:** classes and the environment no longer come from the item type. Set the custom fields `puppet_classes` and `puppet_environment` on items that need them. The old behavior made Puppet runs fail unless such classes and environments happened to exist.
+- **Chef support was removed** (`/api/chef`). Read items from the API v1 instead.
+- Database migrations (new item fields, webhook tables) run automatically on start.
+
 ### Added
-- **API v1** under `/api/v1` — the stable, versioned API for automation:
+- **API v1** under `/api/v1`, the stable, versioned API for automation:
   - Configuration items: list (search, filters, pagination), create, get, PATCH, delete
-  - Idempotent upserts: `PUT …/by-name/{name}` and `PUT …/by-external-id/{source}/{externalId}`; upserts set `lastSeenAt`
+  - Idempotent upserts: `PUT …/by-name/{name}` and `PUT …/by-external-id/{source}/{externalId}`. Upserts set `lastSeenAt`; upserts that change nothing return `"result": "unchanged"` and write no audit entry
   - `POST …/bulk-upsert`: up to 1000 items in one atomic transaction
   - Types, tags and custom fields referenced by name; custom field values validated by field type
   - One error format `{ "error": { "code", "message", "details" } }` with per-field details
   - OpenAPI 3.1 document generated from the validation schemas at `/api/v1/openapi.json`; `/docs` shows it by default
-  - Every v1 write is recorded in the audit log. Upserts that change nothing return `"result": "unchanged"`, only refresh `lastSeenAt` and write no audit entry
+  - Every v1 write is recorded in the audit log
 - Configuration items have `source`, `externalId` (unique together) and `lastSeenAt`.
-- Integration tests against a real PostgreSQL database (`npm run test:integration`), run in CI.
 - **Ansible collection `blokhouse.cmdb`** in `integrations/ansible` (GPL-3.0-or-later):
   - Inventory plugin with groups by type, tag and status, `blokhouse_*` host variables including custom fields, filters, `compose`/`keyed_groups` and caching
   - `configuration_item` module: idempotent create/update/delete by name or external ID, with check and diff mode
   - `configuration_item_info` module
-  - Tested in CI with `ansible-test` (sanity, units on ansible-core 2.17 and 2.22) and end to end against the Docker Compose stack
-- **Webhooks:** signed HTTP callbacks (`item.created`, `item.updated`, `item.deleted`) for every change to an item, from any write path. HMAC-SHA256 signatures with timestamp, retries with backoff for about 7 hours, ordered delivery per webhook, a delivery log with redelivery, and a test button. Managed under Admin → Webhooks or `/api/v1/webhooks` (admin scope). Deliveries are stored before sending and are safe with several app replicas. See docs/webhooks.md.
+  - Tested in CI with `ansible-test` (sanity and units on ansible-core 2.17 and 2.22) and end to end against the Docker Compose stack
 - **Puppet module** in `integrations/puppet` (Puppet/OpenVox 7 and 8, no dependencies):
   - Report processor `blokhouse`: updates IP, MAC, last seen and configured custom fields (from facts or the run) after every run; creates new nodes, adopts existing items with the node's name instead of duplicating them, and never fails a run
   - ENC script that keeps the token out of `puppet.conf`
   - Class `blokhouse` to configure both
   - End-to-end test with real `puppet apply` runs in CI
-- ENC: the variable `$blokhouse` with all fields of the item (type, tags, status, custom fields, …), classes from the custom field `puppet_classes`, environment from `puppet_environment`. Nodes are found by certname (external ID), then name, then IP.
-
-### Removed
-- **Chef support:** the `/api/chef` endpoint (node list, single node, data bag) and its documentation. Chef is rarely used today, and Chef Infra Client cannot even be run for testing without accepting a commercial license. Use the API v1 (`/api/v1/configuration-items`) from Chef recipes if you need the data.
+- **Puppet ENC:** the variable `$blokhouse` with all fields of the item (type, tags, status, custom fields, …), classes from the custom field `puppet_classes`, environment from `puppet_environment`. Nodes are found by certname (external ID), then name, then IP.
+- **Webhooks:** signed HTTP callbacks (`item.created`, `item.updated`, `item.deleted`) for every change to an item, from any write path. HMAC-SHA256 signatures with timestamp, retries with backoff for about 7 hours, ordered delivery per webhook, a delivery log with redelivery, and a test button. Managed under Admin → Webhooks or `/api/v1/webhooks` (admin scope). Deliveries are stored before sending and are safe with several app replicas. See docs/webhooks.md.
+- Integration tests against a real PostgreSQL database (`npm run test:integration`), run in CI.
 
 ### Changed
-- **Puppet ENC no longer derives classes or the environment from the item type.** Set the custom fields `puppet_classes` and `puppet_environment` instead (see docs/integrations/puppet.md). Unknown nodes get an empty classification instead of class `base` and environment `production`.
+- **Puppet ENC no longer derives classes or the environment from the item type** (see upgrade notes). Unknown nodes get an empty classification instead of class `base` and environment `production`.
+- The CSV import returns the IDs it created internally, so webhooks fire for imported items.
+
+### Removed
+- **Chef support:** the `/api/chef` endpoint (node list, single node, data bag) and its documentation. Chef is rarely used today, and Chef Infra Client cannot even be run for testing without accepting a commercial license.
 
 ### Fixed
 - **Puppet runs failed for every node classified by Blokhouse:** the ENC assigned the item type as environment and class (e.g. environment `server`, class `server`), and class `base` with environment `production` to all other nodes; Puppet aborts when they do not exist. Its YAML was also built by hand and broke on backslashes and newlines in descriptions.
-- **Custom fields could not be created**: `POST /api/custom-fields` passed `options` as an array into a text column and always failed, so the Custom Fields admin page did not work. Options are now stored as JSON and returned as arrays, and "must be one of" validation compares whole values instead of substrings.
-- `docs/api.md` documented a response format and rate limiting that did not exist.
-- The Puppet docs described endpoints and settings pages that do not exist.
-- The Ansible docs described an inventory script for `/api/integrations/ansible` and a `uri` inventory plugin, neither of which exists.
+- **Custom fields could not be created:** `POST /api/custom-fields` passed `options` as an array into a text column and always failed, so the Custom Fields admin page did not work. Options are now stored as JSON and returned as arrays, and "must be one of" validation compares whole values instead of substrings.
+- Documentation described endpoints, settings pages and a response format that do not exist (API reference, Ansible, Puppet and Chef docs).
 
 ## [0.2.0] - 2026-11-24
 
