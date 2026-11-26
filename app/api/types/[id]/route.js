@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     const { response } = await requireAuth(request, "read");
     if (response) return response;
 
-    const { id } = params;
+    const { id } = await params;
     const type = await prisma.itemType.findUnique({ where: { id } });
     if (!type) {
         return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
@@ -18,7 +18,7 @@ export async function PUT(request, { params }) {
     const { response } = await requireAuth(request, "write");
     if (response) return response;
 
-    const { id } = params;
+    const { id } = await params;
     const { name, description } = await request.json();
 
     try {
@@ -37,7 +37,7 @@ export async function DELETE(request, { params }) {
     const { response } = await requireAuth(request, "write");
     if (response) return response;
 
-    const { id } = params;
+    const { id } = await params;
     try {
         await prisma.itemType.delete({ where: { id } });
         return new Response(JSON.stringify({ message: "Deleted" }), { status: 200 });
