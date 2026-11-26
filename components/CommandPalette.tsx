@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Box, ChevronRight, CornerDownLeft, FileText, Hash, Search, Tag } from "lucide-react";
+import { navForRole, isMenu } from "@/lib/ui/nav";
+import { Kbd } from "@/components/ui/Kbd";
 
 interface SearchResult {
     id: string;
-    type: "item" | "type" | "tag";
+    type: "item" | "type" | "tag" | "page";
     title: string;
     subtitle: string;
     status?: string;
@@ -21,6 +25,23 @@ export default function CommandPalette() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+    const { data: session } = useSession();
+    const role = (session?.user as { role?: string } | undefined)?.role ?? "";
+
+    const pages = useMemo<SearchResult[]>(
+        () =>
+            navForRole(role).flatMap((item) =>
+                isMenu(item)
+                    ? item.entries.map((e) => ({ id: e.href, type: "page" as const, title: e.label, subtitle: item.label, href: e.href }))
+                    : [{ id: item.href, type: "page" as const, title: item.label, subtitle: "Page", href: item.href }],
+            ),
+        [role],
+    );
+    const matchedPages = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return q ? pages.filter((p) => p.title.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q)) : pages;
+    }, [pages, query]);
+    const all = useMemo(() => [...matchedPages, ...results], [matchedPages, results]);
 
     // Keyboard shortcut: Cmd/Ctrl + K to open
     useEffect(() => {
@@ -28,6 +49,14 @@ export default function CommandPalette() {
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
                 e.preventDefault();
                 setIsOpen(true);
+            }
+            if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                const t = e.target as HTMLElement | null;
+                const typing = !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+                if (!typing) {
+                    e.preventDefault();
+                    setIsOpen(true);
+                }
             }
             if (e.key === "Escape") {
                 setIsOpen(false);
@@ -78,53 +107,18 @@ export default function CommandPalette() {
     }, [router]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (all.length === 0) return;
         if (e.key === "ArrowDown") {
             e.preventDefault();
-            setSelectedIndex((prev) => (prev + 1) % results.length);
+            setSelectedIndex((prev) => (prev + 1) % all.length);
         } else if (e.key === "ArrowUp") {
             e.preventDefault();
-            setSelectedIndex((prev) => (prev - 1 + results.length) % results.length);
-        } else if (e.key === "Enter" && results[selectedIndex]) {
+            setSelectedIndex((prev) => (prev - 1 + all.length) % all.length);
+        } else if (e.key === "Enter" && all[selectedIndex]) {
             e.preventDefault();
-            handleSelect(results[selectedIndex]);
+            handleSelect(all[selectedIndex]);
         }
-    }, [results, selectedIndex, handleSelect]);
-
-    const getIcon = (type: SearchResult["type"]) => {
-        switch (type) {
-            case "item":
-                return (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                );
-            case "type":
-                return (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                );
-            case "tag":
-                return (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                    </svg>
-                );
-        }
-    };
-
-    const getStatusColor = (status?: string) => {
-        switch (status) {
-            case "ACTIVE":
-                return "bg-green-500";
-            case "DEPRECATED":
-                return "bg-red-500";
-            case "MAINTENANCE":
-                return "bg-yellow-500";
-            default:
-                return "bg-gray-400";
-        }
-    };
+    }, [all, selectedIndex, handleSelect]);
 
     // Listen for custom open event from Navbar
     useEffect(() => {
@@ -133,119 +127,98 @@ export default function CommandPalette() {
         return () => document.removeEventListener("openCommandPalette", handleOpen);
     }, []);
 
+    const icons = { item: Box, type: Tag, tag: Hash, page: FileText } as const;
+    const statusDot = (status?: string) =>
+        status === "ACTIVE" ? "bg-success" : status === "DEPRECATED" ? "bg-danger" : status === "MAINTENANCE" ? "bg-warning" : "bg-neutral";
+
     if (!isOpen) {
-        return null; // Trigger is now in Navbar
+        return null; // Trigger is in the top bar
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] px-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => setIsOpen(false)}
-            />
+        <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh]">
+            <div className="absolute inset-0 bg-bg/70" onClick={() => setIsOpen(false)} />
 
-            {/* Modal */}
-            <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
-                {/* Search Input */}
-                <div className="flex items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <svg className="w-6 h-6 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Command palette"
+                className="relative w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-surface text-text shadow-lg"
+            >
+                <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                    <Search className="size-5 shrink-0 text-muted" aria-hidden="true" />
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
                         onKeyDown={handleKeyDown}
-                        placeholder="Search assets, types, tags..."
-                        className="flex-1 text-lg bg-transparent border-none outline-none placeholder-gray-400 dark:text-white"
+                        placeholder="Search pages, assets, types, tags..."
+                        aria-label="Search"
+                        className="min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-muted"
                     />
-                    {loading && (
-                        <div className="w-5 h-5 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                    )}
-                    <kbd className="hidden sm:block px-2 py-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 rounded">
-                        ESC
-                    </kbd>
+                    {loading && <div className="size-4 animate-spin rounded-full border-2 border-border-strong border-t-accent motion-reduce:animate-none" />}
+                    <Kbd className="hidden sm:inline-flex">ESC</Kbd>
                 </div>
 
-                {/* Results */}
                 <div className="max-h-[50vh] overflow-y-auto">
-                    {query.length < 2 ? (
-                        <div className="p-8 text-center text-gray-500">
-                            <p className="text-lg font-medium mb-2">Start typing to search</p>
-                            <p className="text-sm">Search for assets, types, or tags</p>
-                        </div>
-                    ) : results.length === 0 && !loading ? (
-                        <div className="p-8 text-center text-gray-500">
-                            <p className="text-lg font-medium mb-2">No results found</p>
+                    {all.length === 0 && !loading ? (
+                        <div className="p-8 text-center text-muted">
+                            <p className="mb-1 text-base font-medium text-text">No results found</p>
                             <p className="text-sm">Try a different search term</p>
                         </div>
                     ) : (
-                        <div className="py-2">
-                            {results.map((result, index) => (
-                                <button
-                                    key={`${result.type}-${result.id}`}
-                                    onClick={() => handleSelect(result)}
-                                    className={`w-full px-4 py-3 flex items-center gap-4 text-left transition-colors ${
-                                        index === selectedIndex
-                                            ? "bg-brand-primary/10 dark:bg-brand-primary/20"
-                                            : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                                    }`}
-                                >
-                                    <div className={`p-2 rounded-lg ${
-                                        result.type === "item" ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" :
-                                        result.type === "type" ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" :
-                                        "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-                                    }`}>
-                                        {getIcon(result.type)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                                                {result.title}
+                        <ul className="py-1">
+                            {all.map((result, index) => {
+                                const Icon = icons[result.type];
+                                return (
+                                    <li key={`${result.type}-${result.id}`}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelect(result)}
+                                            onMouseMove={() => setSelectedIndex(index)}
+                                            className={`flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 motion-reduce:transition-none ${
+                                                index === selectedIndex ? "bg-surface-2" : ""
+                                            }`}
+                                        >
+                                            <span className="rounded-md bg-surface-2 p-1.5 text-muted">
+                                                <Icon className="size-4" aria-hidden="true" />
                                             </span>
-                                            {result.status && (
-                                                <span className={`w-2 h-2 rounded-full ${getStatusColor(result.status)}`} />
-                                            )}
-                                            {result.color && (
-                                                <span
-                                                    className="w-3 h-3 rounded-full border border-gray-300"
-                                                    style={{ backgroundColor: result.color }}
-                                                />
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                            {result.subtitle}
-                                        </p>
-                                    </div>
-                                    <div className="text-xs text-gray-400 capitalize">
-                                        {result.type}
-                                    </div>
-                                    {index === selectedIndex && (
-                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
+                                            <span className="min-w-0 flex-1">
+                                                <span className="flex items-center gap-2">
+                                                    <span className="truncate text-sm font-medium text-text">{result.title}</span>
+                                                    {result.status && (
+                                                        <span className="flex items-center gap-1 text-xs text-muted">
+                                                            <span className={`size-2 rounded-full ${statusDot(result.status)}`} aria-hidden="true" />
+                                                            {result.status.toLowerCase()}
+                                                        </span>
+                                                    )}
+                                                    {result.color && (
+                                                        <span
+                                                            className="size-3 rounded-full border border-border-strong"
+                                                            style={{ backgroundColor: result.color }}
+                                                            aria-hidden="true"
+                                                        />
+                                                    )}
+                                                </span>
+                                                <span className="block truncate text-xs text-muted">{result.subtitle}</span>
+                                            </span>
+                                            <span className="text-xs capitalize text-muted">{result.type}</span>
+                                            {index === selectedIndex && <ChevronRight className="size-4 text-muted" aria-hidden="true" />}
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border bg-bg px-4 py-2 text-xs text-muted">
                     <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded border">↑↓</kbd>
-                            to navigate
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded border">↵</kbd>
-                            to select
-                        </span>
+                        <span className="flex items-center gap-1"><Kbd>↑↓</Kbd> to navigate</span>
+                        <span className="flex items-center gap-1"><Kbd><CornerDownLeft className="size-3" aria-hidden="true" /></Kbd> to select</span>
                     </div>
-                    <span>{results.length} results</span>
+                    <span>{all.length} results</span>
                 </div>
             </div>
         </div>
