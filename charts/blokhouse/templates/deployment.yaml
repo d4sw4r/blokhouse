@@ -2,6 +2,12 @@
 {{- $appSecret := include "blokhouse.appSecretName" . }}
 {{- $existingAppSecret := ne .Values.blokhouse.existingSecret "" }}
 {{- $dbSource := include "blokhouse.databaseUrlSource" . }}
+{{- $podSecurityContext := .Values.podSecurityContext }}
+{{- $securityContext := .Values.securityContext }}
+{{- if .Values.openshift }}
+{{- $podSecurityContext = omit $podSecurityContext "runAsUser" "runAsGroup" "fsGroup" }}
+{{- $securityContext = omit $securityContext "runAsUser" "runAsGroup" "fsGroup" }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -9,7 +15,9 @@ metadata:
   labels:
     {{- include "blokhouse.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "blokhouse.selectorLabels" . | nindent 6 }}
@@ -34,7 +42,7 @@ spec:
       serviceAccountName: {{ include "blokhouse.serviceAccountName" . }}
       automountServiceAccountToken: false
       enableServiceLinks: false
-      {{- with .Values.podSecurityContext }}
+      {{- with $podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -42,7 +50,7 @@ spec:
         - name: blokhouse
           image: {{ include "blokhouse.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.securityContext }}
+          {{- with $securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}

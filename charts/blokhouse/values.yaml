@@ -82,8 +82,42 @@ service:
   type: ClusterIP
   port: 80
 
-# Leave runAsUser, runAsGroup and fsGroup to OpenShift's restricted-v2 SCC.
+# Leave runAsUser, runAsGroup and fsGroup to OpenShift's restricted-v2 SCC:
+# they are dropped from the app and the bundled PostgreSQL pods.
 openshift: false
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: blokhouse.local
+      paths:
+        - path: /
+          pathType: Prefix
+  # e.g. [{secretName: blokhouse-tls, hosts: [cmdb.example.com]}]
+  tls: []
+
+# Gateway API route (needs the Gateway API CRDs and a Gateway).
+httpRoute:
+  enabled: false
+  # e.g. [{name: my-gateway, namespace: infra}]
+  parentRefs: []
+  # The first hostname becomes the default NEXTAUTH_URL, assumed to be https
+  # because the Gateway's TLS settings are not visible to the chart.
+  hostnames: []
+  annotations: {}
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# With autoscaling enabled, replicaCount is ignored.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
 
 podSecurityContext:
   runAsNonRoot: true

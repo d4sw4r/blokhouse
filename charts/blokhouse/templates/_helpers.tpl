@@ -54,10 +54,22 @@ arrive as floats; print integers without an exponent (2592000, not 2.592e+06). *
 {{- end }}
 {{- end }}
 
-{{/* The effective NEXTAUTH_URL. */}}
+{{/* The effective NEXTAUTH_URL: blokhouse.url, else the first Ingress host
+(https if it is listed in an Ingress tls entry), else the first HTTPRoute
+hostname (https assumed: the Gateway's TLS settings are not visible here),
+else the port-forward address. */}}
 {{- define "blokhouse.url" -}}
 {{- if .Values.blokhouse.url }}
 {{- .Values.blokhouse.url }}
+{{- else if and .Values.ingress.enabled .Values.ingress.hosts }}
+{{- $host := (first .Values.ingress.hosts).host }}
+{{- $tls := false }}
+{{- range .Values.ingress.tls }}
+{{- if has $host (.hosts | default list) }}{{- $tls = true }}{{- end }}
+{{- end }}
+{{- printf "%s://%s" (ternary "https" "http" $tls) $host }}
+{{- else if and .Values.httpRoute.enabled .Values.httpRoute.hostnames }}
+{{- printf "https://%s" (first .Values.httpRoute.hostnames) }}
 {{- else }}
 {{- "http://localhost:8080" }}
 {{- end }}

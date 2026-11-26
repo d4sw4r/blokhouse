@@ -21,11 +21,13 @@ spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
       securityContext:
-        # UID/GID 70 is the postgres user of the alpine image.
         runAsNonRoot: true
+        {{- if not .Values.openshift }}
+        # UID/GID 70 is the postgres user of the alpine image.
         runAsUser: 70
         runAsGroup: 70
         fsGroup: 70
+        {{- end }}
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -34,8 +36,10 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
+            {{- if not .Values.openshift }}
             runAsUser: 70
             runAsGroup: 70
+            {{- end }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:

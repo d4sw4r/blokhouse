@@ -234,6 +234,114 @@ describe("helm chart", () => {
         });
     });
 
+    describe("networking and extras", () => {
+        const nextauthUrl = (values: object): string =>
+            find(renderChart(values), "ConfigMap", "bh-blokhouse")!.data.NEXTAUTH_URL;
+        const ingressHost = (tls: object[]) => ({
+            ingress: {
+                enabled: true,
+                hosts: [{ host: "cmdb.example.com", paths: [{ path: "/", pathType: "Prefix" }] }],
+                tls,
+            },
+        });
+
+        it("url from ingress with tls", () => {
+            const tls = [{ secretName: "cmdb-tls", hosts: ["cmdb.example.com"] }];
+            expect(nextauthUrl(ingressHost(tls))).toBe("https://cmdb.example.com");
+            expect(nextauthUrl(ingressHost([]))).toBe("http://cmdb.example.com");
+        });
+
+        it("url from httproute", () => {
+            expect(nextauthUrl({ httpRoute: { enabled: true, hostnames: ["cmdb.example.com"] } })).toBe(
+                "https://cmdb.example.com",
+            );
+        });
+
+        it("explicit url wins", () => {
+            expect(nextauthUrl({ blokhouse: { url: "https://x.example.com" }, ...ingressHost([]) })).toBe(
+                "https://x.example.com",
+            );
+        });
+
+        it("renders no networking objects by default", () => {
+            const docs = renderChart({});
+            for (const kind of ["Ingress", "HTTPRoute", "HorizontalPodAutoscaler", "PodDisruptionBudget"]) {
+                expect(find(docs, kind)).toBeUndefined();
+            }
+        });
+
+        it("ingress", () => {
+            const docs = renderChart({
+                ingress: { ...ingressHost([]).ingress, className: "nginx", annotations: { a: "b" } },
+            });
+            const ing = find(docs, "Ingress", "bh-blokhouse")!;
+            expect(ing.spec.ingressClassName).toBe("nginx");
+            expect(ing.metadata.annotations).toEqual({ a: "b" });
+            expect(ing.spec.rules[0].host).toBe("cmdb.example.com");
+            expect(ing.spec.rules[0].http.paths[0]).toEqual({
+                path: "/",
+                pathType: "Prefix",
+                backend: { service: { name: "bh-blokhouse", port: { name: "http" } } },
+            });
+        });
+
+        it("httproute", () => {
+            const parentRefs = [{ name: "gw", namespace: "infra" }];
+            const docs = renderChart({
+                httpRoute: { enabled: true, parentRefs, hostnames: ["cmdb.example.com"] },
+            });
+            const route = find(docs, "HTTPRoute", "bh-blokhouse")!;
+            expect(route.apiVersion).toBe("gateway.networking.k8s.io/v1");
+            expect(route.spec.parentRefs).toEqual(parentRefs);
+            expect(route.spec.hostnames).toEqual(["cmdb.example.com"]);
+            expect(route.spec.rules[0].backendRefs).toEqual([{ name: "bh-blokhouse", port: 80 }]);
+        });
+
+        it("hpa", () => {
+            const docs = renderChart({
+                autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 5, targetCPUUtilizationPercentage: 70 },
+            });
+            const hpa = find(docs, "HorizontalPodAutoscaler", "bh-blokhouse")!;
+            expect(hpa.apiVersion).toBe("autoscaling/v2");
+            expect(hpa.spec.scaleTargetRef).toEqual({
+                apiVersion: "apps/v1",
+                kind: "Deployment",
+                name: "bh-blokhouse",
+            });
+            expect(hpa.spec.minReplicas).toBe(2);
+            expect(hpa.spec.maxReplicas).toBe(5);
+            expect(hpa.spec.metrics[0].resource.target.averageUtilization).toBe(70);
+            expect(find(docs, "Deployment", "bh-blokhouse")!.spec).not.toHaveProperty("replicas");
+        });
+
+        it("pdb", () => {
+            const docs = renderChart({ podDisruptionBudget: { enabled: true } });
+            const pdb = find(docs, "PodDisruptionBudget", "bh-blokhouse")!;
+            expect(pdb.spec.minAvailable).toBe(1);
+            expect(pdb.spec.selector.matchLabels).toEqual({
+                "app.kubernetes.io/name": "blokhouse",
+                "app.kubernetes.io/instance": "bh",
+                "app.kubernetes.io/component": "app",
+            });
+        });
+
+        it("openshift drops fixed ids but keeps the hardening", () => {
+            const docs = renderChart({ openshift: true });
+            const appPod = find(docs, "Deployment", "bh-blokhouse")!.spec.template.spec;
+            const pgPod = find(docs, "StatefulSet", "bh-blokhouse-postgresql")!.spec.template.spec;
+            for (const [podCtx, ctx] of [
+                [appPod.securityContext, appPod.containers[0].securityContext],
+                [pgPod.securityContext, pgPod.containers[0].securityContext],
+            ]) {
+                for (const c of [podCtx, ctx]) {
+                    for (const key of ["runAsUser", "runAsGroup", "fsGroup"]) expect(c).not.toHaveProperty(key);
+                    expect(c.runAsNonRoot).toBe(true);
+                }
+                expect(ctx.readOnlyRootFilesystem).toBe(true);
+            }
+        });
+    });
+
     it("schema rejects a typo", () => {
         expect(renderError({ replicaCount: "two" })).toContain("replicaCount");
     });
