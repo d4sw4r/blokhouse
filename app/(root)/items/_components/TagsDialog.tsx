@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
-import { TagBadge } from "./TagBadge";
+import { TagBadge } from "@/components/TagBadge";
 import type { Tag } from "./types";
 
 interface TagsDialogProps {

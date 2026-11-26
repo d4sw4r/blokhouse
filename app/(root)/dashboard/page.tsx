@@ -58,6 +58,8 @@ const priorityTones: Record<MaintenancePriority, BadgeTone> = {
 
 const activityTones: Record<string, BadgeTone> = {
     CREATE: "success",
+    LOGIN: "success",
+    API_TOKEN_CREATED: "success",
     UPDATE: "accent",
     DELETE: "danger",
     API_TOKEN_DELETED: "danger",

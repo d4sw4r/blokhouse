@@ -9,7 +9,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import CopyButton from "@/components/CopyButton";
-import { TagBadge } from "./TagBadge";
+import { TagBadge } from "@/components/TagBadge";
 import type { ConfigItem, PaginationData } from "./types";
 
 interface ItemsTableProps {

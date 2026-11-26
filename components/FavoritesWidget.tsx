@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Star } from "lucide-react";
 import { SkeletonCard } from "@/components/Skeleton";
 import { Panel } from "@/components/ui/Panel";
+import { TagBadge } from "@/components/TagBadge";
 import { StatusDot } from "@/components/ui/StatusDot";
 
 interface FavoriteItem {
@@ -85,9 +86,7 @@ export default function FavoritesWidget() {
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                 {favorite.configurationItem.itemType && <span>{favorite.configurationItem.itemType.name}</span>}
                 {favorite.configurationItem.tags.slice(0, 3).map((tag) => (
-                  <span key={tag.id} className="rounded border border-border px-1.5 py-0.5 text-text">
-                    {tag.name}
-                  </span>
+                  <TagBadge key={tag.id} tag={tag} />
                 ))}
                 {favorite.configurationItem.tags.length > 3 && <span>+{favorite.configurationItem.tags.length - 3}</span>}
               </div>

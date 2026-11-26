@@ -18,7 +18,7 @@ import { Select } from "@/components/ui/Select";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { Skeleton } from "@/components/Skeleton";
 import CopyButton from "@/components/CopyButton";
-import { TagBadge } from "../_components/TagBadge";
+import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
 import FavoriteButton from "@/components/FavoriteButton";
 
