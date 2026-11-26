@@ -110,7 +110,6 @@ function readPalette(): Palette {
 export default function RelationshipGraphPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [, setRelations] = useState<Relation[]>([]);
     const [nodes, setNodes] = useState<GraphNode[]>([]);
     const [edges, setEdges] = useState<GraphEdge[]>([]);
     const [loading, setLoading] = useState(true);
@@ -155,9 +154,14 @@ export default function RelationshipGraphPage() {
             setSize({ w, h });
             // Keep the layout inside the canvas when it resizes (matters while paused).
             if (w > 0 && h > 0 && prev.w > 0 && prev.h > 0 && (prev.w !== w || prev.h !== h)) {
-                setNodes((nodesNow) =>
-                    nodesNow.map((n) => ({ ...n, x: (n.x * w) / prev.w, y: (n.y * h) / prev.h }))
-                );
+                // Mutate in place so selected/hovered/dragged references stay valid.
+                setNodes((nodesNow) => {
+                    nodesNow.forEach((n) => {
+                        n.x = (n.x * w) / prev.w;
+                        n.y = (n.y * h) / prev.h;
+                    });
+                    return [...nodesNow];
+                });
             }
         };
         update();
@@ -175,7 +179,6 @@ export default function RelationshipGraphPage() {
                 const res = await fetch("/api/relations");
                 if (res.ok) {
                     const allRelations: Relation[] = await res.json();
-                    setRelations(allRelations);
                     initializeGraph(allRelations);
                 }
             } catch (error) {
@@ -241,15 +244,17 @@ export default function RelationshipGraphPage() {
 
     // Force-directed graph simulation
     const simulate = useCallback(() => {
-        if (!animationEnabled) return;
+        if (!animationEnabled || !hasGraph) return;
 
         setNodes((prevNodes) => {
             const newNodes = [...prevNodes];
             const { w: width, h: height } = sizeRef.current;
             const centerX = width / 2;
             const centerY = height / 2;
-            const repulsionForce = 5000;
-            const springLength = 150;
+            // Scale the layout with the canvas so the graph uses the space.
+            const k = Math.max(0.6, Math.min(2, Math.min(width, height) / 450));
+            const repulsionForce = 5000 * k * k;
+            const springLength = 150 * k;
             const springStrength = 0.05;
             const centerStrength = 0.01;
 
@@ -310,11 +315,11 @@ export default function RelationshipGraphPage() {
 
             return newNodes;
         });
-    }, [edges, draggedNode, animationEnabled]);
+    }, [edges, draggedNode, animationEnabled, hasGraph]);
 
     // Animation loop
     useEffect(() => {
-        if (animationEnabled) {
+        if (animationEnabled && hasGraph) {
             const animate = () => {
                 simulate();
                 animationRef.current = requestAnimationFrame(animate);
@@ -327,7 +332,7 @@ export default function RelationshipGraphPage() {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [simulate, animationEnabled]);
+    }, [simulate, animationEnabled, hasGraph]);
 
     // Draw the graph
     useEffect(() => {
@@ -722,6 +727,8 @@ export default function RelationshipGraphPage() {
                         >
                             <canvas
                                 ref={canvasRef}
+                                role="img"
+                                aria-label={`Relationship graph, ${stats.totalNodes} assets, ${stats.totalEdges} relations`}
                                 className="block h-full w-full cursor-move"
                                 onMouseMove={handleMouseMove}
                                 onMouseDown={handleMouseDown}
