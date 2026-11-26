@@ -88,13 +88,20 @@ OIDC_ROLE_MAP=cmdb-admins=ADMIN,cmdb-users=USER,cmdb-read=READONLY
 
 Group claims contain object IDs, not names, and Entra leaves them out of the token when a user is in
 more than about 200 groups (the "overage" case, the token then only points to the Graph API, which
-Blokhouse does not call). App roles are short, readable values and are always included in the ID token.
+Blokhouse does not call). App roles are short, readable values. The roles assigned to the user are included
+in the `roles` claim of the ID token. A user with no assignment gets no `roles` claim and is refused
+(`SsoNoAccess`) when a role map is set.
 
 ### The email address and `OIDC_TRUST_EMAIL`
 
 Entra usually does not send `email_verified`. Blokhouse only links an SSO login to an **existing**
 local account when the provider says the email is verified, so without it existing accounts are not
 linked and the user sees `SsoEmailNotVerified`. New users are created without any problem.
+
+> **New users are created from the `email` claim even when it is not verified.** Only linking to an
+> existing account requires a verified email. On providers where users can set their own email address
+> (multi-tenant apps, guest users), use a role map and/or restrict who can be assigned to the app at the
+> provider, so that only the people you intend can sign in.
 
 If you need to link existing accounts, set `OIDC_TRUST_EMAIL=true`. That tells Blokhouse to treat the
 `email` claim as verified even without `email_verified`. This is only safe when your tenant controls
@@ -145,8 +152,15 @@ On the first login:
 | Local **admin with a password** | Refused (`SsoLocalAdmin`). Local admins are never linked or changed. |
 | Local user already linked to another identity | Refused (`SsoAlreadyLinked`). |
 | Deactivated user | Refused (`SsoDisabled`). |
+| Service account (role `API`) | Refused (`SsoServiceAccount`). |
 
-Email matching ignores case. If two local users differ only in case, nobody is linked.
+The email check comes first: when the email is not verified (and `OIDC_TRUST_EMAIL` is not set) the login is
+refused with `SsoEmailNotVerified` whatever the existing account's status, so an unverified claim reveals
+nothing about it. Email matching ignores case. If two local users differ only in case, nobody is linked.
+
+When an account is linked, its existing API tokens are **capped** to `OIDC_TOKEN_MAX_DAYS`, not revoked. If the
+local account may have been registered by someone else (for example through public signup with that address),
+revoke its tokens under **Admin -> API** after linking.
 
 ## Sign-in errors
 
@@ -156,13 +170,14 @@ Users are sent back to the sign-in page with a message. What it means for you as
 | --- | --- |
 | `SsoNoAccess` | The user has no value in the role claim that appears in `OIDC_ROLE_MAP`. Add the user to the group or assign the app role. Also shown when the provider returned no usable identity. |
 | `SsoLocalAdmin` | The email belongs to a local admin who has a password. Sign in with the password instead, or change that user's email. |
-| `SsoEmailNotVerified` | A local account exists for this email but the provider did not mark it as verified (see `OIDC_TRUST_EMAIL`). Also shown when the only address is `preferred_username` and it already belongs to a user. |
+| `SsoEmailNotVerified` | A local account exists for this email but the provider did not mark it as verified (see `OIDC_TRUST_EMAIL`). The user is told that an account with this email exists and to ask an administrator. Also shown when the only address is `preferred_username` and it already belongs to a user. |
 | `SsoAlreadyLinked` | The account is linked to a different identity at the provider, or two local users match the email ignoring case. |
 | `SsoDisabled` | The user was deactivated in Blokhouse. |
 | `SsoServiceAccount` | The email belongs to a service account (role `API`). |
 | `SsoNoEmail` | The ID token has neither `email` nor a `preferred_username` that looks like an email address. |
 | `SsoError` | Unexpected error. Look in the server log for `OIDC sign-in error`. |
 | `OAuthSignin`, `OAuthCallback`, `Configuration` | The provider is unreachable, rejected the request, or the client is misconfigured. Check issuer, client ID/secret and redirect URI. |
+| `AccessDenied` | Generic denial from the sign-in library, without a more specific code. Blokhouse itself always sends one of the codes above, so look in the server log. |
 
 ## Deactivating users
 
@@ -191,8 +206,12 @@ For users who signed in via SSO the API answers `409`:
 - changing the **role** when `OIDC_ROLE_MAP` is set (the provider manages it),
 - setting a **password** (SSO users have none).
 
-Name changes, deactivation and deletion still work. Deleting an SSO user removes the local record; if they
-sign in again they are created anew.
+Name changes, deactivation and deletion still work. **To revoke access, use Deactivate, not Delete.** Deleting
+an SSO user only removes the local record: when no role map is set, the user is created again at their next
+sign-in (with `OIDC_DEFAULT_ROLE`).
+
+Both rules apply only while OIDC is configured. If you remove the OIDC settings, an administrator can set a
+password for a former SSO user so they can sign in with it.
 
 ## Break-glass access
 
@@ -201,6 +220,10 @@ If the provider is down or misconfigured you must still be able to get in:
 - Keep `PASSWORD_LOGIN=true` (the default).
 - Keep at least one **local admin with a password**, for example `admin@blokhouse.local`. SSO never links
   or changes such an account, whatever the provider sends. Store the password in your password manager.
+- While OIDC is configured, Blokhouse enforces this: demoting, deactivating or deleting the last active
+  local admin (role `ADMIN`, with a password, not linked to SSO) is refused with `400` "Keep at least one
+  local administrator with a password for break-glass access". Create a second local admin first if you
+  want to replace it.
 
 Setting `PASSWORD_LOGIN=false` hides the password form, rejects password logins and disables public
 signup. Only do that once SSO works, and think about how you recover without it (for example setting it back

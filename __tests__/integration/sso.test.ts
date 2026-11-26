@@ -224,6 +224,22 @@ describe("handleOidcSignIn", () => {
         expect(u!.accounts).toHaveLength(0);
     });
 
+    it("checks email_verified before the account's status (no probing with an unverified claim)", async () => {
+        const admin = await prisma.user.create({
+            data: { email: "admin@corp.com", role: "ADMIN", password: bcrypt.hashSync("pw-admin-123", 4) },
+        });
+        await prisma.user.create({ data: { email: "off@corp.com", role: "USER", disabledAt: new Date() } });
+        await prisma.user.create({ data: { email: "svc@corp.com", role: "API" } });
+        for (const email of ["admin@corp.com", "off@corp.com", "svc@corp.com"]) {
+            expect(await handleOidcSignIn({ account: account(), profile: { sub: "sub-1", email }, config: cfg() })).toBe(
+                "/signin?error=SsoEmailNotVerified",
+            );
+        }
+        const u = await prisma.user.findUnique({ where: { id: admin.id }, include: { accounts: true } });
+        expect(u!.password).toBe(admin.password);
+        expect(await prisma.account.count()).toBe(0);
+    });
+
     it("refuses linking an existing deactivated user or service account by email", async () => {
         await prisma.user.create({ data: { email: "off@corp.com", role: "USER", disabledAt: new Date() } });
         await prisma.user.create({ data: { email: "svc@corp.com", role: "API" } });
@@ -308,6 +324,13 @@ describe("authOptions wiring", () => {
 
     it("signIn allows non-oidc providers unchanged", async () => {
         expect(await cb.signIn({ user: { id: "x" }, account: { provider: "credentials", type: "credentials" } })).toBe(true);
+    });
+
+    it("jwt sets token.role to null for a deactivated user", async () => {
+        const u = await prisma.user.create({ data: { email: "gone@corp.com", role: "USER" } });
+        expect((await cb.jwt({ token: { id: u.id, role: "USER" } })).role).toBe("USER");
+        await prisma.user.update({ where: { id: u.id }, data: { disabledAt: new Date() } });
+        expect((await cb.jwt({ token: { id: u.id, role: "USER" } })).role).toBeNull();
     });
 
     it("jwt and session expose sso from the sign-in account", async () => {

@@ -10,6 +10,7 @@ vi.mock("@/lib/oidc", async (orig) => ({
     getOidcConfig: () => cfgMock.current,
 }));
 
+import bcrypt from "bcryptjs";
 import { resetDb, tokenFor, call, prisma } from "./helpers";
 import { parseOidcConfig } from "@/lib/oidc";
 import * as UsersRoute from "@/app/api/users/route";
@@ -106,6 +107,14 @@ describe("role lock for SSO users", () => {
         }
     });
 
+    it("allows setting a password for a former SSO user when OIDC is not configured", async () => {
+        cfgMock.current = null;
+        const u = await ssoUser("USER");
+        const r = await put(u.id, { password: "long-enough-pw" });
+        expect(r.status).toBe(200);
+        expect((await prisma.user.findUnique({ where: { id: u.id } }))!.password).toBeTruthy();
+    });
+
     it("GET /api/users and /api/users/:id expose sso and roleManagedBySso", async () => {
         setCfg(MAPPED);
         const u = await ssoUser("USER");
@@ -155,5 +164,68 @@ describe("GET /api/auth/options", () => {
         cfgMock.current = null;
         const off = await call(OptionsRoute.GET as Handler, { url: "/api/auth/options" });
         expect(off.body).toEqual({ passwordLogin: true, sso: null, ssoTokenMaxDays: null });
+    });
+});
+
+describe("break-glass guard: keep one local admin", () => {
+    const BREAK_GLASS = "Keep at least one local administrator with a password for break-glass access";
+    const localAdmin = (email = "root@test.io") =>
+        prisma.user.create({ data: { email, role: "ADMIN", password: bcrypt.hashSync("pw-admin-123", 4) } });
+    // The caller is an SSO admin; the fixture's token admin has no password, so it is not a local admin.
+    const asSsoAdmin = async () => {
+        const sso = await ssoUser("ADMIN", "boss@corp.com");
+        asSession({ id: sso.id, role: "ADMIN" });
+        return sso;
+    };
+    const putAs = (id: string, body: unknown) =>
+        call(UserRoute.PUT as Handler, { method: "PUT", url: `/api/users/${id}`, body, params: { id } });
+    const del = (id: string) => call(UserRoute.DELETE as Handler, { method: "DELETE", url: `/api/users/${id}`, params: { id } });
+
+    it("with OIDC configured, refuses demoting, deactivating or deleting the only local admin", async () => {
+        setCfg();
+        const root = await localAdmin();
+        await asSsoAdmin();
+        for (const r of [await putAs(root.id, { role: "USER" }), await putAs(root.id, { disabled: true }), await del(root.id)]) {
+            expect(r.status).toBe(400);
+            expect(r.body.error).toBe(BREAK_GLASS);
+        }
+        const after = await prisma.user.findUnique({ where: { id: root.id } });
+        expect(after).toMatchObject({ role: "ADMIN", disabledAt: null });
+    });
+
+    it("works when a second active local admin exists", async () => {
+        setCfg();
+        const a = await localAdmin("a@test.io");
+        const b = await localAdmin("b@test.io");
+        const c = await localAdmin("c@test.io");
+        await asSsoAdmin();
+        expect((await putAs(a.id, { role: "USER" })).status).toBe(200);
+        expect((await putAs(b.id, { disabled: true })).status).toBe(200);
+        // c is now the only active local admin.
+        expect((await del(c.id)).body.error).toBe(BREAK_GLASS);
+        const d = await localAdmin("d@test.io");
+        expect((await del(c.id)).status).toBe(200);
+        expect(await prisma.user.findUnique({ where: { id: d.id } })).toBeTruthy();
+    });
+
+    it("a deactivated local admin does not count as the other one", async () => {
+        setCfg();
+        const root = await localAdmin();
+        await prisma.user.create({
+            data: { email: "old@test.io", role: "ADMIN", password: "hash", disabledAt: new Date() },
+        });
+        await asSsoAdmin();
+        expect((await putAs(root.id, { role: "USER" })).body.error).toBe(BREAK_GLASS);
+    });
+
+    it("without OIDC configured, the old behaviour holds", async () => {
+        cfgMock.current = null;
+        const root = await localAdmin();
+        await asSsoAdmin();
+        expect((await putAs(root.id, { role: "USER" })).status).toBe(200);
+        const root2 = await localAdmin("root2@test.io");
+        expect((await putAs(root2.id, { disabled: true })).status).toBe(200);
+        const root3 = await localAdmin("root3@test.io");
+        expect((await del(root3.id)).status).toBe(200);
     });
 });
