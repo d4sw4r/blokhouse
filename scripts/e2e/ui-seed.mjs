@@ -1,6 +1,6 @@
 // Seeds a Blokhouse instance for the UI check (scripts/e2e/ui-check.mjs) through the API:
-// a READONLY user, 8 items (one with a 60-character name, one with an IPv6 address and
-// ten tags) and 5 relations. Idempotent-ish: existing users, items, tags and relations
+// a READONLY user, 8 items (the newest, which the API lists first, has a 60-character name, an IPv6
+// address and ten tags) and 5 relations. Idempotent-ish: existing users, items, tags and relations
 // are skipped, so reruns against a local database are safe.
 //   BASE_URL=http://localhost:3000 ADMIN_EMAIL=... ADMIN_PASSWORD=... \
 //   READONLY_EMAIL=... READONLY_PASSWORD=... node scripts/e2e/ui-seed.mjs
@@ -67,8 +67,8 @@ const ITEMS = [
     { name: "cache-01", ip: "10.20.0.31", status: "MAINTENANCE" },
     { name: "backup-01", ip: "10.20.0.41", status: "DEPRECATED", tags: ["backup"] },
     { name: "lb-01", ip: "10.20.0.5", mac: "AA:BB:CC:DD:EE:01", tags: ["edge"] },
-    { name: "ipv6-node-01", ip: IPV6, tags: TAGS },
-    { name: LONG_NAME, ip: "10.20.0.99" },
+    { name: "monitor-01", ip: "10.20.0.51", tags: ["monitoring", "internal"] },
+    { name: LONG_NAME, ip: IPV6, tags: TAGS },
 ];
 const have = new Map(
     (await must(await api.get("/api/configuration-items?limit=1000"), "list items")).items.map((i) => [i.name, i.id]),

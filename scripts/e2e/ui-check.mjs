@@ -127,7 +127,7 @@ for (const entry of pages) {
                         await page.evaluate((t) => document.documentElement.classList.contains(t), theme),
                         `<html> lacks class ${theme}`,
                     );
-                    await page.screenshot({ path: `${SHOTS}${theme}-${width}-${slug(path)}.png`, fullPage: true });
+                    await page.screenshot({ path: `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-${slug(path)}.png`, fullPage: true });
                     const overflow = await page.evaluate(() => ({
                         sw: document.documentElement.scrollWidth,
                         iw: window.innerWidth,
