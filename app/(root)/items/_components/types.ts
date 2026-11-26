@@ -1,9 +1,6 @@
-export interface Tag {
-    id: string;
-    name: string;
-    color?: string | null;
-    description?: string | null;
-}
+import type { Tag } from "@/lib/ui/types";
+
+export type { Tag };
 
 export type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 

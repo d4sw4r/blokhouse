@@ -62,14 +62,6 @@ export function normalizeMAC(mac: string): string {
 }
 
 /**
- * Gets validation status color class
- */
-export function getValidationColor(isValid: boolean, hasValue: boolean): string {
-    if (!hasValue) return "border-border-strong";
-    return isValid ? "border-success" : "border-danger";
-}
-
-/**
  * Gets validation status message
  */
 export function getValidationMessage(isValid: boolean, fieldName: string): string | null {
