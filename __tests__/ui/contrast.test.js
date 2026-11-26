@@ -44,9 +44,12 @@ for (const theme of ["light", "dark"]) {
     });
 }
 
-// Badge tints: tone text on (tone at TINT alpha over --surface). Keep in sync with components/ui/Badge.tsx.
-const BADGE_TINT = 0.1;
-const BADGE_TEXT = { neutral: "text", accent: "accent", success: "text", warning: "text", danger: "danger" };
+// Tinted components: text (and secondary text) on (tone at TINT alpha over bg, surface and
+// surface-2), both themes. Keep in sync with components/ui/Badge.tsx and components/ui/Callout.tsx.
+const TINT = 0.1;
+const BADGE_TEXT = { neutral: "text", accent: "text", success: "text", warning: "text", danger: "text" };
+const CALLOUT_TEXT = { danger: ["text", "text-muted"], success: ["text", "text-muted"], warning: ["text", "text-muted"], accent: ["text", "text-muted"] };
+const SURFACES = ["bg", "surface", "surface-2"];
 
 function composite(fg, bg, alpha) {
     const ch = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
@@ -58,16 +61,42 @@ function composite(fg, bg, alpha) {
     );
 }
 
+describe("tint table matches the components", () => {
+    it("Badge and Callout use text-text on every tone", () => {
+        const badge = readFileSync(path.resolve(__dirname, "../../components/ui/Badge.tsx"), "utf8");
+        const callout = readFileSync(path.resolve(__dirname, "../../components/ui/Callout.tsx"), "utf8");
+        for (const tone of Object.keys(BADGE_TEXT)) {
+            expect(badge, `Badge ${tone}`).toMatch(new RegExp(`${tone}: "bg-${tone}/10 text-text `));
+        }
+        expect(callout).toMatch(/text-sm text-text/);
+        for (const tone of Object.keys(CALLOUT_TEXT)) {
+            expect(callout, `Callout ${tone}`).toMatch(new RegExp(`bg-${tone}/10"`));
+        }
+    });
+});
+
 for (const theme of ["light", "dark"]) {
-    describe(`${theme} badge contrast`, () => {
+    describe(`${theme} tint contrast`, () => {
         const t = tokens[theme];
-        for (const [tone, textToken] of Object.entries(BADGE_TEXT)) {
-            it(`${tone} text on ${BADGE_TINT} tint is >= 4.5`, () => {
-                const tintToken = tone === "neutral" ? "neutral" : tone;
-                const bg = composite(t[tintToken], t.surface, BADGE_TINT);
-                const r = contrastRatio(t[textToken], bg);
-                expect(r, `${theme}/${tone} ${r.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
-            });
+        for (const surface of SURFACES) {
+            for (const [tone, textToken] of Object.entries(BADGE_TEXT)) {
+                it(`Badge ${tone}: ${textToken} on ${TINT} tint over ${surface} is >= 4.5`, () => {
+                    const bg = composite(t[tone], t[surface], TINT);
+                    const r = contrastRatio(t[textToken], bg);
+                    expect(r, `${theme}/${tone}/${surface} ${r.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+                });
+            }
+            for (const [tone, textTokens] of Object.entries(CALLOUT_TEXT)) {
+                it(`Callout ${tone}: text >= 4.5 and icon >= 3 on ${TINT} tint over ${surface}`, () => {
+                    const bg = composite(t[tone], t[surface], TINT);
+                    for (const textToken of textTokens) {
+                        const r = contrastRatio(t[textToken], bg);
+                        expect(r, `${theme}/${tone}/${surface}/${textToken} ${r.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+                    }
+                    const icon = contrastRatio(t[tone], bg);
+                    expect(icon, `${theme}/${tone}/${surface} icon ${icon.toFixed(2)}`).toBeGreaterThanOrEqual(3);
+                });
+            }
         }
     });
 }

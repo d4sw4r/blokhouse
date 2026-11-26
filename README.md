@@ -25,6 +25,14 @@
 - **Dark Mode** — for the night owls
 - **Docker and Kubernetes support** — run anywhere, with a Helm chart
 
+## 📸 Screenshots
+
+![Dashboard in the dark theme](docs/images/dashboard-dark.png)
+
+![Items list in the dark theme](docs/images/items-dark.png)
+
+A light theme is included as well; switch themes in the user menu.
+
 ## 🚀 Quick Start (Docker — recommended)
 
 ```bash
@@ -152,7 +160,7 @@ curl -X PUT http://localhost:3000/api/v1/configuration-items/by-name/web-01 \
 ```
 
 Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
-[docs/api.md](docs/api.md). Generate scoped API tokens under **Admin → API Tokens**.
+[docs/api.md](docs/api.md). Generate scoped API tokens under **Automation → API tokens**.
 
 ## 📚 Documentation
 

@@ -160,7 +160,7 @@ nothing about it. Email matching ignores case. If two local users differ only in
 
 When an account is linked, its existing API tokens are **capped** to `OIDC_TOKEN_MAX_DAYS`, not revoked. If the
 local account may have been registered by someone else (for example through public signup with that address),
-revoke its tokens under **Admin -> API** after linking.
+revoke its tokens under **Automation → API tokens** after linking.
 
 ## Sign-in errors
 

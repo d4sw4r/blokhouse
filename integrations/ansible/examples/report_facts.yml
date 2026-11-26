@@ -7,7 +7,7 @@
 #   ansible-playbook -i inventory examples/report_facts.yml
 #
 # The custom fields used below (os, kernel, cpus, memory_mb) must exist in
-# Blokhouse (Admin > Custom Fields); remove the ones you do not need.
+# Blokhouse (Model > Custom fields); remove the ones you do not need.
 - name: Report hosts to the CMDB
   hosts: all
   gather_facts: true

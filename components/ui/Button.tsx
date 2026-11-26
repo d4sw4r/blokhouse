@@ -5,10 +5,8 @@ import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     className?: string;
-    /** "outline" and "destructive" are legacy aliases until Task 16. */
-    variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | "destructive";
-    /** "lg" is a legacy alias of "md" until Task 16. */
-    size?: "sm" | "md" | "lg";
+    variant?: "primary" | "secondary" | "ghost" | "danger";
+    size?: "sm" | "md";
     loading?: boolean;
 }
 
@@ -26,8 +24,6 @@ const sizes = {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, children, variant = "primary", size = "md", loading = false, disabled, ...props }, ref) => {
-        const v = variant === "outline" ? "secondary" : variant === "destructive" ? "danger" : variant;
-        const s = size === "lg" ? "md" : size;
         return (
             <button
                 ref={ref}
@@ -35,8 +31,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 aria-busy={loading || undefined}
                 className={cn(
                     "inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors duration-150 motion-reduce:transition-none max-sm:min-h-11 disabled:opacity-50 disabled:pointer-events-none",
-                    variants[v],
-                    sizes[s],
+                    variants[variant],
+                    sizes[size],
                     className,
                 )}
                 {...props}

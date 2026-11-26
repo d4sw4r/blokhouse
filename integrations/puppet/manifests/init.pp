@@ -32,7 +32,7 @@
 # @param custom_fields
 #   Custom fields to report: Blokhouse field name => `facts.<path>` or
 #   `report.<status|environment|puppet_version|configuration_version|time>`.
-#   The fields must exist in Blokhouse (Admin > Custom Fields).
+#   The fields must exist in Blokhouse (Model > Custom fields).
 # @param type
 #   Type for newly created items. Default: VM for virtual machines, else Server.
 # @param tags

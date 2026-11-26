@@ -16,6 +16,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/Skeleton";
 import { statusTone } from "@/lib/ui/status";
 import { cssVar } from "@/lib/ui/cssVar";
+import { RELATION_TYPES, relationType } from "@/lib/ui/relationTypes";
+import { toneBgClass, type Tone } from "@/lib/ui/tone";
 
 interface GraphNode {
     id: string;
@@ -57,24 +59,12 @@ interface Relation {
     };
 }
 
-type Tone = "accent" | "success" | "warning" | "danger" | "neutral";
-
 // Relation type -> colour token (also named in the legend, never colour alone).
-const relationTypeTones: Record<string, Tone> = {
-    DEPENDS_ON: "danger",
-    RUNS_ON: "accent",
-    CONNECTED_TO: "success",
-    CONTAINS: "warning",
-};
-const relationTone = (type: string): Tone => relationTypeTones[type] ?? "neutral";
-const legendTypes: [string, Tone][] = [...Object.entries(relationTypeTones), ["OTHER", "neutral"]];
-const swatchClass: Record<Tone, string> = {
-    accent: "bg-accent",
-    success: "bg-success",
-    warning: "bg-warning",
-    danger: "bg-danger",
-    neutral: "bg-neutral",
-};
+const relationTone = (type: string): Tone => relationType(type).tone;
+const legendTypes: { label: string; tone: Tone }[] = [
+    ...RELATION_TYPES.filter((r) => r.tone !== "neutral"),
+    { label: "Other", tone: "neutral" },
+];
 const statuses = ["ACTIVE", "MAINTENANCE", "DEPRECATED"];
 
 interface Palette {
@@ -556,7 +546,7 @@ export default function RelationshipGraphPage() {
     if (loading) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <LoadingSpinner size="lg" />
+                <LoadingSpinner size="xl" />
             </div>
         );
     }
@@ -662,10 +652,10 @@ export default function RelationshipGraphPage() {
                         </div>
                         <h3 className="mb-2 mt-4 text-xs font-medium text-muted">Relation Types</h3>
                         <div className="space-y-2">
-                            {legendTypes.map(([type, tone]) => (
-                                <div key={type} className="flex items-center gap-2">
-                                    <span className={`h-1 w-8 shrink-0 rounded ${swatchClass[tone]}`} aria-hidden="true" />
-                                    <span className="text-sm text-text">{type.replace(/_/g, " ")}</span>
+                            {legendTypes.map(({ label, tone }) => (
+                                <div key={label} className="flex items-center gap-2">
+                                    <span className={`h-1 w-8 shrink-0 rounded ${toneBgClass(tone)}`} aria-hidden="true" />
+                                    <span className="text-sm text-text">{label}</span>
                                 </div>
                             ))}
                         </div>

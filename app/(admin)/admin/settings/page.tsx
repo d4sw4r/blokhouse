@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
 
 export default function AdminSettingsPage() {
     // Example setting – replace with real settings and API integration as needed.
@@ -15,27 +19,25 @@ export default function AdminSettingsPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-brand-text">Settings</h1>
-            <div className="bg-white p-6 rounded-sm shadow-sm">
-                <h2 className="text-2xl font-semibold text-brand-text mb-4">General App Settings</h2>
+        <div>
+            <PageHeader title="Settings" description="General application settings." />
+            <Panel title="General app settings" className="max-w-2xl">
                 <div className="space-y-4">
-                    <label className="block text-lg text-brand-secondary">Example Setting:</label>
-                    <input
-                        type="text"
-                        value={newSetting}
-                        onChange={(e) => setNewSetting(e.target.value)}
-                        placeholder="Enter new setting value"
-                        className="w-full border rounded-sm p-2"
-                    />
-                    <Button onClick={updateSetting}>Update Setting</Button>
-                </div>
-                <div className="mt-4">
-                    <p className="text-lg">
-                        Current Setting: <span className="font-semibold text-brand-text">{setting}</span>
+                    <Field label="Example setting" htmlFor="example-setting">
+                        <Input
+                            id="example-setting"
+                            type="text"
+                            value={newSetting}
+                            onChange={(e) => setNewSetting(e.target.value)}
+                            placeholder="Enter new setting value"
+                        />
+                    </Field>
+                    <Button onClick={updateSetting}>Update setting</Button>
+                    <p className="text-sm text-muted">
+                        Current setting: <span className="font-mono text-text break-all">{setting}</span>
                     </p>
                 </div>
-            </div>
+            </Panel>
         </div>
     );
 }

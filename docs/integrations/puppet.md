@@ -13,7 +13,7 @@ all options are in its [README](../../integrations/puppet/README.md).
 ## Classification
 
 The ENC reads two optional custom fields of an item (create them as `STRING` fields under
-Admin → Custom Fields):
+Model → Custom fields):
 
 | Custom field | Example | Meaning |
 |--------------|---------|---------|

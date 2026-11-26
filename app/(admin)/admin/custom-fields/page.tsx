@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ListChecks, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { Select } from "@/components/ui/Select";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
+import { SkeletonTable } from "@/components/Skeleton";
 
 const FIELD_TYPES = [
     { value: "STRING", label: "Text (String)" },
@@ -11,15 +24,6 @@ const FIELD_TYPES = [
     { value: "URL", label: "URL / Link" },
     { value: "EMAIL", label: "Email" },
 ];
-
-const TYPE_BADGES: Record<string, string> = {
-    STRING:  "bg-brand-primary/20  text-brand-primary",
-    NUMBER:  "bg-brand-secondary/20 text-brand-secondary",
-    BOOLEAN: "bg-brand-primary/20  text-brand-primary",
-    DATE:    "bg-brand-accent/20 text-brand-accent",
-    URL:     "bg-brand-secondary/20   text-brand-secondary",
-    EMAIL:   "bg-brand-accent/20   text-brand-accent",
-};
 
 interface ItemType { id: string; name: string }
 interface CustomField {
@@ -56,6 +60,8 @@ export default function CustomFieldsAdminPage() {
     const [showForm, setShowForm]   = useState(false);
     const [form, setForm]           = useState(empty);
     const [filterType, setFilterType] = useState<string>("");
+    const [fieldToDelete, setFieldToDelete] = useState<CustomField | null>(null);
+    const [fieldToDeleteOpen, setFieldToDeleteOpen] = useState(false);
     const [msg, setMsg]             = useState<{ ok: boolean; text: string } | null>(null);
 
     async function fetchData() {
@@ -110,7 +116,6 @@ export default function CustomFieldsAdminPage() {
     }
 
     async function deleteField(id: string, label: string) {
-        if (!confirm(`Delete custom field "${label}"? All stored values will be lost!`)) return;
         setDeleting(id);
         const res = await fetch(`/api/custom-fields/${id}`, { method: "DELETE" });
         if (res.ok) {
@@ -128,231 +133,200 @@ export default function CustomFieldsAdminPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-brand-text">Custom Fields</h1>
-                    <p className="text-brand-secondary mt-1">Define extra metadata fields for your Configuration Items.</p>
-                </div>
-                <Button onClick={() => { setShowForm(v => !v); setMsg(null); }}>
-                    {showForm ? "Cancel" : "+ New Field"}
-                </Button>
-            </div>
+            <PageHeader
+                title="Custom fields"
+                description="Define extra metadata fields for your Configuration Items."
+                actions={
+                    <Button onClick={() => { setShowForm(v => !v); setMsg(null); }} variant={showForm ? "secondary" : "primary"}>
+                        {showForm ? "Cancel" : (<><Plus className="size-4" aria-hidden="true" /> New Field</>)}
+                    </Button>
+                }
+            />
 
-            {/* Flash message */}
             {msg && (
-                <div className={`mb-6 p-3 rounded-lg text-sm font-medium ${msg.ok ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/30" : "bg-brand-accent/10 text-brand-accent border border-brand-accent/30"}`}>
+                <Callout role="status" tone={msg.ok ? "success" : "danger"} className="mb-6">
                     {msg.text}
-                </div>
+                </Callout>
             )}
 
-            {/* Create form */}
             {showForm && (
-                <form onSubmit={createField} className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-brand-primary/20">
-                    <h2 className="text-lg font-semibold text-brand-text mb-4">New Custom Field</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Label */}
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Label <span className="text-brand-accent">*</span></label>
-                            <input
-                                required
-                                value={form.label}
-                                onChange={e => {
-                                    const label = e.target.value;
-                                    // Auto-fill machine name
-                                    const name = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-                                    setForm(f => ({ ...f, label, name }));
-                                }}
-                                placeholder="e.g. Purchase Date"
-                                className="w-full border rounded-sm p-2"
-                            />
-                        </div>
-                        {/* Machine name */}
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Machine Name <span className="text-brand-accent">*</span></label>
-                            <input
-                                required
-                                value={form.name}
-                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                placeholder="e.g. purchase_date"
-                                className="w-full border rounded-sm p-2 font-mono text-sm"
-                            />
-                            <p className="text-xs text-brand-secondary/60 mt-0.5">snake_case, auto-filled from label</p>
-                        </div>
-                        {/* Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Field Type <span className="text-brand-accent">*</span></label>
-                            <select
-                                value={form.type}
-                                onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                                className="w-full border rounded-sm p-2"
-                            >
-                                {FIELD_TYPES.map(t => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {/* Scope */}
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Item Type Scope</label>
-                            <select
-                                value={form.itemTypeId}
-                                onChange={e => setForm(f => ({ ...f, itemTypeId: e.target.value }))}
-                                className="w-full border rounded-sm p-2"
-                            >
-                                <option value="">Global (all item types)</option>
-                                {types.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {/* Description */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Description</label>
-                            <input
-                                value={form.description}
-                                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                placeholder="Optional hint for users"
-                                className="w-full border rounded-sm p-2"
-                            />
-                        </div>
-                        {/* Default value */}
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Default Value</label>
-                            <input
-                                value={form.defaultValue}
-                                onChange={e => setForm(f => ({ ...f, defaultValue: e.target.value }))}
-                                placeholder="Optional"
-                                className="w-full border rounded-sm p-2"
-                            />
-                        </div>
-                        {/* Options (STRING only) */}
-                        {form.type === "STRING" && (
-                            <div>
-                                <label className="block text-sm font-medium text-brand-secondary mb-1">Options (comma-separated)</label>
-                                <input
-                                    value={form.optionsRaw}
-                                    onChange={e => setForm(f => ({ ...f, optionsRaw: e.target.value }))}
-                                    placeholder="e.g. Option A, Option B"
-                                    className="w-full border rounded-sm p-2"
+                <form onSubmit={createField} className="mb-6">
+                    <Panel title="New custom field">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <Field label="Label *" htmlFor="cf-label">
+                                <Input
+                                    id="cf-label"
+                                    required
+                                    value={form.label}
+                                    onChange={e => {
+                                        const label = e.target.value;
+                                        // Auto-fill machine name
+                                        const name = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                                        setForm(f => ({ ...f, label, name }));
+                                    }}
+                                    placeholder="e.g. Purchase Date"
                                 />
-                                <p className="text-xs text-brand-secondary/60 mt-0.5">Leave empty for free-text</p>
-                            </div>
-                        )}
-                        {/* Required */}
-                        <div className="flex items-center gap-2 pt-4">
-                            <input
-                                type="checkbox"
-                                id="required"
-                                checked={form.required}
-                                onChange={e => setForm(f => ({ ...f, required: e.target.checked }))}
-                                className="cursor-pointer"
-                            />
-                            <label htmlFor="required" className="text-sm font-medium text-brand-secondary cursor-pointer">
+                            </Field>
+                            <Field label="Machine name *" htmlFor="cf-name" hint="snake_case, auto-filled from label">
+                                <Input
+                                    id="cf-name"
+                                    required
+                                    value={form.name}
+                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    placeholder="e.g. purchase_date"
+                                    className="font-mono"
+                                />
+                            </Field>
+                            <Field label="Field type *" htmlFor="cf-type">
+                                <Select
+                                    id="cf-type"
+                                    value={form.type}
+                                    onValueChange={type => setForm(f => ({ ...f, type }))}
+                                    options={FIELD_TYPES}
+                                />
+                            </Field>
+                            <Field label="Item type scope" htmlFor="cf-scope">
+                                <Select
+                                    id="cf-scope"
+                                    value={form.itemTypeId}
+                                    onValueChange={itemTypeId => setForm(f => ({ ...f, itemTypeId }))}
+                                    options={[
+                                        { value: "", label: "Global (all item types)" },
+                                        ...types.map(t => ({ value: t.id, label: t.name })),
+                                    ]}
+                                />
+                            </Field>
+                            <Field label="Description" htmlFor="cf-description" className="md:col-span-2">
+                                <Input
+                                    id="cf-description"
+                                    value={form.description}
+                                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                    placeholder="Optional hint for users"
+                                />
+                            </Field>
+                            <Field label="Default value" htmlFor="cf-default">
+                                <Input
+                                    id="cf-default"
+                                    value={form.defaultValue}
+                                    onChange={e => setForm(f => ({ ...f, defaultValue: e.target.value }))}
+                                    placeholder="Optional"
+                                />
+                            </Field>
+                            {form.type === "STRING" && (
+                                <Field label="Options (comma-separated)" htmlFor="cf-options" hint="Leave empty for free-text">
+                                    <Input
+                                        id="cf-options"
+                                        value={form.optionsRaw}
+                                        onChange={e => setForm(f => ({ ...f, optionsRaw: e.target.value }))}
+                                        placeholder="e.g. Option A, Option B"
+                                    />
+                                </Field>
+                            )}
+                            <label htmlFor="required" className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium text-text max-sm:min-h-11 md:pt-6">
+                                <Checkbox
+                                    id="required"
+                                    checked={form.required}
+                                    onCheckedChange={v => setForm(f => ({ ...f, required: v === true }))}
+                                />
                                 Required field
                             </label>
                         </div>
-                    </div>
-                    <div className="mt-6 flex gap-2">
-                        <Button type="submit" disabled={saving}>
-                            {saving ? "Creating..." : "Create Field"}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                    </div>
+                        <div className="mt-6 flex gap-2">
+                            <Button type="submit" disabled={saving}>
+                                {saving ? "Creating..." : "Create Field"}
+                            </Button>
+                            <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                        </div>
+                    </Panel>
                 </form>
             )}
 
-            {/* Filter */}
-            <div className="mb-4 flex items-center gap-4">
-                <label className="text-sm font-medium text-brand-secondary">Filter by scope:</label>
-                <select
-                    value={filterType}
-                    onChange={e => setFilterType(e.target.value)}
-                    className="border rounded-sm p-1.5 text-sm"
-                >
-                    <option value="">All</option>
-                    <option value="__global__">Global only</option>
-                    {types.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                </select>
-                <span className="text-sm text-brand-secondary">{displayed.length} field(s)</span>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+                <label htmlFor="cf-filter" className="text-sm font-medium text-text">Filter by scope:</label>
+                <div className="w-56 max-w-full">
+                    <Select
+                        id="cf-filter"
+                        value={filterType}
+                        onValueChange={setFilterType}
+                        options={[
+                            { value: "", label: "All" },
+                            { value: "__global__", label: "Global only" },
+                            ...types.map(t => ({ value: t.id, label: t.name })),
+                        ]}
+                    />
+                </div>
+                <span className="font-mono text-sm text-muted">{displayed.length} field(s)</span>
             </div>
 
-            {/* Fields table */}
             {loading ? (
-                <div className="animate-pulse space-y-3">
-                    {[1,2,3].map(i => <div key={i} className="h-14 bg-brand-primary/10 rounded" />)}
-                </div>
+                <SkeletonTable rows={3} />
             ) : displayed.length === 0 ? (
-                <div className="text-center py-16 text-brand-secondary/60">
-                    <p className="text-lg">No custom fields defined yet.</p>
-                    <p className="text-sm mt-1">Click &quot;+ New Field&quot; to create one.</p>
-                </div>
+                <EmptyState
+                    icon={ListChecks}
+                    title="No custom fields defined yet."
+                    description='Click "New Field" to create one.'
+                />
             ) : (
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <table className="min-w-full">
-                        <thead className="bg-brand-primary/10 border-b">
-                            <tr>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Label / Name</th>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Type</th>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Scope</th>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Required</th>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Options</th>
-                                <th className="py-3 px-4 text-left text-sm font-semibold text-brand-text">Default</th>
-                                <th className="py-3 px-4 text-right text-sm font-semibold text-brand-text">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {displayed.map(field => (
-                                <tr key={field.id} className="hover:bg-brand-primary/5">
-                                    <td className="py-3 px-4">
-                                        <div className="font-medium text-brand-text">{field.label}</div>
-                                        <div className="text-xs font-mono text-brand-secondary/60">{field.name}</div>
-                                        {field.description && (
-                                            <div className="text-xs text-brand-secondary mt-0.5">{field.description}</div>
-                                        )}
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_BADGES[field.type] || "bg-brand-secondary/20 text-brand-secondary"}`}>
-                                            {field.type}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-brand-secondary">
-                                        {field.itemType ? (
-                                            <span className="bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded text-xs">{field.itemType.name}</span>
-                                        ) : (
-                                            <span className="text-brand-secondary/60 text-xs">Global</span>
-                                        )}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm">
-                                        {field.required
-                                            ? <span className="text-brand-accent font-medium">Yes</span>
-                                            : <span className="text-brand-secondary/60">No</span>}
-                                    </td>
-                                    <td className="py-3 px-4 text-xs text-brand-secondary">
-                                        {field.options?.length
-                                            ? field.options.join(", ")
-                                            : <span className="text-brand-secondary/40">—</span>}
-                                    </td>
-                                    <td className="py-3 px-4 text-xs font-mono text-brand-secondary/70">
-                                        {field.defaultValue ?? <span className="text-brand-secondary/40">—</span>}
-                                    </td>
-                                    <td className="py-3 px-4 text-right">
+                <Table>
+                    <THead>
+                        <tr>
+                            <TH>Label / Name</TH>
+                            <TH>Type</TH>
+                            <TH>Scope</TH>
+                            <TH>Required</TH>
+                            <TH>Options</TH>
+                            <TH>Default</TH>
+                            <TH className="relative"><span className="sr-only">Actions</span></TH>
+                        </tr>
+                    </THead>
+                    <TBody>
+                        {displayed.map(field => (
+                            <TR key={field.id}>
+                                <TD>
+                                    <div className="font-medium">{field.label}</div>
+                                    <div className="font-mono text-xs text-muted">{field.name}</div>
+                                    {field.description && (
+                                        <div className="mt-0.5 text-xs text-muted">{field.description}</div>
+                                    )}
+                                </TD>
+                                <TD><Badge>{field.type}</Badge></TD>
+                                <TD>
+                                    {field.itemType ? <Badge tone="accent">{field.itemType.name}</Badge> : <span className="text-xs text-muted">Global</span>}
+                                </TD>
+                                <TD>{field.required ? <span className="font-medium">Yes</span> : <span className="text-muted">No</span>}</TD>
+                                <TD className="text-xs text-muted">
+                                    {field.options?.length ? field.options.join(", ") : "—"}
+                                </TD>
+                                <TD mono className="text-xs break-all">
+                                    {field.defaultValue ?? <span className="text-muted">—</span>}
+                                </TD>
+                                <TD>
+                                    <div className="flex justify-end">
                                         <Button
-                                            variant="destructive"
+                                            variant="danger"
                                             size="sm"
                                             disabled={deleting === field.id}
-                                            onClick={() => deleteField(field.id, field.label)}
+                                            onClick={() => { setFieldToDelete(field); setFieldToDeleteOpen(true); }}
                                         >
                                             {deleting === field.id ? "…" : "Delete"}
                                         </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                </TD>
+                            </TR>
+                        ))}
+                    </TBody>
+                </Table>
             )}
+
+            <ConfirmDialog
+                open={fieldToDeleteOpen}
+                onOpenChange={setFieldToDeleteOpen}
+                title="Delete custom field"
+                description={`Delete custom field "${fieldToDelete?.label ?? ""}"? All stored values will be lost!`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => fieldToDelete && deleteField(fieldToDelete.id, fieldToDelete.label)}
+            />
         </div>
     );
 }

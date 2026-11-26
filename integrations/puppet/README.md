@@ -12,7 +12,7 @@ Requirements: Blokhouse 0.3.0 or later, Puppet or OpenVox 7 or 8. No other modul
 
 ## Setup
 
-1. Create an API token in Blokhouse (Admin → API Tokens) with the scopes `read` and `write`.
+1. Create an API token in Blokhouse (Automation → API tokens) with the scopes `read` and `write`.
 2. Install the module as `blokhouse` in the server's module path. Until it is on the Puppet
    Forge, copy the directory `integrations/puppet` of the Blokhouse repository, e.g. into your
    control repository's `site-modules/blokhouse`, or:
@@ -71,7 +71,7 @@ item is linked instead of creating a duplicate.
 | `report.status` | `changed`, `unchanged` or `failed` |
 | `report.environment`, `report.puppet_version`, `report.configuration_version`, `report.time` | |
 
-The fields must exist in Blokhouse (Admin → Custom Fields), otherwise Blokhouse rejects the
+The fields must exist in Blokhouse (Model → Custom fields), otherwise Blokhouse rejects the
 update and the server logs the field name. Arrays are joined with `, `, hashes stored as JSON.
 
 **Failures never break Puppet runs.** If Blokhouse is unreachable or refuses the update, the

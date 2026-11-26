@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-import type { Tag } from "@/app/(root)/items/_components/types";
+import type { Tag } from "@/lib/ui/types";
 
 /** Tag name with a swatch of the tag's own colour; the name carries the meaning. */
 export function TagBadge({ tag, children }: { tag: Tag; children?: React.ReactNode }) {

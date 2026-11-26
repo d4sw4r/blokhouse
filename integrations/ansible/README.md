@@ -31,7 +31,7 @@ collections:
 
 ## Authentication
 
-Create an API token in Blokhouse under **Admin → API Tokens**. The inventory needs the `read`
+Create an API token in Blokhouse under **Automation → API tokens**. The inventory needs the `read`
 scope, the `configuration_item` module needs `write`. Then:
 
 ```bash
@@ -124,7 +124,7 @@ options you set**. It runs against the API, so delegate it to the controller:
 - **Identity:** by `name`, or by `source` + `external_id` when another system owns the identity
   (a VM UUID, a Puppet certname). Then `name` is an ordinary field, and changing it renames the item.
 - **Types and tags** are names; missing ones are created. `tags` replaces the item's tags.
-- **Custom fields** must exist in Blokhouse (Admin → Custom Fields). Values are validated by the
+- **Custom fields** must exist in Blokhouse (Model → Custom fields). Values are validated by the
   field type; `null` removes a value.
 - `--check` and `--diff` are supported. `state: absent` deletes the item.
 - Errors from Blokhouse name the field: `HTTP 400 validation_failed: Request body is invalid; ip: Must be a valid IPv4 or IPv6 address`.

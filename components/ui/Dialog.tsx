@@ -4,6 +4,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./IconButton";
+import { isInToastViewport } from "@/components/ToastProvider";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -19,7 +20,7 @@ export interface DialogContentProps
 export const DialogContent = React.forwardRef<
     React.ComponentRef<typeof DialogPrimitive.Content>,
     DialogContentProps
->(({ title, description, footer, children, className, ...props }, ref) => (
+>(({ title, description, footer, children, className, onInteractOutside, ...props }, ref) => (
     <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-bg/70" />
         <DialogPrimitive.Content
@@ -29,6 +30,11 @@ export const DialogContent = React.forwardRef<
                 "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-[8px] border border-border bg-surface text-text shadow-lg",
                 className,
             )}
+            onInteractOutside={(e) => {
+                onInteractOutside?.(e);
+                // A click on a toast (raised from inside this dialog) must not close the dialog.
+                if (isInToastViewport(e.target)) e.preventDefault();
+            }}
             {...props}
         >
             <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">

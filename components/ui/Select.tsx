@@ -53,21 +53,21 @@ export function Select({ value, onValueChange, options, placeholder, id, disable
                 <SelectPrimitive.Content
                     position="popper"
                     sideOffset={4}
-                    className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface text-text shadow-lg"
+                    className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-md border border-border bg-surface text-text shadow-lg"
                 >
                     <SelectPrimitive.Viewport className="p-1">
                         {options.map((o) => (
                             <SelectPrimitive.Item
                                 key={o.value}
                                 value={toInner(o.value)}
-                                className="relative flex min-h-8 cursor-default select-none items-center rounded-sm py-1.5 pr-3 pl-8 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2 max-sm:min-h-11"
+                                className="relative flex min-h-8 cursor-default select-none items-center rounded-sm py-1.5 pr-3 pl-8 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2 data-[highlighted]:outline-solid data-[highlighted]:outline-2 data-[highlighted]:-outline-offset-2 data-[highlighted]:outline-accent max-sm:min-h-11"
                             >
                                 <span className="absolute left-2 inline-flex size-4 items-center justify-center">
                                     <SelectPrimitive.ItemIndicator>
                                         <Check className="size-4 text-accent" aria-hidden="true" />
                                     </SelectPrimitive.ItemIndicator>
                                 </span>
-                                <SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText>
+                                <span className="min-w-0 truncate" title={o.label}><SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText></span>
                             </SelectPrimitive.Item>
                         ))}
                     </SelectPrimitive.Viewport>

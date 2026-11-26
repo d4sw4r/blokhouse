@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface FavoriteButtonProps {
   itemId: string;
   itemName: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md";
   showLabel?: boolean;
 }
 
@@ -17,7 +17,7 @@ export default function FavoriteButton({ itemId, itemName, size = "md", showLabe
   const [loading, setLoading] = useState(false);
   const { addToast } = useToast();
 
-  const iconSize = { sm: "size-4", md: "size-5", lg: "size-5" }[size];
+  const iconSize = { sm: "size-4", md: "size-5" }[size];
 
   // Check initial favorite status
   useEffect(() => {

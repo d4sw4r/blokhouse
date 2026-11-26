@@ -8,8 +8,11 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { StatTile } from "@/components/ui/StatTile";
 import { StatusDot } from "@/components/ui/StatusDot";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { statusTone } from "@/lib/ui/status";
+import { auditAction } from "@/lib/ui/auditActions";
+import { priorityTone } from "@/lib/ui/priority";
+import { toneBgClass } from "@/lib/ui/tone";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 type MaintenancePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -48,24 +51,6 @@ interface MaintenanceItem {
         itemType?: { name: string } | null;
     };
 }
-
-const priorityTones: Record<MaintenancePriority, BadgeTone> = {
-    LOW: "neutral",
-    MEDIUM: "accent",
-    HIGH: "warning",
-    CRITICAL: "danger",
-};
-
-const activityTones: Record<string, BadgeTone> = {
-    CREATE: "success",
-    LOGIN: "success",
-    API_TOKEN_CREATED: "success",
-    UPDATE: "accent",
-    DELETE: "danger",
-    API_TOKEN_DELETED: "danger",
-};
-
-const statusBar = { success: "bg-success", warning: "bg-warning", neutral: "bg-neutral" } as const;
 
 function formatTimeAgo(dateString: string): string {
     const date = new Date(dateString);
@@ -227,7 +212,7 @@ export default function Dashboard() {
                                         {dashboard.itemsPerStatus.map((g) => (
                                             <div
                                                 key={g.status}
-                                                className={statusBar[statusTone(g.status).tone]}
+                                                className={toneBgClass(statusTone(g.status).tone)}
                                                 style={{ width: `${(g.count / statusTotal) * 100}%` }}
                                             />
                                         ))}
@@ -289,7 +274,7 @@ export default function Dashboard() {
                                 maintenance.map((item) => (
                                     <div key={item.id} className={rowClass}>
                                         <div className="mb-1 flex items-center justify-between gap-2">
-                                            <Badge tone={priorityTones[item.priority] ?? "neutral"}>{item.priority}</Badge>
+                                            <Badge tone={priorityTone(item.priority).tone}>{priorityTone(item.priority).label}</Badge>
                                             <span className="font-mono text-xs text-muted">{formatDate(item.scheduledDate)}</span>
                                         </div>
                                         <p className="truncate text-sm font-medium text-text" title={item.title}>
@@ -334,7 +319,7 @@ export default function Dashboard() {
                                 activities.map((activity) => (
                                     <div key={activity.id} className={rowClass}>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <Badge tone={activityTones[activity.action] ?? "neutral"}>{activity.action}</Badge>
+                                            <Badge tone={auditAction(activity.action).tone}>{auditAction(activity.action).label}</Badge>
                                             <span className="text-xs text-muted">{formatTimeAgo(activity.createdAt)}</span>
                                         </div>
                                         <p className="mt-1 break-words text-sm text-text">

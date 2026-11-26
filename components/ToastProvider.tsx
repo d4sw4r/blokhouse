@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { CheckCircle2, Info, TriangleAlert, X, XCircle } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
 
@@ -21,6 +22,19 @@ interface ToastContextType {
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+const VIEWPORT_ATTR = "data-toast-viewport";
+
+// Radix defers "pointer down outside" to the click, when a toast's close button may already
+// have removed the toast from the DOM; remember the pointerdown target so it is still known.
+let lastToastPointerTarget: EventTarget | null = null;
+
+/** True when an event target lies inside the toast viewport. Dialogs use it so that clicking
+ *  a toast (e.g. its close button) does not count as an outside click that dismisses them. */
+export function isInToastViewport(target: EventTarget | null): boolean {
+    if (target !== null && target === lastToastPointerTarget) return true;
+    return typeof Element !== "undefined" && target instanceof Element && !!target.closest(`[${VIEWPORT_ATTR}]`);
+}
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
@@ -66,14 +80,30 @@ function ToastContainer({
     toasts: Toast[]; 
     onRemove: (id: string) => void;
 }) {
-    if (toasts.length === 0) return null;
+    const [mounted, setMounted] = useState(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- portal target exists only after mount
+    useEffect(() => setMounted(true), []);
+    if (!mounted) return null;
 
-    return (
-        <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+    // Always mounted, portalled to <body> and marked aria-live: Radix Dialog's aria-hidden pass
+    // (aria-hidden's hideOthers) skips [aria-live] elements, so toasts raised while a dialog is
+    // open stay visible to assistive tech; pointer-events-auto overrides the body's
+    // pointer-events:none so the close button stays clickable.
+    return createPortal(
+        <div
+            {...{ [VIEWPORT_ATTR]: "" }}
+            aria-live="polite"
+            aria-relevant="additions text"
+            onPointerDownCapture={(e) => {
+                lastToastPointerTarget = e.target;
+            }}
+            className="pointer-events-auto fixed right-4 bottom-4 z-[100] flex flex-col gap-2"
+        >
             {toasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
             ))}
-        </div>
+        </div>,
+        document.body,
     );
 }
 
@@ -103,7 +133,6 @@ function ToastItem({
     return (
         <div
             className="flex w-[min(480px,calc(100vw-2rem))] items-start gap-3 rounded-[8px] border border-border bg-surface px-4 py-3 text-text shadow-lg"
-            role="alert"
         >
             <div className={`flex-shrink-0 mt-0.5 ${iconColors[toast.type]}`}>
                 <Icon className="size-5" aria-hidden="true" />

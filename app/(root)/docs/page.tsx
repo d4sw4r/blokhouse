@@ -1,8 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SwaggerUI from "swagger-ui-react";
+import "./apidom-registrations";
 import "swagger-ui-react/swagger-ui.css";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { useTheme } from "@/components/ThemeProvider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 const SPECS = [
     {
@@ -21,49 +25,53 @@ const SPECS = [
 
 export default function ApiDocsPage() {
     const [active, setActive] = useState<(typeof SPECS)[number]["id"]>("v1");
-    const spec = SPECS.find((s) => s.id === active)!;
+    const { resolvedTheme } = useTheme();
+
+    // swagger-ui ships dark rules under `html.dark-mode .swagger-ui`; follow our theme.
+    useEffect(() => {
+        const root = document.documentElement;
+        root.classList.toggle("dark-mode", resolvedTheme === "dark");
+        return () => root.classList.remove("dark-mode");
+    }, [resolvedTheme]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 py-4 space-y-3">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800">Blokhouse API Documentation</h1>
-                        <p className="text-gray-600 mt-1">
-                            Authenticate with <code className="font-mono">Authorization: Bearer &lt;token&gt;</code>.
-                            Create tokens under Admin → API Tokens.
+        <div>
+            <PageHeader
+                title="Blokhouse API Documentation"
+                description={
+                    <>
+                        Authenticate with{" "}
+                        <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] break-all text-text">
+                            Authorization: Bearer &lt;token&gt;
+                        </code>
+                        . Create tokens under Automation → API tokens.
+                    </>
+                }
+            />
+            <Tabs value={active} onValueChange={(v) => setActive(v as typeof active)}>
+                <TabsList aria-label="API version">
+                    {SPECS.map((s) => (
+                        <TabsTrigger key={s.id} value={s.id}>
+                            {s.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+                {SPECS.map((s) => (
+                    <TabsContent key={s.id} value={s.id} className="pt-0">
+                        <p className="mt-3 mb-4 text-sm text-muted">
+                            {s.hint}{" "}
+                            <a className="text-accent underline" href={s.url}>
+                                Raw spec
+                            </a>
                         </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2" role="tablist" aria-label="API version">
-                        {SPECS.map((s) => (
-                            <button
-                                key={s.id}
-                                role="tab"
-                                aria-selected={active === s.id}
-                                onClick={() => setActive(s.id)}
-                                className={`px-3 py-1.5 rounded-sm border text-sm ${
-                                    active === s.id
-                                        ? "bg-brand-primary text-white border-brand-primary"
-                                        : "bg-white text-gray-700 hover:bg-gray-100"
-                                }`}
-                            >
-                                {s.label}
-                            </button>
-                        ))}
-                    </div>
-                    <p className="text-sm text-gray-600">
-                        {spec.hint}{" "}
-                        <a className="underline" href={spec.url}>
-                            Raw spec
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="bg-white rounded-lg shadow">
-                    <SwaggerUI key={spec.id} url={spec.url} docExpansion="list" />
-                </div>
-            </div>
+                        {/* Only the active panel is mounted (Radix unmounts inactive TabsContent);
+                            the key remounts SwaggerUI when the spec changes. */}
+                        <div className="swagger-host overflow-x-auto rounded-lg border border-border bg-surface p-2 sm:p-4">
+                            <SwaggerUI key={s.id} url={s.url} docExpansion="list" />
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
         </div>
     );
 }

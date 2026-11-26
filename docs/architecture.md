@@ -34,7 +34,7 @@ Blokhouse uses **NextAuth.js** with the following configuration:
 - **Session Strategy**: JWT-based sessions with cookies
 - **API Authentication**: Bearer tokens for programmatic access
 
-Users can generate scoped, expiring API tokens under Admin → API Tokens. Only a SHA-256 hash of each token is stored. All API routes authenticate via `lib/auth.js` (`requireAuth(req, scope)`); see [API Reference](api.md#permissions).
+Users can generate scoped, expiring API tokens under Automation → API tokens. Only a SHA-256 hash of each token is stored. All API routes authenticate via `lib/auth.js` (`requireAuth(req, scope)`); see [API Reference](api.md#permissions).
 
 ## Database Models
 

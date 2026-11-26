@@ -1,8 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Download, Lock, ScrollText, Search } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { Select } from "@/components/ui/Select";
+import { StatTile } from "@/components/ui/StatTile";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { SkeletonTable } from "@/components/Skeleton";
+import { useToast } from "@/components/ToastProvider";
+import { AUDIT_ACTIONS, auditAction } from "@/lib/ui/auditActions";
 
 interface AuditLog {
     id: string;
@@ -29,26 +42,6 @@ interface PaginationData {
     totalPages: number;
 }
 
-const actionColors: Record<string, string> = {
-    CREATE: "bg-brand-primary/20 text-brand-primary border-brand-primary/30",
-    UPDATE: "bg-brand-secondary/20 text-brand-secondary border-brand-secondary/30",
-    DELETE: "bg-brand-accent/20 text-brand-accent border-brand-accent/30",
-    LOGIN: "bg-brand-primary/20 text-brand-primary border-brand-primary/30",
-    LOGOUT: "bg-brand-secondary/20 text-brand-secondary border-brand-secondary/30",
-    API_TOKEN_CREATED: "bg-brand-primary/20 text-brand-primary border-brand-primary/30",
-    API_TOKEN_DELETED: "bg-brand-accent/20 text-brand-accent border-brand-accent/30",
-};
-
-const actionLabels: Record<string, string> = {
-    CREATE: "Created",
-    UPDATE: "Updated",
-    DELETE: "Deleted",
-    LOGIN: "Login",
-    LOGOUT: "Logout",
-    API_TOKEN_CREATED: "API Token Created",
-    API_TOKEN_DELETED: "API Token Deleted",
-};
-
 const entityTypeLabels: Record<string, string> = {
     ConfigurationItem: "Asset",
     User: "User",
@@ -59,7 +52,13 @@ const entityTypeLabels: Record<string, string> = {
     AssetRelation: "Relation",
 };
 
+function ActionBadge({ action }: { action: string }) {
+    const { tone, label } = auditAction(action);
+    return <Badge tone={tone}>{label}</Badge>;
+}
+
 export default function AuditLogsPage() {
+    const { addToast } = useToast();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
@@ -80,7 +79,7 @@ export default function AuditLogsPage() {
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
     // Available filter options
-    const actionTypes = ["CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT", "API_TOKEN_CREATED", "API_TOKEN_DELETED"];
+    const actionTypes = AUDIT_ACTIONS;
     const entityTypes = ["ConfigurationItem", "User", "ApiToken", "Tag", "ItemType", "CustomField", "AssetRelation"];
 
     useEffect(() => {
@@ -142,7 +141,7 @@ export default function AuditLogsPage() {
 
             const res = await fetch(`/api/audit-logs?${params.toString()}`);
             if (!res.ok) {
-                alert("Failed to export logs");
+                addToast({ type: "error", title: "Failed to export logs" });
                 return;
             }
 
@@ -184,7 +183,7 @@ export default function AuditLogsPage() {
             }
         } catch (error) {
             console.error("Export error:", error);
-            alert("Export failed");
+            addToast({ type: "error", title: "Export failed" });
         }
     };
 
@@ -252,312 +251,257 @@ export default function AuditLogsPage() {
 
     if (error) {
         return (
-            <div className="max-w-6xl mx-auto">
-                <h1 className="text-4xl font-bold text-brand-text mb-6">Audit Logs</h1>
-                <div className="bg-brand-accent/10 border border-brand-accent/30 rounded-lg p-6 text-center">
-                    <svg className="w-12 h-12 mx-auto mb-4 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <h2 className="text-lg font-semibold text-brand-accent mb-2">Access Denied</h2>
-                    <p className="text-brand-accent/80">{error}</p>
-                </div>
+            <div>
+                <PageHeader title="Audit log" />
+                <EmptyState icon={Lock} title="Access Denied" description={error} />
             </div>
         );
     }
 
     return (
-        <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div>
-                    <h1 className="text-4xl font-bold text-brand-text">Audit Logs</h1>
-                    <p className="text-brand-secondary mt-1">Track all changes and activities in the system</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={() => exportLogs("csv")} variant="outline">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Export CSV
-                    </Button>
-                    <Button onClick={() => exportLogs("json")} variant="outline">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Export JSON
-                    </Button>
-                </div>
+        <div>
+            <PageHeader
+                title="Audit log"
+                description="Track all changes and activities in the system."
+                actions={
+                    <>
+                        <Button onClick={() => exportLogs("csv")} variant="secondary">
+                            <Download className="size-4" aria-hidden="true" />
+                            Export CSV
+                        </Button>
+                        <Button onClick={() => exportLogs("json")} variant="secondary">
+                            <Download className="size-4" aria-hidden="true" />
+                            Export JSON
+                        </Button>
+                    </>
+                }
+            />
+
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatTile label="Total logs" value={pagination.total.toLocaleString()} />
+                <StatTile
+                    label="Current page"
+                    value={
+                        <>
+                            {pagination.page} <span className="text-sm font-normal text-muted">/ {pagination.totalPages}</span>
+                        </>
+                    }
+                />
+                <StatTile
+                    label="Showing"
+                    value={
+                        <>
+                            {logs.length} <span className="text-sm font-normal text-muted">logs</span>
+                        </>
+                    }
+                />
             </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white rounded-lg shadow-sm p-4">
-                    <p className="text-sm font-medium text-brand-secondary">Total Logs</p>
-                    <p className="text-2xl font-bold text-brand-primary">{pagination.total.toLocaleString()}</p>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-4">
-                    <p className="text-sm font-medium text-brand-secondary">Current Page</p>
-                    <p className="text-2xl font-bold text-brand-primary">{pagination.page} <span className="text-sm text-brand-secondary/60">/ {pagination.totalPages}</span></p>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-4">
-                    <p className="text-sm font-medium text-brand-secondary">Showing</p>
-                    <p className="text-2xl font-bold text-brand-secondary">{logs.length} <span className="text-sm text-brand-secondary/60">logs</span></p>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-4">
-                    <p className="text-sm font-medium text-brand-secondary">Per Page</p>
-                    <select
-                        value={pagination.limit}
-                        onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-                        className="mt-1 block w-full border rounded-md p-1 text-sm"
-                    >
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-brand-secondary mb-1">Search</label>
+            <Panel className="mb-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <Field label="Search" htmlFor="audit-search" className="lg:col-span-2">
                         <div className="relative">
-                            <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-secondary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                            <Input
+                                id="audit-search"
                                 type="text"
                                 placeholder="Search description, user..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
+                                className="pl-9"
                             />
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-brand-secondary mb-1">Action Type</label>
-                        <select
+                    </Field>
+                    <Field label="Action type" htmlFor="audit-action">
+                        <Select
+                            id="audit-action"
                             value={actionFilter}
-                            onChange={(e) => setActionFilter(e.target.value)}
-                            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-primary"
-                        >
-                            <option value="">All Actions</option>
-                            {actionTypes.map(action => (
-                                <option key={action} value={action}>{actionLabels[action] || action}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-brand-secondary mb-1">Entity Type</label>
-                        <select
+                            onValueChange={setActionFilter}
+                            options={[
+                                { value: "", label: "All Actions" },
+                                ...actionTypes.map((a) => ({ value: a, label: auditAction(a).label })),
+                            ]}
+                        />
+                    </Field>
+                    <Field label="Entity type" htmlFor="audit-entity">
+                        <Select
+                            id="audit-entity"
                             value={entityTypeFilter}
-                            onChange={(e) => setEntityTypeFilter(e.target.value)}
-                            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-primary"
-                        >
-                            <option value="">All Entities</option>
-                            {entityTypes.map(type => (
-                                <option key={type} value={type}>{entityTypeLabels[type] || type}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex items-end">
-                        <Button onClick={clearFilters} variant="outline" className="w-full">
-                            Clear Filters
-                        </Button>
-                    </div>
+                            onValueChange={setEntityTypeFilter}
+                            options={[
+                                { value: "", label: "All Entities" },
+                                ...entityTypes.map((t) => ({ value: t, label: entityTypeLabels[t] || t })),
+                            ]}
+                        />
+                    </Field>
+                    <Field label="Per page" htmlFor="audit-limit">
+                        <Select
+                            id="audit-limit"
+                            value={String(pagination.limit)}
+                            onValueChange={(v) => setPagination((prev) => ({ ...prev, limit: parseInt(v), page: 1 }))}
+                            options={["25", "50", "100"].map((n) => ({ value: n, label: n }))}
+                        />
+                    </Field>
                 </div>
-            </div>
+                <div className="mt-4">
+                    <Button onClick={clearFilters} variant="secondary">
+                        Clear Filters
+                    </Button>
+                </div>
+            </Panel>
 
-            {/* Logs Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                {loading ? (
-                    <div className="p-8">
-                        <SkeletonTable rows={10} />
-                    </div>
-                ) : logs.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <svg className="w-16 h-16 mx-auto mb-4 text-brand-secondary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        <h3 className="text-lg font-medium text-brand-text mb-2">No logs found</h3>
-                        <p className="text-brand-secondary">
-                            {actionFilter || entityTypeFilter || searchQuery
-                                ? "Try adjusting your filters"
-                                : "No audit logs available yet"}
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full">
-                                <thead className="bg-brand-primary/10">
-                                    <tr>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">Time</th>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">Action</th>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">Entity</th>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">Description</th>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">User</th>
-                                        <th className="py-3 px-4 text-left text-xs font-medium text-brand-secondary uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-brand-secondary/20">
-                                    {logs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-brand-primary/5 transition-colors">
-                                            <td className="py-3 px-4 whitespace-nowrap">
-                                                <div className="text-sm text-brand-text" title={formatDate(log.createdAt)}>
-                                                    {formatTimeAgo(log.createdAt)}
-                                                </div>
-                                                <div className="text-xs text-brand-secondary">
-                                                    {new Date(log.createdAt).toLocaleDateString()}
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${actionColors[log.action] || "bg-brand-secondary/20 text-brand-secondary"}`}>
-                                                    {actionLabels[log.action] || log.action}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4 whitespace-nowrap">
-                                                <div className="text-sm text-brand-text">
-                                                    {entityTypeLabels[log.entityType] || log.entityType}
-                                                </div>
-                                                {log.entityId && (
-                                                    <code className="text-xs text-brand-secondary bg-brand-primary/10 px-1 rounded">
-                                                        {log.entityId.slice(0, 8)}...
-                                                    </code>
-                                                )}
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <div className="text-sm text-brand-text max-w-md truncate">
-                                                    {log.description || `${log.action} ${log.entityType}`}
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 whitespace-nowrap">
-                                                {log.user ? (
-                                                    <div className="text-sm text-brand-text">
-                                                        {log.user.name || log.user.email}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-sm text-brand-secondary italic">System</span>
-                                                )}
-                                            </td>
-                                            <td className="py-3 px-4 whitespace-nowrap">
-                                                <button
-                                                    onClick={() => setSelectedLog(log)}
-                                                    className="text-brand-primary hover:text-brand-accent text-sm font-medium"
-                                                >
-                                                    View Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        {pagination.totalPages > 1 && (
-                            <div className="flex items-center justify-between px-4 py-3 bg-brand-primary/5 border-t">
-                                <div className="text-sm text-brand-secondary">
-                                    Showing {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                    <Button
-                                        onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                                        disabled={pagination.page === 1}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Previous
-                                    </Button>
-                                    {getPaginationRange().map((page, idx) =>
-                                        page === "..." ? (
-                                            <span key={idx} className="px-3 py-1 text-brand-secondary">...</span>
+            {loading ? (
+                <SkeletonTable rows={10} />
+            ) : logs.length === 0 ? (
+                <EmptyState
+                    icon={ScrollText}
+                    title="No logs found"
+                    description={
+                        actionFilter || entityTypeFilter || searchQuery
+                            ? "Try adjusting your filters"
+                            : "No audit logs available yet"
+                    }
+                />
+            ) : (
+                <div className="space-y-3">
+                    <Table>
+                        <THead>
+                            <tr>
+                                <TH>Time</TH>
+                                <TH>Action</TH>
+                                <TH>Entity</TH>
+                                <TH>Description</TH>
+                                <TH>User</TH>
+                                <TH className="relative"><span className="sr-only">Details</span></TH>
+                            </tr>
+                        </THead>
+                        <TBody>
+                            {logs.map((log) => (
+                                <TR key={log.id}>
+                                    <TD className="whitespace-nowrap">
+                                        <div title={formatDate(log.createdAt)}>{formatTimeAgo(log.createdAt)}</div>
+                                        <div className="text-xs text-muted">{new Date(log.createdAt).toLocaleDateString()}</div>
+                                    </TD>
+                                    <TD className="whitespace-nowrap"><ActionBadge action={log.action} /></TD>
+                                    <TD className="whitespace-nowrap">
+                                        <div>{entityTypeLabels[log.entityType] || log.entityType}</div>
+                                        {log.entityId && (
+                                            <code className="font-mono text-xs text-muted">{log.entityId.slice(0, 8)}...</code>
+                                        )}
+                                    </TD>
+                                    <TD>
+                                        <div
+                                            className="max-w-md truncate"
+                                            title={log.description || `${log.action} ${log.entityType}`}
+                                        >
+                                            {log.description || `${log.action} ${log.entityType}`}
+                                        </div>
+                                    </TD>
+                                    <TD className="whitespace-nowrap">
+                                        {log.user ? (
+                                            <span>{log.user.name || log.user.email}</span>
                                         ) : (
-                                            <Button
-                                                key={idx}
-                                                onClick={() => setPagination(prev => ({ ...prev, page: page as number }))}
-                                                variant={pagination.page === page ? undefined : "outline"}
-                                                size="sm"
-                                            >
-                                                {page}
-                                            </Button>
-                                        )
-                                    )}
-                                    <Button
-                                        onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                                        disabled={pagination.page === pagination.totalPages}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+                                            <span className="text-muted italic">System</span>
+                                        )}
+                                    </TD>
+                                    <TD className="whitespace-nowrap">
+                                        <Button size="sm" variant="secondary" onClick={() => setSelectedLog(log)}>
+                                            View Details
+                                        </Button>
+                                    </TD>
+                                </TR>
+                            ))}
+                        </TBody>
+                    </Table>
 
-            {/* Detail Modal */}
-            {selectedLog && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-800">Audit Log Details</h2>
-                            <button
-                                onClick={() => setSelectedLog(null)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Action</label>
-                                    <p className="mt-1">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${actionColors[selectedLog.action] || "bg-gray-100"}`}>
-                                            {actionLabels[selectedLog.action] || selectedLog.action}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Entity Type</label>
-                                    <p className="mt-1 text-sm text-gray-900">{entityTypeLabels[selectedLog.entityType] || selectedLog.entityType}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Timestamp</label>
-                                    <p className="mt-1 text-sm text-gray-900">{formatDate(selectedLog.createdAt)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">User</label>
-                                    <p className="mt-1 text-sm text-gray-900">
-                                        {selectedLog.user?.name || selectedLog.user?.email || "System"}
-                                    </p>
-                                </div>
+                    {pagination.totalPages > 1 && (
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="font-mono text-sm text-muted">
+                                Showing {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
                             </div>
+                            <div className="flex flex-wrap items-center gap-1">
+                                <Button
+                                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                                    disabled={pagination.page === 1}
+                                    variant="secondary"
+                                    size="sm"
+                                >
+                                    Previous
+                                </Button>
+                                {getPaginationRange().map((page, idx) =>
+                                    page === "..." ? (
+                                        <span key={idx} className="px-2 text-muted">...</span>
+                                    ) : (
+                                        <Button
+                                            key={idx}
+                                            onClick={() => setPagination(prev => ({ ...prev, page: page as number }))}
+                                            variant={pagination.page === page ? "primary" : "secondary"}
+                                            size="sm"
+                                            aria-current={pagination.page === page ? "page" : undefined}
+                                        >
+                                            {page}
+                                        </Button>
+                                    )
+                                )}
+                                <Button
+                                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                                    disabled={pagination.page === pagination.totalPages}
+                                    variant="secondary"
+                                    size="sm"
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <Dialog open={selectedLog !== null} onOpenChange={(open) => !open && setSelectedLog(null)}>
+                {selectedLog && (
+                    <DialogContent
+                        title="Audit Log Details"
+                        className="max-w-2xl"
+                        footer={<Button variant="secondary" onClick={() => setSelectedLog(null)}>Close</Button>}
+                    >
+                        <div className="space-y-4">
+                            <dl className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <dt className="text-xs font-medium text-muted">Action</dt>
+                                    <dd className="mt-1"><ActionBadge action={selectedLog.action} /></dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-medium text-muted">Entity Type</dt>
+                                    <dd className="mt-1">{entityTypeLabels[selectedLog.entityType] || selectedLog.entityType}</dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-medium text-muted">Timestamp</dt>
+                                    <dd className="mt-1">{formatDate(selectedLog.createdAt)}</dd>
+                                </div>
+                                <div className="min-w-0">
+                                    <dt className="text-xs font-medium text-muted">User</dt>
+                                    <dd className="mt-1 break-words">{selectedLog.user?.name || selectedLog.user?.email || "System"}</dd>
+                                </div>
+                            </dl>
 
                             {selectedLog.entityId && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Entity ID</label>
-                                    <code className="mt-1 block text-sm bg-gray-100 p-2 rounded">{selectedLog.entityId}</code>
+                                    <div className="text-xs font-medium text-muted">Entity ID</div>
+                                    <code className="mt-1 block rounded-md bg-surface-2 p-2 font-mono text-sm break-all">{selectedLog.entityId}</code>
                                 </div>
                             )}
 
                             {selectedLog.description && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Description</label>
-                                    <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded">{selectedLog.description}</p>
+                                    <div className="text-xs font-medium text-muted">Description</div>
+                                    <p className="mt-1 rounded-md bg-surface-2 p-3 text-sm break-words">{selectedLog.description}</p>
                                 </div>
                             )}
 
                             {selectedLog.oldValues && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Old Values</label>
-                                    <pre className="mt-1 text-xs text-red-700 bg-red-50 p-3 rounded overflow-x-auto">
+                                    <div className="text-xs font-medium text-muted">Old Values</div>
+                                    <pre className="mt-1 overflow-x-auto rounded-md border border-danger/40 bg-danger/10 p-3 font-mono text-xs text-text">
                                         {selectedLog.oldValues}
                                     </pre>
                                 </div>
@@ -565,8 +509,8 @@ export default function AuditLogsPage() {
 
                             {selectedLog.newValues && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">New Values</label>
-                                    <pre className="mt-1 text-xs text-green-700 bg-green-50 p-3 rounded overflow-x-auto">
+                                    <div className="text-xs font-medium text-muted">New Values</div>
+                                    <pre className="mt-1 overflow-x-auto rounded-md border border-success/40 bg-success/10 p-3 font-mono text-xs text-text">
                                         {selectedLog.newValues}
                                     </pre>
                                 </div>
@@ -574,26 +518,21 @@ export default function AuditLogsPage() {
 
                             {selectedLog.ipAddress && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">IP Address</label>
-                                    <p className="mt-1 text-sm text-gray-900 font-mono">{selectedLog.ipAddress}</p>
+                                    <div className="text-xs font-medium text-muted">IP Address</div>
+                                    <p className="mt-1 font-mono text-sm break-all">{selectedLog.ipAddress}</p>
                                 </div>
                             )}
 
                             {selectedLog.userAgent && (
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">User Agent</label>
-                                    <p className="mt-1 text-xs text-gray-600 break-all">{selectedLog.userAgent}</p>
+                                    <div className="text-xs font-medium text-muted">User Agent</div>
+                                    <p className="mt-1 text-xs break-all text-muted">{selectedLog.userAgent}</p>
                                 </div>
                             )}
                         </div>
-                        <div className="p-6 border-t bg-gray-50">
-                            <Button onClick={() => setSelectedLog(null)} variant="outline" className="w-full">
-                                Close
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+                )}
+            </Dialog>
         </div>
     );
 }

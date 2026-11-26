@@ -1,1 +1,21 @@
-[{ "path": "/dashboard" }, { "path": "/items" }, { "path": "/items/:first" }, { "path": "/graph" }]
+[
+  { "path": "/dashboard" },
+  { "path": "/items" },
+  { "path": "/items/:first" },
+  { "path": "/graph" },
+  { "path": "/compare" },
+  { "path": "/tags" },
+  { "path": "/maintenance" },
+  { "path": "/types" },
+  { "path": "/discovery" },
+  { "path": "/notifications" },
+  { "path": "/reports" },
+  { "path": "/docs" },
+  { "path": "/admin" },
+  { "path": "/admin/users" },
+  { "path": "/admin/api" },
+  { "path": "/admin/webhooks" },
+  { "path": "/admin/custom-fields" },
+  { "path": "/admin/audit-logs" },
+  { "path": "/admin/settings" }
+]
