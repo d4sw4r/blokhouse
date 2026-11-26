@@ -90,7 +90,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v5.1.0
         with:
-          version: v3.19.0
+          version: v3.22.1
 
       - name: Log in to GitHub Container Registry
         env:
