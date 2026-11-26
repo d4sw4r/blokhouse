@@ -5,6 +5,8 @@
 import prisma from "@/lib/prisma";
 import { requireAuth, hasScope, generateToken, hashToken, parseScopes, scopesForRole, jsonError } from "@/lib/auth";
 import { logTokenCreated } from "@/lib/audit";
+import { getOidcConfig } from "@/lib/oidc";
+import { isSsoUser } from "@/lib/sso";
 
 const TOKEN_SELECT = {
     id: true,
@@ -70,6 +72,15 @@ export async function POST(request) {
             return jsonError(400, "expiresInDays must be between 1 and 3650");
         }
         expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    }
+
+    // SSO users: tokens must expire (the IdP cannot revoke them), within OIDC_TOKEN_MAX_DAYS.
+    const config = getOidcConfig();
+    if (config && (await isSsoUser(auth.user.id))) {
+        const days = expiresAt ? Number(body.expiresInDays) : null;
+        if (days === null || days > config.tokenMaxDays) {
+            return jsonError(400, `API tokens of SSO users must expire within ${config.tokenMaxDays} days`);
+        }
     }
 
     const raw = generateToken();

@@ -178,9 +178,34 @@ describe("handleOidcSignIn", () => {
         it("refuses a second, different sub for a user that is already linked", async () => {
             expect(await handleOidcSignIn({ account: account(), profile, config: cfg() })).toBe(true);
             const r = await handleOidcSignIn({ account: account("sub-other"), profile: { ...profile, sub: "sub-other" }, config: cfg() });
-            expect(r).toBe("/signin?error=SsoEmailNotVerified");
+            expect(r).toBe("/signin?error=SsoAlreadyLinked");
             expect(await prisma.account.count()).toBe(1);
         });
+    });
+
+    it("refuses an ambiguous case-insensitive email match with SsoAlreadyLinked", async () => {
+        await prisma.user.create({ data: { email: "Dup@corp.com", role: "USER" } });
+        await prisma.user.create({ data: { email: "dup@corp.com", role: "USER" } });
+        const r = await handleOidcSignIn({
+            account: account(),
+            profile: { sub: "sub-1", email: "dup@corp.com", email_verified: true },
+            config: cfg(),
+        });
+        expect(r).toBe("/signin?error=SsoAlreadyLinked");
+        expect(await prisma.account.count()).toBe(0);
+    });
+
+    it("returns SsoError instead of throwing on an unexpected failure", async () => {
+        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+        // A malformed config (no roleMap) makes the decision code throw for real.
+        const r = await handleOidcSignIn({
+            account: account(),
+            profile: { sub: "sub-1", email: "x@corp.com", email_verified: true },
+            config: {} as never,
+        });
+        expect(r).toBe("/signin?error=SsoError");
+        expect(spy).toHaveBeenCalled();
+        spy.mockRestore();
     });
 
     it("never links a local admin with a password (SsoLocalAdmin), user unchanged", async () => {

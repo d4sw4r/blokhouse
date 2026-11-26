@@ -2,7 +2,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth, isValidRole, ROLES, jsonError } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
-import { USER_SELECT, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
+import { USER_SELECT, USER_SELECT_SSO, withSso, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
 
 async function countOtherAdmins(id) {
     return prisma.user.count({ where: { role: "ADMIN", disabledAt: null, NOT: { id } } });
@@ -12,9 +12,9 @@ export async function GET(request, { params }) {
     const { response } = await requireAuth(request, "admin");
     if (response) return response;
     const { id } = await params;
-    const user = await prisma.user.findUnique({ where: { id }, select: USER_SELECT });
+    const user = await prisma.user.findUnique({ where: { id }, select: USER_SELECT_SSO });
     if (!user) return jsonError(404, "Not found");
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(JSON.stringify(withSso(user)), { status: 200 });
 }
 
 export async function PUT(request, { params }) {
@@ -43,8 +43,15 @@ export async function PUT(request, { params }) {
         data.password = hashPassword(password);
     }
 
-    const existing = await prisma.user.findUnique({ where: { id }, select: USER_SELECT });
-    if (!existing) return jsonError(404, "Not found");
+    const found = await prisma.user.findUnique({ where: { id }, select: USER_SELECT_SSO });
+    if (!found) return jsonError(404, "Not found");
+    const { sso, roleManagedBySso, ...existing } = withSso(found);
+    if (data.role !== undefined && data.role !== existing.role && roleManagedBySso) {
+        return jsonError(409, "The role of this user is managed by the identity provider (OIDC_ROLE_MAP)");
+    }
+    if (data.password && sso) {
+        return jsonError(409, "This user signs in via single sign-on and cannot have a password");
+    }
     if (existing.role === "ADMIN" && data.role && data.role !== "ADMIN" && (await countOtherAdmins(id)) === 0) {
         return jsonError(400, "Cannot demote the last administrator");
     }
@@ -72,7 +79,7 @@ export async function PUT(request, { params }) {
             newValues: updated,
             req: request,
         });
-        return new Response(JSON.stringify(updated), { status: 200 });
+        return new Response(JSON.stringify({ ...updated, sso, roleManagedBySso }), { status: 200 });
     } catch (error) {
         console.error("Update user error:", error);
         return jsonError(500, "Update failed");
