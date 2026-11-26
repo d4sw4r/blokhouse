@@ -8,7 +8,7 @@ legacy API, bulk operations, CSV import, the Ansible collection or the Puppet re
 
 ## Setup
 
-**Admin → Webhooks**: enter a name, the URL and the events, then copy the **signing secret**.
+**Automation → Webhooks**: enter a name, the URL and the events, then copy the **signing secret**.
 It is shown only once. Use **Send test** to check that your receiver works. The delivery log
 shows every attempt, the response code and the payload, and can send a delivery again.
 

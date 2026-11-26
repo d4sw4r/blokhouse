@@ -160,7 +160,7 @@ curl -X PUT http://localhost:3000/api/v1/configuration-items/by-name/web-01 \
 ```
 
 Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
-[docs/api.md](docs/api.md). Generate scoped API tokens under **Admin → API Tokens**.
+[docs/api.md](docs/api.md). Generate scoped API tokens under **Automation → API tokens**.
 
 ## 📚 Documentation
 

@@ -344,7 +344,7 @@ export default function AssetDetailPage() {
                             <p className="mt-1">
                                 Admins can create custom fields under{" "}
                                 <a href="/admin/custom-fields" className="text-accent underline">
-                                    Admin → Custom Fields
+                                    Model → Custom fields
                                 </a>.
                             </p>
                         </div>

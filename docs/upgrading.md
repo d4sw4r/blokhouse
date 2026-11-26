@@ -30,7 +30,7 @@ Your data is imported once with `npm run db:import-sqlite`.
 What changes:
 
 - **API tokens are not imported** — v0.1 stored them in plain text. Create new tokens under
-  **Admin → API Tokens** after the upgrade and update your integrations.
+  **Automation → API tokens** after the upgrade and update your integrations.
 - Public self-registration is disabled by default (`ALLOW_SIGNUP=true` to re-enable).
 - Search is case-insensitive.
 

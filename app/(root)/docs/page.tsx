@@ -45,7 +45,7 @@ export default function ApiDocsPage() {
                         <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] break-all text-text">
                             Authorization: Bearer &lt;token&gt;
                         </code>
-                        . Create tokens under Admin → API Tokens.
+                        . Create tokens under Automation → API tokens.
                     </>
                 }
             />

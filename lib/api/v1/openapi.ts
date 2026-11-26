@@ -9,7 +9,7 @@ const registry = new OpenAPIRegistry();
 registry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",
     scheme: "bearer",
-    description: "API token created under Admin → API Tokens (`bh_…`).",
+    description: "API token created under Automation → API tokens (`bh_…`).",
 });
 
 const security = [{ bearerAuth: [] }];
