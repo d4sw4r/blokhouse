@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
-import { Field } from "@/components/ui/Field";
-import { Input } from "@/components/ui/Input";
+import { TagForm, validateTag, type TagFormErrors } from "@/components/TagForm";
 import { TagBadge } from "@/components/TagBadge";
 import type { Tag } from "./types";
 
@@ -35,13 +35,23 @@ export function TagsDialog({
     onDescriptionChange,
     onCreate,
 }: TagsDialogProps) {
+    const [errors, setErrors] = useState<TagFormErrors>({});
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!o) setErrors({});
+                onOpenChange(o);
+            }}
+        >
             <DialogContent
                 title="Tags"
                 description="Create and delete the tags used to label configuration items."
                 footer={
-                    <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                    <Button variant="secondary" onClick={() => {
+                            setErrors({});
+                            onOpenChange(false);
+                        }}>
                         Close
                     </Button>
                 }
@@ -74,41 +84,24 @@ export function TagsDialog({
                         noValidate
                         onSubmit={(e) => {
                             e.preventDefault();
-                            onCreate();
+                            const found = validateTag({ name, color, description });
+                            setErrors(found);
+                            if (Object.keys(found).length === 0) onCreate();
                         }}
                         className="space-y-4 border-t border-border pt-4"
                     >
                         <h3 className="text-sm font-medium text-text">Create new tag</h3>
-                        <Field label="Name *" htmlFor="new-tag-name">
-                            <Input
-                                id="new-tag-name"
-                                type="text"
-                                value={name}
-                                onChange={(e) => onNameChange(e.target.value)}
-                                placeholder="e.g., production"
-                            />
-                        </Field>
-                        <Field label="Color" htmlFor="new-tag-color">
-                            <div className="flex items-center gap-2">
-                                <input
-                                    id="new-tag-color"
-                                    type="color"
-                                    value={color}
-                                    onChange={(e) => onColorChange(e.target.value)}
-                                    className="h-9 w-16 cursor-pointer rounded-md border border-border-strong bg-surface p-1 max-sm:h-11"
-                                />
-                                <span className="font-mono text-sm text-muted">{color}</span>
-                            </div>
-                        </Field>
-                        <Field label="Description" htmlFor="new-tag-description">
-                            <Input
-                                id="new-tag-description"
-                                type="text"
-                                value={description}
-                                onChange={(e) => onDescriptionChange(e.target.value)}
-                                placeholder="Optional description"
-                            />
-                        </Field>
+                        <TagForm
+                            idPrefix="new-tag"
+                            values={{ name, color, description }}
+                            onChange={(v) => {
+                                onNameChange(v.name);
+                                onColorChange(v.color);
+                                onDescriptionChange(v.description);
+                            }}
+                            errors={errors}
+                            withPlaceholders
+                        />
                         <Button type="submit">Create</Button>
                     </form>
                 </div>

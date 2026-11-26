@@ -171,15 +171,15 @@ export default function DiscoveryPage() {
     return (
         <div>
             <PageHeader
-                title="Network Discovery"
+                title="Network discovery"
                 description="Scan your network to discover and import new devices"
             />
 
-            <Panel title="Scan Configuration" className="mb-6">
+            <Panel title="Scan configuration" className="mb-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start">
                     <div className="min-w-0 flex-1">
                         <Field
-                            label="Network Subnet"
+                            label="Network subnet"
                             htmlFor="discovery-subnet"
                             hint="Format: IP/CIDR (e.g., 192.168.1.0/24)"
                         >
@@ -203,7 +203,7 @@ export default function DiscoveryPage() {
                         ) : (
                             <>
                                 <Search className="size-4" aria-hidden="true" />
-                                Start Discovery
+                                Start discovery
                             </>
                         )}
                     </Button>
@@ -237,8 +237,8 @@ export default function DiscoveryPage() {
             {devices.length > 0 && (
                 <>
                     <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                        <StatTile label="Total Found" value={devices.length} />
-                        <StatTile label="New Devices" value={newDevicesCount} tone="success" />
+                        <StatTile label="Total found" value={devices.length} />
+                        <StatTile label="New devices" value={newDevicesCount} tone="success" />
                         <StatTile label="Existing" value={existingDevicesCount} />
                         <StatTile label="Imported" value={importedDevicesCount} tone="accent" />
                     </div>
@@ -246,11 +246,11 @@ export default function DiscoveryPage() {
                     {newDevicesCount > 0 && (
                         <div className="mb-4 flex flex-wrap gap-2">
                             <Button onClick={importAllNew} disabled={importing.size > 0}>
-                                Import All New Devices ({newDevicesCount})
+                                Import all new devices ({newDevicesCount})
                             </Button>
                             {importResults.length > 0 && (
                                 <Button onClick={() => setShowImportModal(true)} variant="secondary">
-                                    View Import Results
+                                    View import results
                                 </Button>
                             )}
                         </div>
@@ -261,8 +261,8 @@ export default function DiscoveryPage() {
                             <TR>
                                 <TH>Status</TH>
                                 <TH>Name</TH>
-                                <TH>IP Address</TH>
-                                <TH>MAC Address</TH>
+                                <TH>IP address</TH>
+                                <TH>MAC address</TH>
                                 <TH>Actions</TH>
                             </TR>
                         </THead>
@@ -295,7 +295,7 @@ export default function DiscoveryPage() {
                                             device.existingAssetId && (
                                                 <Link href={`/items/${device.existingAssetId}`}>
                                                     <Button variant="secondary" size="sm" tabIndex={-1}>
-                                                        View Asset
+                                                        View asset
                                                     </Button>
                                                 </Link>
                                             )}
@@ -310,14 +310,14 @@ export default function DiscoveryPage() {
             {!scanning && devices.length === 0 && !error && (
                 <EmptyState
                     icon={Radar}
-                    title="Ready to Discover"
-                    description='Configure your network subnet and click "Start Discovery" to scan for devices on your network.'
+                    title="Ready to discover"
+                    description='Configure your network subnet and click "Start discovery" to scan for devices on your network.'
                 />
             )}
 
             <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
                 <DialogContent
-                    title="Import Results"
+                    title="Import results"
                     className="max-w-2xl"
                     footer={<Button onClick={() => setShowImportModal(false)}>Close</Button>}
                 >

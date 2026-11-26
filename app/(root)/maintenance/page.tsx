@@ -47,7 +47,7 @@ const statusTones: Record<string, BadgeTone> = {
 const statusFilterOptions = [
     { value: "ALL", label: "All" },
     { value: "SCHEDULED", label: "Scheduled" },
-    { value: "IN_PROGRESS", label: "In Progress" },
+    { value: "IN_PROGRESS", label: "In progress" },
     { value: "COMPLETED", label: "Completed" },
     { value: "CANCELLED", label: "Cancelled" },
 ];
@@ -113,7 +113,7 @@ export default function MaintenancePage() {
 
     const createSchedule = async () => {
         if (!formData.configurationItemId || !formData.title || !formData.scheduledDate) {
-            addToast({ type: "error", title: "Validation Error", message: "Please fill in all required fields" });
+            addToast({ type: "error", title: "Validation error", message: "Please fill in all required fields" });
             return;
         }
 
@@ -198,7 +198,7 @@ export default function MaintenancePage() {
     if (loading) {
         return (
             <div>
-                <PageHeader title="Maintenance Schedule" />
+                <PageHeader title="Maintenance schedule" />
                 <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                     {[...Array(4)].map((_, i) => (
                         <SkeletonCard key={i} />
@@ -212,21 +212,21 @@ export default function MaintenancePage() {
     return (
         <div>
             <PageHeader
-                title="Maintenance Schedule"
+                title="Maintenance schedule"
                 description="Manage and track maintenance tasks for your assets"
                 actions={
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="size-4" aria-hidden="true" />
-                        Schedule Maintenance
+                        Schedule maintenance
                     </Button>
                 }
             />
 
             {/* Stats */}
             <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
-                <StatTile label="Total Tasks" value={stats.total} />
+                <StatTile label="Total tasks" value={stats.total} />
                 <StatTile label="Scheduled" value={stats.scheduled} />
-                <StatTile label="In Progress" value={stats.inProgress} />
+                <StatTile label="In progress" value={stats.inProgress} />
                 <StatTile label="Completed" value={stats.completed} />
                 <StatTile label="Overdue" value={stats.overdue} tone={stats.overdue > 0 ? "danger" : "neutral"} />
             </div>
@@ -250,7 +250,7 @@ export default function MaintenancePage() {
             {schedules.length === 0 ? (
                 <EmptyState
                     icon={CalendarCheck}
-                    title="No Maintenance Tasks"
+                    title="No maintenance tasks"
                     description="Create your first maintenance schedule to get started"
                 />
             ) : (
@@ -259,7 +259,7 @@ export default function MaintenancePage() {
                         <tr>
                             <TH>Task</TH>
                             <TH>Asset</TH>
-                            <TH>Scheduled Date</TH>
+                            <TH>Scheduled date</TH>
                             <TH>Priority</TH>
                             <TH>Status</TH>
                             <TH>Actions</TH>
@@ -360,13 +360,13 @@ export default function MaintenancePage() {
             {/* Create Modal */}
             <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
                 <DialogContent
-                    title="Schedule Maintenance"
+                    title="Schedule maintenance"
                     footer={
                         <>
                             <Button onClick={() => setShowCreateModal(false)} variant="secondary">
                                 Cancel
                             </Button>
-                            <Button onClick={createSchedule}>Create Schedule</Button>
+                            <Button onClick={createSchedule}>Create schedule</Button>
                         </>
                     }
                 >
@@ -386,7 +386,7 @@ export default function MaintenancePage() {
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="e.g., Quarterly Server Maintenance"
+                                placeholder="e.g., Quarterly server maintenance"
                             />
                         </Field>
                         <Field label="Description" htmlFor="maint-description">
@@ -398,7 +398,7 @@ export default function MaintenancePage() {
                                 placeholder="Maintenance details..."
                             />
                         </Field>
-                        <Field label="Scheduled Date *" htmlFor="maint-date">
+                        <Field label="Scheduled date *" htmlFor="maint-date">
                             <Input
                                 id="maint-date"
                                 type="datetime-local"
@@ -414,7 +414,7 @@ export default function MaintenancePage() {
                                 options={priorityOptions}
                             />
                         </Field>
-                        <Field label="Assigned To" htmlFor="maint-assigned">
+                        <Field label="Assigned to" htmlFor="maint-assigned">
                             <Input
                                 id="maint-assigned"
                                 type="text"

@@ -22,7 +22,7 @@ describe("auditAction", () => {
 
 describe("relationType", () => {
     it("maps the known types", () => {
-        expect(relationType("DEPENDS_ON")).toEqual({ tone: "danger", label: "Depends On" });
+        expect(relationType("DEPENDS_ON")).toEqual({ tone: "danger", label: "Depends on" });
         expect(relationType("CONTAINS").tone).toBe("warning");
         expect(RELATION_TYPES.map((r) => r.value)).toEqual(["DEPENDS_ON", "RUNS_ON", "CONNECTED_TO", "CONTAINS", "PART_OF", "MANAGES"]);
     });

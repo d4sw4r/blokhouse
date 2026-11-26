@@ -135,10 +135,10 @@ export default function CustomFieldsAdminPage() {
         <div>
             <PageHeader
                 title="Custom fields"
-                description="Define extra metadata fields for your Configuration Items."
+                description="Define extra metadata fields for your configuration items."
                 actions={
                     <Button onClick={() => { setShowForm(v => !v); setMsg(null); }} variant={showForm ? "secondary" : "primary"}>
-                        {showForm ? "Cancel" : (<><Plus className="size-4" aria-hidden="true" /> New Field</>)}
+                        {showForm ? "Cancel" : (<><Plus className="size-4" aria-hidden="true" /> New field</>)}
                     </Button>
                 }
             />
@@ -164,7 +164,7 @@ export default function CustomFieldsAdminPage() {
                                         const name = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
                                         setForm(f => ({ ...f, label, name }));
                                     }}
-                                    placeholder="e.g. Purchase Date"
+                                    placeholder="e.g. Purchase date"
                                 />
                             </Field>
                             <Field label="Machine name *" htmlFor="cf-name" hint="snake_case, auto-filled from label">
@@ -233,7 +233,7 @@ export default function CustomFieldsAdminPage() {
                         </div>
                         <div className="mt-6 flex gap-2">
                             <Button type="submit" disabled={saving}>
-                                {saving ? "Creating..." : "Create Field"}
+                                {saving ? "Creating..." : "Create field"}
                             </Button>
                             <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                         </div>
@@ -264,7 +264,7 @@ export default function CustomFieldsAdminPage() {
                 <EmptyState
                     icon={ListChecks}
                     title="No custom fields defined yet."
-                    description='Click "New Field" to create one.'
+                    description='Click "New field" to create one.'
                 />
             ) : (
                 <Table>

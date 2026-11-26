@@ -216,7 +216,7 @@ export default function AdminUsersPage() {
                         />
                     </Field>
                     <div className="sm:col-span-2 lg:col-span-4">
-                        <Button type="submit">Create User</Button>
+                        <Button type="submit">Create user</Button>
                     </div>
                 </form>
             </Panel>

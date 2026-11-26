@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/Field";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
-import { Textarea } from "@/components/ui/Textarea";
 import { TagBadge } from "@/components/TagBadge";
+import { DEFAULT_TAG_COLOR, EMPTY_TAG, TagForm, validateTag, type TagFormErrors, type TagFormValues } from "@/components/TagForm";
 import { SkeletonCard } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 
@@ -41,12 +40,8 @@ export default function TagsPage() {
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
     
     // Form states
-    const [formData, setFormData] = useState({
-        name: "",
-        color: "#3b82f6",
-        description: "",
-    });
-    const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+    const [formData, setFormData] = useState<TagFormValues>({ ...EMPTY_TAG });
+    const [formErrors, setFormErrors] = useState<TagFormErrors>({});
     const [submitting, setSubmitting] = useState(false);
 
     const fetchTags = async () => {
@@ -71,13 +66,7 @@ export default function TagsPage() {
     }, []);
 
     const validateForm = () => {
-        const errors: {[key: string]: string} = {};
-        if (!formData.name.trim()) {
-            errors.name = "Tag name is required";
-        }
-        if (formData.color && !/^#[0-9A-Fa-f]{6}$/.test(formData.color)) {
-            errors.color = "Invalid hex color format";
-        }
+        const errors = validateTag(formData);
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -96,7 +85,7 @@ export default function TagsPage() {
             if (res.ok) {
                 await fetchTags();
                 setShowCreateModal(false);
-                setFormData({ name: "", color: "#3b82f6", description: "" });
+                setFormData({ ...EMPTY_TAG });
                 setFormErrors({});
             } else {
                 const error = await res.json();
@@ -125,7 +114,7 @@ export default function TagsPage() {
                 await fetchTags();
                 setShowEditModal(false);
                 setSelectedTag(null);
-                setFormData({ name: "", color: "#3b82f6", description: "" });
+                setFormData({ ...EMPTY_TAG });
                 setFormErrors({});
             } else {
                 const error = await res.json();
@@ -168,7 +157,7 @@ export default function TagsPage() {
         setSelectedTag(tag);
         setFormData({
             name: tag.name,
-            color: tag.color || "#3b82f6",
+            color: tag.color || DEFAULT_TAG_COLOR,
             description: tag.description || "",
         });
         setFormErrors({});
@@ -191,60 +180,15 @@ export default function TagsPage() {
     const unusedTags = tags.filter(tag => tag._count.configurationItems === 0).length;
 
     const openCreateModal = () => {
-        setFormData({ name: "", color: "#3b82f6", description: "" });
+        setFormData({ ...EMPTY_TAG });
         setFormErrors({});
         setShowCreateModal(true);
     };
 
-    const tagForm = (idPrefix: string, withPlaceholders: boolean) => (
-        <div className="space-y-4">
-            <Field label="Name *" htmlFor={`${idPrefix}-name`} error={formErrors.name}>
-                <Input
-                    id={`${idPrefix}-name`}
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={withPlaceholders ? "e.g., production" : undefined}
-                />
-            </Field>
-            <Field label="Color" htmlFor={`${idPrefix}-color`} error={formErrors.color}>
-                <div className="flex items-center gap-3">
-                    <input
-                        type="color"
-                        aria-label="Pick a colour"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="h-9 w-16 shrink-0 cursor-pointer rounded-md border border-border-strong bg-surface p-1 max-sm:h-11"
-                    />
-                    <Input
-                        id={`${idPrefix}-color`}
-                        type="text"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="min-w-0 flex-1 font-mono"
-                        placeholder={withPlaceholders ? "#3b82f6" : undefined}
-                    />
-                </div>
-            </Field>
-            <Field label="Description" htmlFor={`${idPrefix}-description`}>
-                <Textarea
-                    id={`${idPrefix}-description`}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                    placeholder={withPlaceholders ? "Optional description for this tag" : undefined}
-                />
-            </Field>
-            {formErrors.submit && (
-                <p role="alert" className="text-sm text-danger">{formErrors.submit}</p>
-            )}
-        </div>
-    );
-
     if (loading) {
         return (
             <div>
-                <PageHeader title="Tags Management" />
+                <PageHeader title="Tag management" />
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <SkeletonCard />
                     <SkeletonCard />
@@ -260,21 +204,21 @@ export default function TagsPage() {
     return (
         <div>
             <PageHeader
-                title="Tags Management"
+                title="Tag management"
                 description="Organize and manage tags for your configuration items"
                 actions={
                     <Button onClick={openCreateModal}>
                         <Plus className="size-4" aria-hidden="true" />
-                        Create Tag
+                        Create tag
                     </Button>
                 }
             />
 
             {/* Statistics */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <StatTile label="Total Tags" value={totalTags} />
-                <StatTile label="Tagged Items" value={totalTaggedItems} />
-                <StatTile label="Unused Tags" value={unusedTags} tone={unusedTags > 0 ? "warning" : "neutral"} />
+                <StatTile label="Total tags" value={totalTags} />
+                <StatTile label="Tagged items" value={totalTaggedItems} />
+                <StatTile label="Unused tags" value={unusedTags} tone={unusedTags > 0 ? "warning" : "neutral"} />
             </div>
 
             {/* Search */}
@@ -292,7 +236,7 @@ export default function TagsPage() {
                 </div>
                 {searchQuery && (
                     <Button onClick={() => setSearchQuery("")} variant="secondary">
-                        Clear Search
+                        Clear search
                     </Button>
                 )}
             </div>
@@ -309,7 +253,7 @@ export default function TagsPage() {
                     }
                     action={
                         !searchQuery ? (
-                            <Button onClick={openCreateModal}>Create Your First Tag</Button>
+                            <Button onClick={openCreateModal}>Create your first tag</Button>
                         ) : undefined
                     }
                 />
@@ -346,7 +290,7 @@ export default function TagsPage() {
                                     href={`/items?tag=${tag.id}`}
                                     className="text-sm font-medium text-accent hover:underline max-sm:inline-flex max-sm:min-h-11 max-sm:items-center"
                                 >
-                                    View Items →
+                                    View items →
                                 </Link>
                             </div>
                         </div>
@@ -357,52 +301,52 @@ export default function TagsPage() {
             {/* Create Modal */}
             <Dialog open={showCreateModal} onOpenChange={(o) => { if (!submitting) setShowCreateModal(o); }}>
                 <DialogContent
-                    title="Create New Tag"
+                    title="Create new tag"
                     footer={
                         <>
                             <Button onClick={() => setShowCreateModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleCreate} loading={submitting}>
-                                Create Tag
+                                Create tag
                             </Button>
                         </>
                     }
                 >
-                    {tagForm("create-tag", true)}
+                    <TagForm idPrefix="create-tag" values={formData} onChange={setFormData} errors={formErrors} withPlaceholders />
                 </DialogContent>
             </Dialog>
 
             {/* Edit Modal */}
             <Dialog open={showEditModal && !!selectedTag} onOpenChange={(o) => { if (!submitting) setShowEditModal(o); }}>
                 <DialogContent
-                    title="Edit Tag"
+                    title="Edit tag"
                     footer={
                         <>
                             <Button onClick={() => setShowEditModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleUpdate} loading={submitting}>
-                                Save Changes
+                                Save changes
                             </Button>
                         </>
                     }
                 >
-                    {tagForm("edit-tag", false)}
+                    <TagForm idPrefix="edit-tag" values={formData} onChange={setFormData} errors={formErrors} />
                 </DialogContent>
             </Dialog>
 
             {/* Delete Modal */}
             <Dialog open={showDeleteModal && !!selectedTag} onOpenChange={(o) => { if (!submitting) setShowDeleteModal(o); }}>
                 <DialogContent
-                    title="Delete Tag"
+                    title="Delete tag"
                     footer={
                         <>
                             <Button onClick={() => setShowDeleteModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleDelete} variant="danger" loading={submitting}>
-                                Delete Tag
+                                Delete tag
                             </Button>
                         </>
                     }

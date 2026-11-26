@@ -562,7 +562,7 @@ export default function RelationshipGraphPage() {
     return (
         <div>
             <PageHeader
-                title="Relationship Graph"
+                title="Relationship graph"
                 description="Visualize connections between your configuration items"
                 actions={
                     <>
@@ -582,7 +582,7 @@ export default function RelationshipGraphPage() {
                             variant="secondary"
                         >
                             <RotateCcw className="size-4" aria-hidden="true" />
-                            Reset View
+                            Reset view
                         </Button>
                     </>
                 }
@@ -599,7 +599,7 @@ export default function RelationshipGraphPage() {
                 <div className="space-y-4 lg:col-span-1">
                     <Panel title="Filter">
                         <div className="space-y-4">
-                            <Field label="Search Assets" htmlFor="graph-search">
+                            <Field label="Search assets" htmlFor="graph-search">
                                 <Input
                                     id="graph-search"
                                     type="text"
@@ -608,13 +608,13 @@ export default function RelationshipGraphPage() {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </Field>
-                            <Field label="Filter by Relation Type" htmlFor="graph-filter">
+                            <Field label="Filter by relation type" htmlFor="graph-filter">
                                 <Select
                                     id="graph-filter"
                                     value={filterType}
                                     onValueChange={setFilterType}
                                     options={[
-                                        { value: "ALL", label: "All Types" },
+                                        { value: "ALL", label: "All types" },
                                         ...relationTypes.map((type) => ({
                                             value: type,
                                             label: type.replace(/_/g, " "),
@@ -625,11 +625,11 @@ export default function RelationshipGraphPage() {
                         </div>
                     </Panel>
 
-                    <Panel title="Display Options">
+                    <Panel title="Display options">
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm text-text">
                                 <Checkbox checked={showLabels} onCheckedChange={(c) => setShowLabels(c === true)} />
-                                Show Labels
+                                Show labels
                             </label>
                             <label className="flex items-center gap-2 text-sm text-text">
                                 <Checkbox
@@ -650,7 +650,7 @@ export default function RelationshipGraphPage() {
                                 </div>
                             ))}
                         </div>
-                        <h3 className="mb-2 mt-4 text-xs font-medium text-muted">Relation Types</h3>
+                        <h3 className="mb-2 mt-4 text-xs font-medium text-muted">Relation types</h3>
                         <div className="space-y-2">
                             {legendTypes.map(({ label, tone }) => (
                                 <div key={label} className="flex items-center gap-2">
@@ -662,7 +662,7 @@ export default function RelationshipGraphPage() {
                     </Panel>
 
                     {selectedNode && (
-                        <Panel title="Selected Asset">
+                        <Panel title="Selected asset">
                             <div className="space-y-2">
                                 <p className="break-all font-mono text-sm font-semibold text-text">{selectedNode.name}</p>
                                 {selectedNode.typeName && (
@@ -673,7 +673,7 @@ export default function RelationshipGraphPage() {
                                     href={`/items/${selectedNode.id}`}
                                     className="mt-2 inline-flex h-8 w-full items-center justify-center rounded-md bg-accent px-3 text-xs font-medium text-accent-fg transition-colors hover:bg-accent/90 max-sm:min-h-11"
                                 >
-                                    View Details
+                                    View details
                                 </Link>
                             </div>
 
@@ -707,7 +707,7 @@ export default function RelationshipGraphPage() {
                     {!hasGraph ? (
                         <EmptyState
                             icon={Share2}
-                            title="No Relations Found"
+                            title="No relations found"
                             description='Create relations between your configuration items to see them visualized here. Go to any item and click "Relations" to get started.'
                         />
                     ) : (

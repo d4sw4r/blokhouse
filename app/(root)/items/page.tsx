@@ -23,6 +23,7 @@ import { ImportDialog } from "./_components/ImportDialog";
 import { ItemFilters } from "./_components/ItemFilters";
 import { ItemFormDialog } from "./_components/ItemFormDialog";
 import { ItemsTable } from "./_components/ItemsTable";
+import { DEFAULT_TAG_COLOR } from "@/components/TagForm";
 import { TagsDialog } from "./_components/TagsDialog";
 import { statusOptions, type AssetStatus, type ConfigItem, ItemFormData, PaginationData, Tag, Type } from "./_components/types";
 
@@ -68,7 +69,7 @@ status: "ACTIVE" as AssetStatus,
     // Tag management modal state
     const [showTagModal, setShowTagModal] = useState(false);
     const [newTagName, setNewTagName] = useState("");
-    const [newTagColor, setNewTagColor] = useState("#3b82f6");
+    const [newTagColor, setNewTagColor] = useState(DEFAULT_TAG_COLOR);
     
     // Bulk selection state
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -198,16 +199,16 @@ status: "ACTIVE" as AssetStatus,
 
     const createItem = async () => {
         if (!newItem.name.trim()) {
-            addToast({ type: "error", title: "Validation Error", message: "Name is required" });
+            addToast({ type: "error", title: "Validation error", message: "Name is required" });
             return;
         }
         // Validate IP and MAC before saving
         if (newItem.ip && !isValidIP(newItem.ip)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid IP address" });
             return;
         }
         if (newItem.mac && !isValidMAC(newItem.mac)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid MAC address" });
             return;
         }
         try {
@@ -269,11 +270,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     const updateItem = async (id: string) => {
         // Validate IP and MAC before saving
         if (editingItemData.ip && !isValidIP(editingItemData.ip)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid IP address" });
             return;
         }
         if (editingItemData.mac && !isValidMAC(editingItemData.mac)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid MAC address" });
             return;
         }
         try {
@@ -336,10 +337,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
     // Tag management
     const createTag = async () => {
-        if (!newTagName.trim()) {
-            addToast({ type: "warning", title: "Tag name required", message: "Please enter a name for the tag" });
-            return;
-        }
         try {
             const res = await fetch("/api/tags", {
                 method: "POST",
@@ -354,7 +351,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 const newTag = await res.json();
                 setAvailableTags((prev) => [...prev, newTag]);
                 setNewTagName("");
-                setNewTagColor("#3b82f6");
+                setNewTagColor(DEFAULT_TAG_COLOR);
                 setNewTagDescription("");
                 addToast({ type: "success", title: "Tag created", message: `"${newTag.name}" has been created successfully` });
             } else {

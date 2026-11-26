@@ -182,7 +182,7 @@ export default function AdminAPIPage() {
                         <Select id="token-exp" value={expiryValue} onValueChange={setExpiresInDays} options={expiryOptions} />
                     </Field>
                     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-                    <Button type="submit" disabled={scopes.length === 0}>Generate API Token</Button>
+                    <Button type="submit" disabled={scopes.length === 0}>Generate API token</Button>
                 </form>
             </Panel>
 

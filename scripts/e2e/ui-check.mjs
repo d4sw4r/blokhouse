@@ -149,8 +149,8 @@ for (const path of ["/signin", "/signup"]) {
                         await page.evaluate((t) => document.documentElement.classList.contains(t), theme),
                         `<html> lacks class ${theme}`,
                     );
-                    await page.getByRole("heading", { name: path === "/signin" ? "Sign In" : "Sign Up" }).waitFor();
-                    await page.screenshot({ path: `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-signedout-${slug(path)}.png`, fullPage: true });
+                    await page.getByRole("heading", { name: path === "/signin" ? "Sign in" : "Sign up" }).waitFor();
+                    await screenshot(page, `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-signedout-${slug(path)}.png`);
                     const overflow = await page.evaluate(() => ({
                         sw: document.documentElement.scrollWidth,
                         iw: window.innerWidth,
@@ -162,6 +162,19 @@ for (const path of ["/signin", "/signup"]) {
                 }
             });
         }
+    }
+}
+
+// Chromium's full-page capture occasionally fails with "Unable to capture screenshot" while it
+// resizes the surface to the page height. The screenshot is an artifact, not an assertion, so
+// retry it once after the page has settled; a second failure still fails the check.
+async function screenshot(page, file) {
+    try {
+        await page.screenshot({ path: file, fullPage: true });
+    } catch (err) {
+        if (!String(err?.message).includes("Unable to capture screenshot")) throw err;
+        await page.waitForTimeout(500);
+        await page.screenshot({ path: file, fullPage: true });
     }
 }
 
@@ -187,7 +200,7 @@ for (const entry of pages) {
                         await page.evaluate((t) => document.documentElement.classList.contains(t), theme),
                         `<html> lacks class ${theme}`,
                     );
-                    await page.screenshot({ path: `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-${slug(path)}.png`, fullPage: true });
+                    await screenshot(page, `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-${slug(path)}.png`);
                     const overflow = await page.evaluate(() => ({
                         sw: document.documentElement.scrollWidth,
                         iw: window.innerWidth,

@@ -4,6 +4,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./IconButton";
+import { isInToastViewport } from "./toastViewport";
 
 export interface SheetProps {
     open: boolean;
@@ -20,6 +21,10 @@ export function Sheet({ open, onOpenChange, side = "left", title, children }: Sh
                 <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-bg/70" />
                 <DialogPrimitive.Content
                     aria-describedby={undefined}
+                    onInteractOutside={(e) => {
+                        // A click on a toast (raised while the sheet is open) must not close the sheet.
+                        if (isInToastViewport(e.target)) e.preventDefault();
+                    }}
                     className={cn(
                         "fixed inset-y-0 z-50 flex h-dvh w-[min(320px,85vw)] flex-col border-border bg-surface text-text shadow-lg",
                         side === "left" ? "left-0 border-r" : "right-0 border-l",

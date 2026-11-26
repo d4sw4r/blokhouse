@@ -131,12 +131,12 @@ export default function NotificationsPage() {
               onClick={() => setFilter(filter === "all" ? "unread" : "all")}
               variant="secondary"
             >
-              {filter === "all" ? "Show Unread" : "Show All"}
+              {filter === "all" ? "Show unread" : "Show all"}
             </Button>
-            {unreadCount > 0 && <Button onClick={markAllAsRead}>Mark All as Read</Button>}
+            {unreadCount > 0 && <Button onClick={markAllAsRead}>Mark all as read</Button>}
             {notifications.some((n) => n.read) && (
               <Button onClick={() => setConfirmClearRead(true)} variant="danger">
-                Clear Read
+                Clear read
               </Button>
             )}
           </>
@@ -198,7 +198,7 @@ export default function NotificationsPage() {
                             href={`/items?highlight=${notification.entityId}`}
                             className="text-sm font-medium text-accent hover:underline max-sm:inline-flex max-sm:min-h-11 max-sm:items-center"
                           >
-                            View Asset →
+                            View asset →
                           </Link>
                         )}
                         <button

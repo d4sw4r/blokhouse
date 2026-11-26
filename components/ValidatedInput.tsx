@@ -41,7 +41,7 @@ export default function ValidatedInput({
     const invalid = isTouched && !isValid;
     const validAndFilled = !invalid && isValid && !!value;
 
-    const label = type === "ip" ? "IP Address" : "MAC Address";
+    const label = type === "ip" ? "IP address" : "MAC address";
     const validationMessage = invalid
         ? type === "ip"
             ? "Invalid IP address (use IPv4: xxx.xxx.xxx.xxx or IPv6)"

@@ -100,3 +100,26 @@ for (const theme of ["light", "dark"]) {
         }
     });
 }
+
+// Badge borders are UI boundaries: the border colour (tone at its border alpha) over the badge's
+// own tint must reach 3:1 on bg, surface and surface-2. Keep in sync with components/ui/Badge.tsx.
+describe("Badge borders", () => {
+    const badge = readFileSync(path.resolve(__dirname, "../../components/ui/Badge.tsx"), "utf8");
+    for (const theme of ["light", "dark"]) {
+        const t = tokens[theme];
+        for (const tone of Object.keys(BADGE_TEXT)) {
+            const m = badge.match(new RegExp(`${tone}: "bg-${tone}/10 text-text border-${tone}(?:/(\\d+))?"`));
+            for (const surface of SURFACES) {
+                it(`${theme}/${tone}: border over its tint on ${surface} is >= 3`, () => {
+                    expect(m, `Badge ${tone} border class`).not.toBeNull();
+                    const alpha = m[1] ? Number(m[1]) / 100 : 1;
+                    const fill = composite(t[tone], t[surface], TINT);
+                    // The border is painted over the badge's own background (background-clip: border-box).
+                    const border = composite(t[tone], fill, alpha);
+                    const r = contrastRatio(border, t[surface]);
+                    expect(r, `${theme}/${tone}/${surface} border ${r.toFixed(2)}`).toBeGreaterThanOrEqual(3);
+                });
+            }
+        }
+    }
+});

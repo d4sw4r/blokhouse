@@ -20,13 +20,13 @@ export interface NotificationTypeMeta {
 
 // Every type carries an icon and a text label, so colour is never the only cue.
 export const notificationTypes: Record<string, NotificationTypeMeta> = {
-    ASSET_STATUS_CHANGED: { label: "Status Changed", icon: RefreshCw, tone: "accent" },
-    ASSET_CREATED: { label: "Asset Created", icon: FilePlus2, tone: "success" },
-    ASSET_DELETED: { label: "Asset Deleted", icon: FileX2, tone: "danger" },
-    RELATION_CREATED: { label: "Relation Created", icon: Link2, tone: "accent" },
-    RELATION_DELETED: { label: "Relation Deleted", icon: Link2Off, tone: "warning" },
-    MAINTENANCE_DUE: { label: "Maintenance Due", icon: Wrench, tone: "warning" },
-    CUSTOM_FIELD_CHANGED: { label: "Field Changed", icon: PencilLine, tone: "neutral" },
+    ASSET_STATUS_CHANGED: { label: "Status changed", icon: RefreshCw, tone: "accent" },
+    ASSET_CREATED: { label: "Asset created", icon: FilePlus2, tone: "success" },
+    ASSET_DELETED: { label: "Asset deleted", icon: FileX2, tone: "danger" },
+    RELATION_CREATED: { label: "Relation created", icon: Link2, tone: "accent" },
+    RELATION_DELETED: { label: "Relation deleted", icon: Link2Off, tone: "warning" },
+    MAINTENANCE_DUE: { label: "Maintenance due", icon: Wrench, tone: "warning" },
+    CUSTOM_FIELD_CHANGED: { label: "Field changed", icon: PencilLine, tone: "neutral" },
     SYSTEM: { label: "System", icon: Settings, tone: "neutral" },
 };
 

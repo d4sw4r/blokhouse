@@ -36,7 +36,7 @@ export default function SignUpPage() {
         <Panel className="w-full">
             <div className="flex flex-col gap-4 p-2 sm:p-3">
                 <div>
-                    <h1 className="text-lg font-semibold text-text">Sign Up</h1>
+                    <h1 className="text-lg font-semibold text-text">Sign up</h1>
                     <p className="mt-1 text-sm text-muted">Your infrastructure, block by block.</p>
                 </div>
                 {error && (
@@ -84,13 +84,13 @@ export default function SignUpPage() {
                         />
                     </Field>
                     <Button type="submit" className="w-full">
-                        Sign Up
+                        Sign up
                     </Button>
                 </form>
                 <p className="text-center text-sm text-muted">
                     Already have an account?{" "}
                     <Link href="/signin" className="text-accent underline-offset-2 hover:underline">
-                        Sign In
+                        Sign in
                     </Link>
                 </p>
             </div>
