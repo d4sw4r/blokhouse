@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
@@ -27,6 +28,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [confirmClearRead, setConfirmClearRead] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
@@ -133,7 +135,7 @@ export default function NotificationsPage() {
             </Button>
             {unreadCount > 0 && <Button onClick={markAllAsRead}>Mark All as Read</Button>}
             {notifications.some((n) => n.read) && (
-              <Button onClick={deleteAllRead} variant="danger">
+              <Button onClick={() => setConfirmClearRead(true)} variant="danger">
                 Clear Read
               </Button>
             )}
@@ -214,6 +216,16 @@ export default function NotificationsPage() {
           </ul>
         </Panel>
       )}
+
+      <ConfirmDialog
+        open={confirmClearRead}
+        onOpenChange={setConfirmClearRead}
+        title="Clear read notifications?"
+        description="All read notifications will be deleted."
+        confirmLabel="Clear read"
+        tone="danger"
+        onConfirm={deleteAllRead}
+      />
     </div>
   );
 }

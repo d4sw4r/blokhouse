@@ -15,6 +15,11 @@
  * Turbopack keep and run them. The list covers every apidom namespace that
  * swagger-client pulls into the docs page bundle. Remove this file once
  * Turbopack no longer drops side-effectful modules on re-export chains.
+ *
+ * After bumping swagger-ui-react / swagger-client, run the UI check against a
+ * production build (`npm run build && npx next start`, then
+ * scripts/e2e/ui-check.mjs): its /docs pass fails on the console error above
+ * if a new apidom namespace is missing from this list.
  */
 import "../../../node_modules/@swagger-api/apidom-core/src/refractor/registration.mjs";
 import "../../../node_modules/@swagger-api/apidom-ns-json-schema-draft-4/src/refractor/registration.mjs";

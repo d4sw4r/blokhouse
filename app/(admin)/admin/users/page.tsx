@@ -152,11 +152,19 @@ export default function AdminUsersPage() {
         }
     };
 
-    if (loading) return <SkeletonTable rows={6} />;
+    const header = <PageHeader title="Users" description="Create accounts, change roles and deactivate or delete users." />;
+
+    if (loading)
+        return (
+            <div className="space-y-6">
+                {header}
+                <SkeletonTable rows={6} />
+            </div>
+        );
 
     return (
         <div className="space-y-6">
-            <PageHeader title="Users" description="Create accounts, change roles and deactivate or delete users." />
+            {header}
 
             {actionError && (
                 <Callout tone="danger" role="alert">

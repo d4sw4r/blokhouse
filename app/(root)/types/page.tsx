@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Shapes } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
@@ -23,6 +24,7 @@ export default function TypesPage() {
     const [newType, setNewType] = useState({ name: '', description: '' });
     const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
     const [editingTypeData, setEditingTypeData] = useState({ name: '', description: '' });
+    const [typeToDelete, setTypeToDelete] = useState<ItemType | null>(null);
 
     const fetchTypes = async () => {
         try {
@@ -173,7 +175,7 @@ export default function TypesPage() {
                                             <Button size="sm" variant="secondary" onClick={() => startEditing(type)}>
                                                 Edit
                                             </Button>
-                                            <Button size="sm" variant="danger" onClick={() => deleteType(type.id)}>
+                                            <Button size="sm" variant="danger" onClick={() => setTypeToDelete(type)}>
                                                 Delete
                                             </Button>
                                         </>
@@ -184,6 +186,20 @@ export default function TypesPage() {
                     </ul>
                 )}
             </Panel>
+
+            <ConfirmDialog
+                open={typeToDelete !== null}
+                onOpenChange={(open) => {
+                    if (!open) setTypeToDelete(null);
+                }}
+                title="Delete type?"
+                description={typeToDelete ? `Delete the type "${typeToDelete.name}"?` : ""}
+                confirmLabel="Delete type"
+                tone="danger"
+                onConfirm={() => {
+                    if (typeToDelete) deleteType(typeToDelete.id);
+                }}
+            />
         </div>
     );
 }
