@@ -7,7 +7,7 @@ The full guide (production database, Ingress, SSO, OpenShift, upgrading, uninsta
 ## Quick start
 
 ```bash
-helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.4.0 \
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.5.0 \
   --namespace blokhouse --create-namespace
 ```
 

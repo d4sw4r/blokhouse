@@ -39,7 +39,7 @@ describe("helm chart", () => {
             expect(find(docs, kind, name), `${kind} ${name}`).toBeDefined();
         }
 
-        expect(appContainer(docs).image).toBe("ghcr.io/d4sw4r/blokhouse:0.4.0");
+        expect(appContainer(docs).image).toBe("ghcr.io/d4sw4r/blokhouse:0.5.0");
 
         const config = find(docs, "ConfigMap", "bh-blokhouse")!.data;
         expect(config.NEXTAUTH_URL).toBe("http://localhost:8080");

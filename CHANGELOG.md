@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-26
+
+New interface: a dark console design with a light theme, grouped navigation that follows each
+role, and accessible menus and dialogs on every page. No API or data changes; see
+[docs/upgrading.md](https://github.com/d4sw4r/blokhouse/blob/main/docs/upgrading.md).
+
 ### Changed
 - New interface: dark console design with a light theme, grouped navigation and accessible menus and dialogs (dark is the default; switch in the user menu). All pages are rebuilt on the new design.
 - Theme choices from earlier versions are not carried over (the theme is stored under a new key): everyone starts on dark once and can switch to light or system in the user menu.
