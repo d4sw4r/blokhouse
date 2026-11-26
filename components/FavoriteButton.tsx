@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Star } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
+import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
   itemId: string;
@@ -15,17 +17,7 @@ export default function FavoriteButton({ itemId, itemName, size = "md", showLabe
   const [loading, setLoading] = useState(false);
   const { addToast } = useToast();
 
-  const sizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
-    lg: "w-6 h-6",
-  };
-
-  const buttonClasses = {
-    sm: "p-1",
-    md: "p-1.5",
-    lg: "p-2",
-  };
+  const iconSize = { sm: "size-4", md: "size-5", lg: "size-5" }[size];
 
   // Check initial favorite status
   useEffect(() => {
@@ -91,7 +83,7 @@ export default function FavoriteButton({ itemId, itemName, size = "md", showLabe
           throw new Error("Failed to add favorite");
         }
       }
-    } catch (error) {
+    } catch {
       addToast({
         type: "error",
         title: "Error",
@@ -102,35 +94,24 @@ export default function FavoriteButton({ itemId, itemName, size = "md", showLabe
     }
   };
 
+  const label = isFavorited ? "Remove from favorites" : "Add to favorites";
+
   return (
     <button
+      type="button"
       onClick={toggleFavorite}
       disabled={loading}
-      className={`${buttonClasses[size]} rounded-lg transition-all duration-200 ${
-        isFavorited
-          ? "text-brand-accent hover:text-brand-accent/80 bg-brand-accent/10 hover:bg-brand-accent/20"
-          : "text-brand-secondary hover:text-brand-accent hover:bg-brand-accent/10"
-      } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-      title={isFavorited ? "Remove from favorites" : "Add to favorites"}
-    >
-      <svg
-        className={sizeClasses[size]}
-        fill={isFavorited ? "currentColor" : "none"}
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-        />
-      </svg>
-      {showLabel && (
-        <span className="ml-1 text-sm">
-          {isFavorited ? "Favorited" : "Add to favorites"}
-        </span>
+      aria-pressed={isFavorited}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 rounded-md text-sm transition-colors duration-150 hover:bg-surface-2 motion-reduce:transition-none disabled:pointer-events-none disabled:opacity-50",
+        showLabel ? "h-9 px-3 max-sm:min-h-11" : "size-9 max-sm:size-11",
+        isFavorited ? "text-accent" : "text-muted hover:text-text",
       )}
+    >
+      <Star className={cn(iconSize, isFavorited && "fill-current")} aria-hidden="true" />
+      {showLabel && <span>{isFavorited ? "Favorited" : "Add to favorites"}</span>}
     </button>
   );
 }

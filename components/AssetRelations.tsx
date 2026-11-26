@@ -1,7 +1,18 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { Check, Cog, Link2, Network, Package, Plug, Plus, Puzzle, Server, type LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { StatusDot } from "@/components/ui/StatusDot";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Textarea } from "@/components/ui/Textarea";
+import { cn } from "@/lib/utils";
 
 interface RelationTarget {
   id: string;
@@ -34,23 +45,14 @@ interface AvailableItem {
   itemType?: { name: string } | null;
 }
 
-const relationTypes = [
-  { value: "DEPENDS_ON", label: "Depends On", icon: "🔗" },
-  { value: "RUNS_ON", label: "Runs On", icon: "🖥️" },
-  { value: "CONNECTED_TO", label: "Connected To", icon: "🔌" },
-  { value: "CONTAINS", label: "Contains", icon: "📦" },
-  { value: "PART_OF", label: "Part Of", icon: "🧩" },
-  { value: "MANAGES", label: "Manages", icon: "⚙️" },
+const relationTypes: { value: string; label: string; icon: LucideIcon }[] = [
+  { value: "DEPENDS_ON", label: "Depends On", icon: Link2 },
+  { value: "RUNS_ON", label: "Runs On", icon: Server },
+  { value: "CONNECTED_TO", label: "Connected To", icon: Plug },
+  { value: "CONTAINS", label: "Contains", icon: Package },
+  { value: "PART_OF", label: "Part Of", icon: Puzzle },
+  { value: "MANAGES", label: "Manages", icon: Cog },
 ];
-
-const relationColors: Record<string, string> = {
-  DEPENDS_ON: "bg-red-100 text-red-800 border-red-300",
-  RUNS_ON: "bg-blue-100 text-blue-800 border-blue-300",
-  CONNECTED_TO: "bg-green-100 text-green-800 border-green-300",
-  CONTAINS: "bg-purple-100 text-purple-800 border-purple-300",
-  PART_OF: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  MANAGES: "bg-orange-100 text-orange-800 border-orange-300",
-};
 
 interface AssetRelationsProps {
   itemId: string;
@@ -167,12 +169,15 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
     return relationTypes.find((t) => t.value === type)?.label || type;
   };
 
-  const getRelationTypeIcon = (type: string) => {
-    return relationTypes.find((t) => t.value === type)?.icon || "🔗";
+  const getRelationTypeIcon = (type: string): LucideIcon => {
+    return relationTypes.find((t) => t.value === type)?.icon || Link2;
   };
 
-  const getRelationColorClass = (type: string) => {
-    return relationColors[type] || "bg-gray-100 text-gray-800 border-gray-300";
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setSelectedTarget("");
+    setDescription("");
+    setSearchQuery("");
   };
 
   const displayedRelations = relations
@@ -182,251 +187,181 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
     : [];
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700">Asset Relations</h3>
-          <p className="text-sm text-gray-500">
-            Define relationships between this asset and others
-          </p>
-        </div>
-        <Button onClick={() => setShowAddModal(true)}>+ Add Relation</Button>
+    <div className="min-w-0">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="min-w-0 text-sm text-muted">
+          Define relationships between this asset and others
+        </p>
+        <Button size="sm" onClick={() => setShowAddModal(true)}>
+          <Plus className="size-4" aria-hidden="true" />
+          Add Relation
+        </Button>
       </div>
 
-      {/* Tabs */}
       {relations && (relations.outgoing.length > 0 || relations.incoming.length > 0) && (
-        <div className="flex gap-2 mb-4 border-b">
-          {[
-            { key: "all", label: `All (${relations.all.length})` },
-            { key: "outgoing", label: `Outgoing (${relations.outgoing.length})` },
-            { key: "incoming", label: `Incoming (${relations.incoming.length})` },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as "all" | "outgoing" | "incoming")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "all" | "outgoing" | "incoming")}
+          className="mb-4"
+        >
+          <TabsList>
+            <TabsTrigger value="all">All ({relations.all.length})</TabsTrigger>
+            <TabsTrigger value="outgoing">Outgoing ({relations.outgoing.length})</TabsTrigger>
+            <TabsTrigger value="incoming">Incoming ({relations.incoming.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
       )}
 
-      {/* Relations List */}
       {loading ? (
-        <div className="py-8 text-center text-gray-500">Loading relations...</div>
+        <p className="py-8 text-center text-sm text-muted" role="status">Loading relations...</p>
       ) : displayedRelations.length === 0 ? (
-        <div className="py-8 text-center text-gray-500">
-          {relations?.all.length === 0
-            ? "No relations defined yet. Add a relation to connect this asset with others."
-            : "No relations in this category."}
-        </div>
+        <EmptyState
+          icon={Network}
+          title={
+            relations?.all.length === 0
+              ? "No relations defined yet"
+              : "No relations in this category"
+          }
+          description={
+            relations?.all.length === 0
+              ? "Add a relation to connect this asset with others."
+              : undefined
+          }
+        />
       ) : (
-        <div className="space-y-3">
-          {displayedRelations.map((relation) => (
-            <div
-              key={relation.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:shadow-sm transition-shadow"
-            >
-              <div className="flex items-center gap-3 flex-1">
-                <span className="text-lg">{getRelationTypeIcon(relation.type)}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {relation.direction === "outgoing" ? (
-                      <>
-                        <span className="font-medium text-gray-900">{itemName}</span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRelationColorClass(
-                            relation.type
-                          )}`}
-                        >
-                          {getRelationTypeLabel(relation.type)}
-                        </span>
-                        <span className="font-medium text-gray-900">
-                          {relation.target.name}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-medium text-gray-900">
-                          {relation.target.name}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRelationColorClass(
-                            relation.type
-                          )}`}
-                        >
-                          {getRelationTypeLabel(relation.type)}
-                        </span>
-                        <span className="font-medium text-gray-900">{itemName}</span>
-                      </>
+        <ul className="space-y-2">
+          {displayedRelations.map((relation) => {
+            const Icon = getRelationTypeIcon(relation.type);
+            const self = <span className="font-mono break-all text-text">{itemName}</span>;
+            const other = <span className="font-mono break-all text-text">{relation.target.name}</span>;
+            return (
+              <li
+                key={relation.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-2 p-3"
+              >
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <Icon className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      {relation.direction === "outgoing" ? self : other}
+                      <Badge>{getRelationTypeLabel(relation.type)}</Badge>
+                      {relation.direction === "outgoing" ? other : self}
+                    </div>
+                    {relation.description && (
+                      <p className="mt-1 text-sm break-words text-muted">{relation.description}</p>
                     )}
-                  </div>
-                  {relation.description && (
-                    <p className="text-sm text-gray-500 mt-1">{relation.description}</p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                    <span>{relation.target.itemType?.name || "No Type"}</span>
-                    {relation.target.ip && <span>• {relation.target.ip}</span>}
-                    <span
-                      className={`px-1.5 py-0.5 rounded ${
-                        relation.target.status === "ACTIVE"
-                          ? "bg-green-100 text-green-700"
-                          : relation.target.status === "MAINTENANCE"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {relation.target.status}
-                    </span>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                      <span>{relation.target.itemType?.name || "No Type"}</span>
+                      {relation.target.ip && <span className="font-mono break-all">{relation.target.ip}</span>}
+                      <StatusDot status={relation.target.status} className="text-xs text-muted" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <Button
-                onClick={() => deleteRelation(relation.id)}
-                variant="destructive"
-                className="text-sm"
-              >
-                Remove
-              </Button>
-            </div>
-          ))}
-        </div>
+                <Button onClick={() => deleteRelation(relation.id)} variant="danger" size="sm">
+                  Remove
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {/* Add Relation Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4">Add New Relation</h3>
+      <Dialog
+        open={showAddModal}
+        onOpenChange={(open) => {
+          if (!open) closeAddModal();
+        }}
+      >
+        <DialogContent
+          title="Add New Relation"
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeAddModal}>
+                Cancel
+              </Button>
+              <Button onClick={createRelation} disabled={!selectedTarget}>
+                Create Relation
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <Field
+              label="Relation Type *"
+              htmlFor="relation-type"
+              hint={
+                <>
+                  <span className="font-mono break-all">{itemName}</span>{" "}
+                  <span className="font-medium text-text">
+                    {getRelationTypeLabel(selectedType).toLowerCase()}
+                  </span>{" "}
+                  the selected asset
+                </>
+              }
+            >
+              <Select
+                id="relation-type"
+                value={selectedType}
+                onValueChange={setSelectedType}
+                options={relationTypes.map((t) => ({ value: t.value, label: t.label }))}
+              />
+            </Field>
 
-            {/* Relation Type Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Relation Type *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {relationTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setSelectedType(type.value)}
-                    className={`p-3 rounded-lg border text-left transition-all ${
-                      selectedType === type.value
-                        ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="text-lg mr-2">{type.icon}</span>
-                    <span className="text-sm font-medium">{type.label}</span>
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {itemName} {" "}
-                <span className="font-medium text-gray-700">
-                  {getRelationTypeLabel(selectedType).toLowerCase()}
-                </span>{" "}
-                the selected asset
-              </p>
-            </div>
-
-            {/* Target Asset Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Target Asset *
-              </label>
-              <input
+            <Field label="Target Asset *" htmlFor="relation-target-search">
+              <Input
+                id="relation-target-search"
                 type="text"
                 placeholder="Search assets by name or IP..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border rounded-sm p-2 mb-2"
               />
-              <div className="max-h-48 overflow-y-auto border rounded-sm">
-                {availableItems.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    {searchQuery
-                      ? "No matching assets found"
-                      : "Type to search for assets"}
-                  </div>
-                ) : (
-                  availableItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedTarget(item.id)}
-                      className={`w-full text-left p-3 border-b last:border-b-0 transition-colors ${
-                        selectedTarget === item.id
-                          ? "bg-blue-50 border-blue-500"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{item.name}</span>
-                        {selectedTarget === item.id && (
-                          <span className="text-blue-600">✓</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {item.itemType?.name || "No Type"}
-                        {item.ip && ` • ${item.ip}`}
-                        <span
-                          className={`ml-2 px-1.5 py-0.5 rounded ${
-                            item.status === "ACTIVE"
-                              ? "bg-green-100 text-green-700"
-                              : item.status === "MAINTENANCE"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
+            </Field>
+            <div className="max-h-48 overflow-y-auto rounded-md border border-border" role="listbox" aria-label="Target assets">
+              {availableItems.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted">
+                  {searchQuery ? "No matching assets found" : "Type to search for assets"}
+                </div>
+              ) : (
+                availableItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedTarget === item.id}
+                    onClick={() => setSelectedTarget(item.id)}
+                    className={cn(
+                      "block w-full border-b border-border p-3 text-left transition-colors duration-150 last:border-b-0 hover:bg-surface-2 motion-reduce:transition-none",
+                      selectedTarget === item.id && "bg-surface-2",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 font-mono text-sm font-medium break-all text-text">{item.name}</span>
+                      {selectedTarget === item.id && (
+                        <Check className="size-4 shrink-0 text-accent" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                      <span>{item.itemType?.name || "No Type"}</span>
+                      {item.ip && <span className="font-mono break-all">{item.ip}</span>}
+                      <StatusDot status={item.status} className="text-xs text-muted" />
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
 
-            {/* Description */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Description (optional)
-              </label>
-              <textarea
+            <Field label="Description (optional)" htmlFor="relation-description">
+              <Textarea
+                id="relation-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Add details about this relation..."
-                className="w-full border rounded-sm p-2 h-20 resize-none"
+                className="h-20 resize-none"
               />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Button
-                onClick={createRelation}
-                disabled={!selectedTarget}
-              >
-                Create Relation
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setSelectedTarget("");
-                  setDescription("");
-                  setSearchQuery("");
-                }}
-                variant="outline"
-              >
-                Cancel
-              </Button>
-            </div>
+            </Field>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,1 +1,1 @@
-[{ "path": "/dashboard" }, { "path": "/items" }]
+[{ "path": "/dashboard" }, { "path": "/items" }, { "path": "/items/:first" }]
