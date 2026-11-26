@@ -1,56 +1,94 @@
 @import 'tailwindcss';
 
-@theme {
-    --color-brand-primary: #8B5E3C;     /* Wood brown */
-    --color-brand-secondary: #4A5568;   /* Slate */
-    --color-brand-accent: #C0392B;      /* Red (roof) */
-    --color-brand-background: #FEFCE8;  /* Cream */
-    --color-brand-text: #2D1B0E;        /* Dark brown */
+@custom-variant dark (&:where(.dark, .dark *));
 
-    --font-sans: Inter, sans-serif;
+/* Leitstand design tokens. Light values on :root, dark values on .dark.
+   Only --border-strong was adjusted from the spec to pass the 3:1 UI contrast test. */
+:root {
+    --bg: #F6F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #EEF2F6;
+    --border: #D8DEE4;
+    --border-strong: #8A949F; /* adjusted from #C3CBD4 for 3:1 on surface */
+    --text: #0D1117;
+    --text-muted: #57606A;
+    --accent: #0E7490;
+    --accent-fg: #FFFFFF;
+    --success: #1A7F37;
+    --warning: #9A6700;
+    --danger: #CF222E;
+    --neutral: #6E7781;
 }
 
 .dark {
-    --color-brand-background: #1C1410;
-    --color-brand-text: #F5F0E8;
+    --bg: #0B0F14;
+    --surface: #11161D;
+    --surface-2: #1A222C;
+    --border: #1F2732;
+    --border-strong: #566679; /* adjusted from #263140 for 3:1 on surface */
+    --text: #E6EDF3;
+    --text-muted: #9AA7B4;
+    --accent: #22D3EE;
+    --accent-fg: #04141A;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --neutral: #94A3B8;
+    color-scheme: dark;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+@theme inline {
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
+    --color-text: var(--text);
+    --color-muted: var(--text-muted);
+    --color-accent: var(--accent);
+    --color-accent-fg: var(--accent-fg);
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+    --color-danger: var(--danger);
+    --color-neutral: var(--neutral);
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
+    /* Legacy aliases, removed once all pages use the semantic tokens. */
+    --color-brand-primary: var(--accent);
+    --color-brand-background: var(--bg);
+    --color-brand-text: var(--text);
+    --color-brand-secondary: var(--text-muted);
+    --color-brand-accent: var(--accent);
+
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 @layer base {
-
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--border);
+    }
+
+    body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
     }
 }
 
-/* Dark mode base styles */
-@layer base {
-    .dark body {
-        background-color: #1C1410;
-        color: #F5F0E8;
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::after,
+    ::before {
+        transition: none !important;
+        animation: none !important;
     }
-    
-    .dark {
-        color-scheme: dark;
-    }
-}
-
-/* Smooth transitions for theme changes */
-html {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-body {
-    transition: background-color 0.3s ease, color 0.3s ease;
 }

@@ -4,8 +4,21 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import { useToast } from "@/components/ToastProvider";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Panel } from "@/components/ui/Panel";
+import { Select } from "@/components/ui/Select";
+import { StatusDot } from "@/components/ui/StatusDot";
+import { Skeleton } from "@/components/Skeleton";
+import CopyButton from "@/components/CopyButton";
+import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -53,29 +66,15 @@ interface CustomField {
     options: string[];
 }
 
-interface CustomFieldValue {
-    id: string;
-    value: string;
-    customFieldId: string;
-    customField: CustomField;
+interface CustomFieldWithValue extends CustomField {
+    value: string | null;
+    valueId: string | null;
 }
 
-const statusColors: Record<AssetStatus, string> = {
-    ACTIVE: "bg-green-100 text-green-800 border-green-200",
-    DEPRECATED: "bg-red-100 text-red-800 border-red-200",
-    MAINTENANCE: "bg-yellow-100 text-yellow-800 border-yellow-200",
-};
-
-const statusLabels: Record<AssetStatus, string> = {
-    ACTIVE: "Active",
-    DEPRECATED: "Deprecated",
-    MAINTENANCE: "Maintenance",
-};
-
-const actionColors: Record<string, string> = {
-    CREATE: "bg-blue-100 text-blue-800",
-    UPDATE: "bg-yellow-100 text-yellow-800",
-    DELETE: "bg-red-100 text-red-800",
+const actionTones: Record<string, "accent" | "warning" | "danger"> = {
+    CREATE: "accent",
+    UPDATE: "warning",
+    DELETE: "danger",
 };
 
 function formatDate(dateString: string): string {
@@ -108,17 +107,17 @@ export default function AssetDetailPage() {
     const { status } = useSession();
     const params = useParams();
     const router = useRouter();
+    const { addToast } = useToast();
     const itemId = params.id as string;
 
     const [item, setItem] = useState<ConfigItem | null>(null);
     const [history, setHistory] = useState<AuditLogEntry[]>([]);
-    const [, setCustomFieldValues] = useState<CustomFieldValue[]>([]);
     const [customFieldDefs, setCustomFieldDefs] = useState<CustomField[]>([]);
     const [cfEdits, setCfEdits] = useState<Record<string, string>>({});
     const [cfSaving, setCfSaving] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"overview" | "relations" | "history" | "fields">("overview");
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     useEffect(() => {
         if (status === "authenticated" && itemId) {
@@ -156,11 +155,10 @@ export default function AssetDetailPage() {
                 fetch(`/api/configuration-items/${itemId}`),
             ]);
             if (valRes.ok) {
-                const vals: CustomFieldValue[] = await valRes.json();
-                setCustomFieldValues(vals);
+                const vals: CustomFieldWithValue[] = await valRes.json();
                 // Build edits map from existing values
                 const edits: Record<string, string> = {};
-                vals.forEach(v => { edits[v.customFieldId] = v.value; });
+                vals.forEach(v => { if (v.value !== null && v.value !== undefined) edits[v.id] = v.value; });
                 setCfEdits(edits);
             }
             // After we have the item, fetch field defs for its type (+ global)
@@ -179,11 +177,16 @@ export default function AssetDetailPage() {
         setCfSaving(fieldId);
         try {
             const res = await fetch(`/api/configuration-items/${itemId}/custom-fields`, {
-                method: "POST",
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ customFieldId: fieldId, value: cfEdits[fieldId] ?? "" }),
+                body: JSON.stringify({ values: { [fieldId]: cfEdits[fieldId] ?? "" } }),
             });
-            if (res.ok) await fetchCustomFields();
+            if (res.ok) {
+                await fetchCustomFields();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                addToast({ type: "error", title: "Could not save field", message: err.error || "Failed to save custom field value" });
+            }
         } catch (err) {
             console.error("Failed to save custom field value:", err);
         }
@@ -196,7 +199,8 @@ export default function AssetDetailPage() {
             const res = await fetch(`/api/audit-logs?entityType=ConfigurationItem&entityId=${itemId}&limit=50`);
             if (res.ok) {
                 const data = await res.json();
-                setHistory(data);
+                // The API answers { logs, ... }; tolerate a bare array too.
+                setHistory(Array.isArray(data) ? data : Array.isArray(data?.logs) ? data.logs : []);
             }
         } catch (err) {
             console.error("Failed to fetch history:", err);
@@ -204,7 +208,6 @@ export default function AssetDetailPage() {
     };
 
     const deleteItem = async () => {
-        if (!confirm("Are you sure you want to delete this asset?")) return;
         try {
             const res = await fetch(`/api/configuration-items/${itemId}`, {
                 method: "DELETE",
@@ -221,318 +224,252 @@ export default function AssetDetailPage() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 p-8">
-                <div className="max-w-5xl mx-auto">
-                    <div className="animate-pulse">
-                        <div className="h-8 bg-gray-300 rounded w-1/3 mb-4"></div>
-                        <div className="h-4 bg-gray-300 rounded w-1/4 mb-8"></div>
-                        <div className="h-64 bg-gray-300 rounded"></div>
-                    </div>
-                </div>
+            <div className="space-y-4" role="status" aria-label="Loading asset">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-64 w-full" />
             </div>
         );
     }
 
     if (error || !item) {
         return (
-            <div className="min-h-screen bg-gray-50 p-8">
-                <div className="max-w-5xl mx-auto">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                        <h2 className="text-xl font-semibold text-red-800 mb-2">Error</h2>
-                        <p className="text-red-600">{error || "Asset not found"}</p>
-                        <Link href="/items">
-                            <Button className="mt-4">← Back to Items</Button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
+            <EmptyState
+                title={error || "Asset not found"}
+                description="The asset could not be displayed."
+                action={
+                    <Link href="/items">
+                        <Button variant="secondary">
+                            <ArrowLeft className="size-4" aria-hidden="true" />
+                            Back to Items
+                        </Button>
+                    </Link>
+                }
+            />
         );
     }
 
+    const copyable = (label: string, value: string | undefined) => (
+        <div className="min-w-0">
+            <dt className="text-xs font-medium text-muted">{label}</dt>
+            <dd className="mt-1 flex min-w-0 items-center gap-1 text-sm">
+                {value ? (
+                    <>
+                        <span className="min-w-0 font-mono break-all text-text">{value}</span>
+                        <CopyButton text={value} />
+                    </>
+                ) : (
+                    <span className="text-muted">Not set</span>
+                )}
+            </dd>
+        </div>
+    );
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="max-w-5xl mx-auto p-8">
-                {/* Header */}
-                <div className="mb-6">
-                    <Link href="/items" className="text-brand-primary hover:underline text-sm">
-                        ← Back to Items
-                    </Link>
+        <div>
+            <Link
+                href="/items"
+                className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-text max-sm:min-h-11"
+            >
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                Back to Items
+            </Link>
+
+            {/* Header */}
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-full flex-1 sm:min-w-0">
+                    <h1 className="font-mono text-xl font-semibold break-all text-text">{item.name}</h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <StatusDot status={item.status} />
+                        <Badge>{item.itemType?.name || "No type"}</Badge>
+                    </div>
+                    {item.description && (
+                        <p className="mt-3 text-sm break-words text-muted">{item.description}</p>
+                    )}
                 </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <FavoriteButton itemId={item.id} itemName={item.name} size="lg" />
+                    <Link
+                        href={`/items?id=${item.id}`}
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium whitespace-nowrap text-text transition-colors duration-150 hover:bg-surface-2 motion-reduce:transition-none max-sm:min-h-11"
+                    >
+                        <Pencil className="size-4" aria-hidden="true" />
+                        Edit
+                    </Link>
+                    <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+                        <Trash2 className="size-4" aria-hidden="true" />
+                        Delete
+                    </Button>
+                </div>
+            </div>
 
-                {/* Asset Header */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <h1 className="text-3xl font-bold text-gray-900">{item.name}</h1>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[item.status]}`}>
-                                    {statusLabels[item.status]}
-                                </span>
-                            </div>
-                            {item.description && (
-                                <p className="text-gray-600 text-lg">{item.description}</p>
-                            )}
+            <div className="space-y-6">
+                <Panel title="Details">
+                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {copyable("IP Address", item.ip)}
+                        {copyable("MAC Address", item.mac)}
+                        {copyable("ID", item.id)}
+                        <div className="min-w-0">
+                            <dt className="text-xs font-medium text-muted">Type</dt>
+                            <dd className="mt-1 text-sm break-words text-text">{item.itemType?.name || "None"}</dd>
                         </div>
-                        <div className="flex gap-2 items-center">
-                            <FavoriteButton itemId={item.id} itemName={item.name} size="lg" />
-                            <Link href={`/items?id=${item.id}`}>
-                                <Button variant="outline">Edit</Button>
-                            </Link>
-                            <Button variant="destructive" onClick={deleteItem}>Delete</Button>
+                        <div className="min-w-0">
+                            <dt className="text-xs font-medium text-muted">Created</dt>
+                            <dd className="mt-1 text-sm text-text">{formatDate(item.createdAt)}</dd>
                         </div>
-                    </div>
-
-                    {/* Metadata */}
-                    <div className="mt-6 flex flex-wrap gap-4 text-sm text-gray-500">
-                        <span>ID: <code className="bg-gray-100 px-1 rounded">{item.id}</code></span>
-                        <span>Type: {item.itemType?.name || "None"}</span>
-                        <span>Created: {formatDate(item.createdAt)}</span>
-                        <span>Updated: {formatTimeAgo(item.updatedAt)}</span>
+                        <div className="min-w-0">
+                            <dt className="text-xs font-medium text-muted">Updated</dt>
+                            <dd className="mt-1 text-sm text-text">{formatTimeAgo(item.updatedAt)}</dd>
+                        </div>
                         {item.user && (
-                            <span>By: {item.user.name || item.user.email}</span>
+                            <div className="min-w-0">
+                                <dt className="text-xs font-medium text-muted">By</dt>
+                                <dd className="mt-1 text-sm break-all text-text">{item.user.name || item.user.email}</dd>
+                            </div>
                         )}
-                    </div>
+                    </dl>
+                </Panel>
 
-                    {/* Tags */}
-                    {item.tags.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
+                <Panel title={`Tags (${item.tags.length})`}>
+                    {item.tags.length === 0 ? (
+                        <p className="text-sm text-muted">No tags.</p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
                             {item.tags.map((tag) => (
-                                <span
-                                    key={tag.id}
-                                    className="px-3 py-1 rounded-full text-sm"
-                                    style={{
-                                        backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
-                                        border: `1px solid ${tag.color || '#d1d5db'}`,
-                                        color: tag.color || '#374151',
-                                    }}
-                                >
-                                    {tag.name}
-                                </span>
+                                <TagBadge key={tag.id} tag={tag} />
                             ))}
                         </div>
                     )}
-                </div>
+                </Panel>
 
-                {/* Tabs */}
-                <div className="bg-white rounded-lg shadow-sm mb-6">
-                    <div className="border-b border-gray-200">
-                        <nav className="flex">
-                            <button
-                                onClick={() => setActiveTab("overview")}
-                                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                    activeTab === "overview"
-                                        ? "border-brand-primary text-brand-primary"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
-                                }`}
-                            >
-                                Overview
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("relations")}
-                                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                    activeTab === "relations"
-                                        ? "border-brand-primary text-brand-primary"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
-                                }`}
-                            >
-                                Relations
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("history")}
-                                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                    activeTab === "history"
-                                        ? "border-brand-primary text-brand-primary"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
-                                }`}
-                            >
-                                History ({history.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("fields")}
-                                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                    activeTab === "fields"
-                                        ? "border-brand-primary text-brand-primary"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
-                                }`}
-                            >
-                                Custom Fields ({customFieldDefs.length})
-                            </button>
-                        </nav>
-                    </div>
-
-                    <div className="p-6">
-                        {activeTab === "overview" && (
-                            <div className="space-y-6">
-                                {/* Network Info */}
-                                <section>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Network Information</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <span className="text-sm text-gray-500">IP Address</span>
-                                            <div className="mt-1">
-                                                {item.ip ? (
-                                                    <code className="text-lg font-mono bg-gray-200 px-2 py-1 rounded">{item.ip}</code>
-                                                ) : (
-                                                    <span className="text-gray-400 italic">Not set</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <span className="text-sm text-gray-500">MAC Address</span>
-                                            <div className="mt-1">
-                                                {item.mac ? (
-                                                    <code className="text-lg font-mono bg-gray-200 px-2 py-1 rounded">{item.mac}</code>
-                                                ) : (
-                                                    <span className="text-gray-400 italic">Not set</span>
-                                                )}
-                                            </div>
-                                        </div>
+                <Panel title={`Custom Fields (${customFieldDefs.length})`}>
+                    {customFieldDefs.length === 0 ? (
+                        <div className="text-sm text-muted">
+                            <p>No custom fields defined for this item type.</p>
+                            <p className="mt-1">
+                                Admins can create custom fields under{" "}
+                                <a href="/admin/custom-fields" className="text-accent underline">
+                                    Admin → Custom Fields
+                                </a>.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {customFieldDefs.map((field) => {
+                                const inputId = `cf-${field.id}`;
+                                const setValue = (v: string) => setCfEdits((prev) => ({ ...prev, [field.id]: v }));
+                                return (
+                                    <div key={field.id} className="flex flex-wrap items-end gap-3">
+                                        <Field
+                                            className="min-w-0 flex-1 basis-56"
+                                            htmlFor={inputId}
+                                            label={
+                                                <>
+                                                    {field.label}
+                                                    {field.required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
+                                                </>
+                                            }
+                                            hint={field.description || undefined}
+                                        >
+                                            {field.options?.length > 0 ? (
+                                                <Select
+                                                    id={inputId}
+                                                    value={cfEdits[field.id] ?? ""}
+                                                    onValueChange={setValue}
+                                                    options={[
+                                                        { value: "", label: "— select —" },
+                                                        ...field.options.map((o) => ({ value: o, label: o })),
+                                                    ]}
+                                                />
+                                            ) : field.type === "BOOLEAN" ? (
+                                                <Select
+                                                    id={inputId}
+                                                    value={cfEdits[field.id] ?? ""}
+                                                    onValueChange={setValue}
+                                                    options={[
+                                                        { value: "", label: "— select —" },
+                                                        { value: "true", label: "Yes" },
+                                                        { value: "false", label: "No" },
+                                                    ]}
+                                                />
+                                            ) : (
+                                                <Input
+                                                    id={inputId}
+                                                    type={field.type === "DATE" ? "date" : field.type === "NUMBER" ? "number" : field.type === "EMAIL" ? "email" : field.type === "URL" ? "url" : "text"}
+                                                    value={cfEdits[field.id] ?? ""}
+                                                    onChange={(e) => setValue(e.target.value)}
+                                                    placeholder={field.defaultValue || ""}
+                                                />
+                                            )}
+                                        </Field>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => saveCustomFieldValue(field.id)}
+                                            loading={cfSaving === field.id}
+                                            className="mb-0.5"
+                                        >
+                                            {cfSaving === field.id ? "Saving…" : "Save"}
+                                        </Button>
                                     </div>
-                                </section>
+                                );
+                            })}
+                        </div>
+                    )}
+                </Panel>
 
-                                {/* Quick Stats */}
-                                <section>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Stats</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="bg-blue-50 rounded-lg p-4 text-center">
-                                            <div className="text-2xl font-bold text-blue-600">{history.length}</div>
-                                            <div className="text-sm text-blue-600">Changes</div>
-                                        </div>
-                                        <div className="bg-purple-50 rounded-lg p-4 text-center">
-                                            <div className="text-2xl font-bold text-purple-600">{item.tags.length}</div>
-                                            <div className="text-sm text-purple-600">Tags</div>
-                                        </div>
+                <Panel title="Relations">
+                    <AssetRelations itemId={item.id} itemName={item.name} />
+                </Panel>
+
+                <Panel title={`Change History (${history.length})`}>
+                    {history.length === 0 ? (
+                        <p className="text-sm text-muted">No history available for this asset.</p>
+                    ) : (
+                        <ol className="space-y-4">
+                            {history.map((entry) => (
+                                <li key={entry.id} className="border-l-2 border-border pl-4">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                        <Badge tone={actionTones[entry.action] || "neutral"}>{entry.action}</Badge>
+                                        <span className="text-xs text-muted">{formatTimeAgo(entry.createdAt)}</span>
+                                        {entry.user && (
+                                            <span className="text-xs break-all text-muted">
+                                                by {entry.user.name || entry.user.email}
+                                            </span>
+                                        )}
                                     </div>
-                                </section>
-                            </div>
-                        )}
-
-                        {activeTab === "relations" && (
-                            <AssetRelations itemId={item.id} itemName={item.name} />
-                        )}
-
-                        {activeTab === "history" && (
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Change History</h3>
-                                {history.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <p>No history available for this asset.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {history.map((entry) => (
-                                            <div key={entry.id} className="border-l-4 border-gray-200 pl-4 py-2">
-                                                <div className="flex items-center gap-3 mb-1">
-                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${actionColors[entry.action] || "bg-gray-100 text-gray-800"}`}>
-                                                        {entry.action}
-                                                    </span>
-                                                    <span className="text-sm text-gray-500">
-                                                        {formatTimeAgo(entry.createdAt)}
-                                                    </span>
-                                                    {entry.user && (
-                                                        <span className="text-sm text-gray-600">
-                                                            by {entry.user.name || entry.user.email}
-                                                        </span>
-                                                    )}
+                                    <p className="mt-1 text-sm break-words text-text">
+                                        {entry.description || `${entry.action} Configuration Item`}
+                                    </p>
+                                    {(entry.oldValues || entry.newValues) && (
+                                        <div className="mt-2 space-y-1 text-xs">
+                                            {entry.oldValues && (
+                                                <div className="font-mono break-all text-muted">
+                                                    <span className="font-sans font-medium text-text">Old:</span> {entry.oldValues}
                                                 </div>
-                                                <p className="text-gray-800">{entry.description || `${entry.action} Configuration Item`}</p>
-                                                {(entry.oldValues || entry.newValues) && (
-                                                    <div className="mt-2 text-sm">
-                                                        {entry.oldValues && (
-                                                            <div className="text-red-600">
-                                                                <span className="font-medium">Old:</span> {entry.oldValues}
-                                                            </div>
-                                                        )}
-                                                        {entry.newValues && (
-                                                            <div className="text-green-600">
-                                                                <span className="font-medium">New:</span> {entry.newValues}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === "fields" && (
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Custom Fields</h3>
-                                {customFieldDefs.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400">
-                                        <p>No custom fields defined for this item type.</p>
-                                        <p className="text-sm mt-1">
-                                            Admins can create custom fields under{" "}
-                                            <a href="/admin/custom-fields" className="text-brand-primary hover:underline">
-                                                Admin → Custom Fields
-                                            </a>.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {customFieldDefs.map((field) => {
-                                            return (
-                                                <div key={field.id} className="border border-gray-200 rounded-lg p-4">
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div className="flex-1">
-                                                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                                                {field.label}
-                                                                {field.required && <span className="text-red-500 ml-1">*</span>}
-                                                            </label>
-                                                            {field.description && (
-                                                                <p className="text-xs text-gray-400 mb-2">{field.description}</p>
-                                                            )}
-                                                            {field.options?.length > 0 ? (
-                                                                <select
-                                                                    value={cfEdits[field.id] ?? ""}
-                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
-                                                                    className="w-full border rounded-sm p-2 text-sm"
-                                                                >
-                                                                    <option value="">— select —</option>
-                                                                    {field.options.map(o => (
-                                                                        <option key={o} value={o}>{o}</option>
-                                                                    ))}
-                                                                </select>
-                                                            ) : field.type === "BOOLEAN" ? (
-                                                                <select
-                                                                    value={cfEdits[field.id] ?? ""}
-                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
-                                                                    className="w-full border rounded-sm p-2 text-sm"
-                                                                >
-                                                                    <option value="">— select —</option>
-                                                                    <option value="true">Yes</option>
-                                                                    <option value="false">No</option>
-                                                                </select>
-                                                            ) : (
-                                                                <input
-                                                                    type={field.type === "DATE" ? "date" : field.type === "NUMBER" ? "number" : field.type === "EMAIL" ? "email" : field.type === "URL" ? "url" : "text"}
-                                                                    value={cfEdits[field.id] ?? ""}
-                                                                    onChange={e => setCfEdits(prev => ({ ...prev, [field.id]: e.target.value }))}
-                                                                    placeholder={field.defaultValue || ""}
-                                                                    className="w-full border rounded-sm p-2 text-sm"
-                                                                />
-                                                            )}
-                                                        </div>
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => saveCustomFieldValue(field.id)}
-                                                            disabled={cfSaving === field.id}
-                                                        >
-                                                            {cfSaving === field.id ? "Saving…" : "Save"}
-                                                        </Button>
-                                                    </div>
+                                            )}
+                                            {entry.newValues && (
+                                                <div className="font-mono break-all text-muted">
+                                                    <span className="font-sans font-medium text-text">New:</span> {entry.newValues}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </main>
+                                            )}
+                                        </div>
+                                    )}
+                                </li>
+                            ))}
+                        </ol>
+                    )}
+                </Panel>
+            </div>
+
+            <ConfirmDialog
+                open={confirmDelete}
+                onOpenChange={setConfirmDelete}
+                title="Delete asset"
+                description="Are you sure you want to delete this asset?"
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={deleteItem}
+            />
         </div>
     );
 }

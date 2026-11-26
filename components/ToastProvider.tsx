@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { CheckCircle2, Info, TriangleAlert, X, XCircle } from "lucide-react";
+import { IconButton } from "@/components/ui/IconButton";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -84,65 +86,40 @@ function ToastItem({
     onRemove: (id: string) => void;
 }) {
     const icons = {
-        success: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-        ),
-        error: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        ),
-        warning: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-        ),
-        info: (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        ),
+        success: CheckCircle2,
+        error: XCircle,
+        warning: TriangleAlert,
+        info: Info,
     };
-
-    const colors = {
-        success: "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200",
-        error: "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200",
-        warning: "bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200",
-        info: "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200",
-    };
+    const Icon = icons[toast.type];
 
     const iconColors = {
-        success: "text-green-500",
-        error: "text-red-500",
-        warning: "text-yellow-500",
-        info: "text-blue-500",
+        success: "text-success",
+        error: "text-danger",
+        warning: "text-warning",
+        info: "text-accent",
     };
 
     return (
         <div
-            className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-lg min-w-[320px] max-w-[480px] animate-in slide-in-from-right-full fade-in duration-300 ${colors[toast.type]}`}
+            className="flex w-[min(480px,calc(100vw-2rem))] items-start gap-3 rounded-[8px] border border-border bg-surface px-4 py-3 text-text shadow-lg"
             role="alert"
         >
             <div className={`flex-shrink-0 mt-0.5 ${iconColors[toast.type]}`}>
-                {icons[toast.type]}
+                <Icon className="size-5" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{toast.title}</p>
                 {toast.message && (
-                    <p className="text-sm opacity-90 mt-0.5">{toast.message}</p>
+                    <p className="text-sm text-muted mt-0.5 break-words">{toast.message}</p>
                 )}
             </div>
-            <button
+            <IconButton
+                label="Close"
+                icon={X}
                 onClick={() => onRemove(toast.id)}
-                className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-                aria-label="Close"
-            >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+                className="-my-1 -mr-2 shrink-0"
+            />
         </div>
     );
 }

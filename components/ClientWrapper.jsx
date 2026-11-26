@@ -1,6 +1,6 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
-import Navbar from "@/components/Navbar";
+import AppShell from "@/components/shell/AppShell";
 import CommandPalette from "@/components/CommandPalette";
 import { ToastProvider } from "@/components/ToastProvider";
 
@@ -9,8 +9,7 @@ export default function ClientWrapper({ children }) {
         <SessionProvider>
             <ToastProvider>
                 <CommandPalette />
-                <Navbar />
-                {children}
+                <AppShell>{children}</AppShell>
             </ToastProvider>
         </SessionProvider>
     );
