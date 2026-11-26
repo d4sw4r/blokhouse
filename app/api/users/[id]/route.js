@@ -5,7 +5,7 @@ import { createAuditLog } from "@/lib/audit";
 import { USER_SELECT, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
 
 async function countOtherAdmins(id) {
-    return prisma.user.count({ where: { role: "ADMIN", NOT: { id } } });
+    return prisma.user.count({ where: { role: "ADMIN", disabledAt: null, NOT: { id } } });
 }
 
 export async function GET(request, { params }) {
@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
     const { auth, response } = await requireAuth(request, "admin");
     if (response) return response;
     const { id } = await params;
-    const { name, email, role, password } = await request.json();
+    const { name, email, role, password, disabled } = await request.json();
 
     const data = {};
     if (name !== undefined) data.name = name;
@@ -32,6 +32,10 @@ export async function PUT(request, { params }) {
     if (role !== undefined) {
         if (!isValidRole(role)) return jsonError(400, `Role must be one of: ${ROLES.join(", ")}`);
         data.role = role;
+    }
+    if (disabled !== undefined) {
+        if (typeof disabled !== "boolean") return jsonError(400, "disabled must be a boolean");
+        if (disabled && id === auth.user.id) return jsonError(400, "You cannot deactivate your own account");
     }
     if (password !== undefined && password !== "") {
         const pwError = passwordProblem(password);
@@ -44,6 +48,17 @@ export async function PUT(request, { params }) {
     if (existing.role === "ADMIN" && data.role && data.role !== "ADMIN" && (await countOtherAdmins(id)) === 0) {
         return jsonError(400, "Cannot demote the last administrator");
     }
+    if (disabled === true && !existing.disabledAt) {
+        if (existing.role === "ADMIN" && (await countOtherAdmins(id)) === 0) {
+            return jsonError(400, "Cannot deactivate the last administrator");
+        }
+        data.disabledAt = new Date();
+    } else if (disabled === false) {
+        data.disabledAt = null;
+    }
+
+    const deactivationNote =
+        disabled === true && !existing.disabledAt ? " (deactivated)" : disabled === false && existing.disabledAt ? " (reactivated)" : "";
 
     try {
         const updated = await prisma.user.update({ where: { id }, data, select: USER_SELECT });
@@ -52,7 +67,7 @@ export async function PUT(request, { params }) {
             entityType: "User",
             entityId: id,
             userId: auth.user.id,
-            description: `Updated user ${updated.email}${data.password ? " (password changed)" : ""}`,
+            description: `Updated user ${updated.email}${data.password ? " (password changed)" : ""}${deactivationNote}`,
             oldValues: existing,
             newValues: updated,
             req: request,
