@@ -4,11 +4,13 @@ import { cn } from "@/lib/utils";
 export type BadgeTone = "neutral" | "accent" | "success" | "warning" | "danger";
 
 const tones: Record<BadgeTone, string> = {
-    neutral: "bg-neutral/15 text-text border-neutral/40",
-    accent: "bg-accent/15 text-accent border-accent/40",
-    success: "bg-success/15 text-success border-success/40",
-    warning: "bg-warning/15 text-warning border-warning/40",
-    danger: "bg-danger/15 text-danger border-danger/40",
+    // Tint 10% (verified >= 4.5:1 in __tests__/ui/contrast.test.js). Success and warning
+    // keep text-text because their light-theme tone colours fall short on the tint.
+    neutral: "bg-neutral/10 text-text border-neutral/40",
+    accent: "bg-accent/10 text-accent border-accent/40",
+    success: "bg-success/10 text-text border-success/40",
+    warning: "bg-warning/10 text-text border-warning/40",
+    danger: "bg-danger/10 text-danger border-danger/40",
 };
 
 export function Badge({

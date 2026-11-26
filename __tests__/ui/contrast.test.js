@@ -43,3 +43,31 @@ for (const theme of ["light", "dark"]) {
         });
     });
 }
+
+// Badge tints: tone text on (tone at TINT alpha over --surface). Keep in sync with components/ui/Badge.tsx.
+const BADGE_TINT = 0.1;
+const BADGE_TEXT = { neutral: "text", accent: "accent", success: "text", warning: "text", danger: "danger" };
+
+function composite(fg, bg, alpha) {
+    const ch = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+    return (
+        "#" +
+        [0, 1, 2]
+            .map((i) => Math.round(ch(fg, i) * alpha + ch(bg, i) * (1 - alpha)).toString(16).padStart(2, "0"))
+            .join("")
+    );
+}
+
+for (const theme of ["light", "dark"]) {
+    describe(`${theme} badge contrast`, () => {
+        const t = tokens[theme];
+        for (const [tone, textToken] of Object.entries(BADGE_TEXT)) {
+            it(`${tone} text on ${BADGE_TINT} tint is >= 4.5`, () => {
+                const tintToken = tone === "neutral" ? "neutral" : tone;
+                const bg = composite(t[tintToken], t.surface, BADGE_TINT);
+                const r = contrastRatio(t[textToken], bg);
+                expect(r, `${theme}/${tone} ${r.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+            });
+        }
+    });
+}
