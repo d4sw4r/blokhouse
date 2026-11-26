@@ -1,14 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Shapes } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Field } from '@/components/ui/Field';
+import { Input } from '@/components/ui/Input';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Panel } from '@/components/ui/Panel';
 
+interface ItemType {
+    id: string;
+    name: string;
+    description?: string | null;
+}
 
 export default function TypesPage() {
-    const [types, setTypes] = useState([]);
+    const [types, setTypes] = useState<ItemType[]>([]);
     const [newType, setNewType] = useState({ name: '', description: '' });
-    const [editingTypeId, setEditingTypeId] = useState(null);
+    const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
     const [editingTypeData, setEditingTypeData] = useState({ name: '', description: '' });
 
     const fetchTypes = async () => {
@@ -43,12 +54,12 @@ export default function TypesPage() {
         setNewType({ name: '', description: '' });
     };
 
-    const deleteType = async (id) => {
+    const deleteType = async (id: string) => {
         await fetch(`/api/types/${id}`, { method: 'DELETE' });
         setTypes((prev) => prev.filter((t) => t.id !== id));
     };
 
-    const startEditing = (type) => {
+    const startEditing = (type: ItemType) => {
         setEditingTypeId(type.id);
         setEditingTypeData({ name: type.name, description: type.description || '' });
     };
@@ -58,7 +69,7 @@ export default function TypesPage() {
         setEditingTypeData({ name: '', description: '' });
     };
 
-    const updateType = async (id) => {
+    const updateType = async (id: string) => {
         const res = await fetch(`/api/types/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -70,93 +81,95 @@ export default function TypesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div>
+            <PageHeader
+                title="Configuration Item Types"
+                description="The categories that configuration items are grouped under."
+            />
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto p-6">
-                <h1 className="text-3xl font-bold mb-6">Configuration Item Types</h1>
-
-                {/* New Type Form */}
-                <div className="bg-white p-4 rounded-sm shadow-sm mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Add New Type</h2>
-                    <div className="flex flex-col gap-4">
-                        <input
+            <Panel title="Add New Type" className="mb-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
+                    <Field label="Name" htmlFor="new-type-name">
+                        <Input
+                            id="new-type-name"
                             type="text"
                             placeholder="Name"
                             value={newType.name}
                             onChange={(e) => setNewType({ ...newType, name: e.target.value })}
-                            className="border rounded-sm p-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         />
-                        <input
+                    </Field>
+                    <Field label="Description" htmlFor="new-type-description">
+                        <Input
+                            id="new-type-description"
                             type="text"
                             placeholder="Description"
                             value={newType.description}
-                            onChange={(e) =>
-                                setNewType({ ...newType, description: e.target.value })
-                            }
-                            className="border rounded-sm p-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) => setNewType({ ...newType, description: e.target.value })}
                         />
-                        <Button onClick={createType}>Add Type</Button>
-                    </div>
+                    </Field>
+                    <Button onClick={createType}>Add Type</Button>
                 </div>
+            </Panel>
 
-                {/* Types List */}
-                <div className="bg-white p-4 rounded-sm shadow-sm">
-                    <h2 className="text-xl font-semibold mb-4">Existing Types</h2>
-                    <ul className="space-y-4">
+            <Panel title="Existing Types" padded={false}>
+                {types.length === 0 ? (
+                    <div className="p-4">
+                        <EmptyState
+                            icon={Shapes}
+                            title="No types yet"
+                            description="Add a type above to categorise your configuration items."
+                        />
+                    </div>
+                ) : (
+                    <ul className="divide-y divide-border">
                         {types.map((type) => (
                             <li
                                 key={type.id}
-                                className="border rounded-sm p-4 flex justify-between items-center"
+                                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                             >
                                 {editingTypeId === type.id ? (
-                                    <div className="flex-1">
-                                        <input
+                                    <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <Input
                                             type="text"
+                                            aria-label="Type name"
                                             placeholder="Name"
                                             value={editingTypeData.name}
                                             onChange={(e) =>
-                                                setEditingTypeData({
-                                                    ...editingTypeData,
-                                                    name: e.target.value,
-                                                })
+                                                setEditingTypeData({ ...editingTypeData, name: e.target.value })
                                             }
-                                            className="border rounded-sm p-2 mr-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                         />
-                                        <input
+                                        <Input
                                             type="text"
+                                            aria-label="Type description"
                                             placeholder="Description"
                                             value={editingTypeData.description}
                                             onChange={(e) =>
-                                                setEditingTypeData({
-                                                    ...editingTypeData,
-                                                    description: e.target.value,
-                                                })
+                                                setEditingTypeData({ ...editingTypeData, description: e.target.value })
                                             }
-                                            className="border rounded-sm p-2 mr-2 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
                                 ) : (
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-lg">{type.name}</h3>
-                                        <p className="text-gray-600">{type.description}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-semibold break-words text-text">{type.name}</h3>
+                                        {type.description && (
+                                            <p className="mt-0.5 text-sm break-words text-muted">{type.description}</p>
+                                        )}
                                     </div>
                                 )}
-                                <div className="flex gap-2">
+                                <div className="flex shrink-0 gap-2">
                                     {editingTypeId === type.id ? (
                                         <>
-                                            <Button onClick={() => updateType(type.id)}>Save</Button>
-                                            <Button onClick={cancelEditing} variant="outline">
+                                            <Button size="sm" onClick={() => updateType(type.id)}>Save</Button>
+                                            <Button size="sm" onClick={cancelEditing} variant="secondary">
                                                 Cancel
                                             </Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Button onClick={() => startEditing(type)}>Edit</Button>
-                                            <Button
-                                                onClick={() => deleteType(type.id)}
-                                                variant="destructive"
-                                            >
+                                            <Button size="sm" variant="secondary" onClick={() => startEditing(type)}>
+                                                Edit
+                                            </Button>
+                                            <Button size="sm" variant="danger" onClick={() => deleteType(type.id)}>
                                                 Delete
                                             </Button>
                                         </>
@@ -165,8 +178,8 @@ export default function TypesPage() {
                             </li>
                         ))}
                     </ul>
-                </div>
-            </main>
+                )}
+            </Panel>
         </div>
     );
 }
