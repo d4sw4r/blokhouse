@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SwaggerUI from "swagger-ui-react";
+import "./apidom-registrations";
 import "swagger-ui-react/swagger-ui.css";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
