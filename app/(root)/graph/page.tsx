@@ -1,9 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/Button";
-import { LoadingSpinner } from "@/components/Skeleton";
 import Link from "next/link";
+import { Pause, Play, RotateCcw, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Select";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Panel } from "@/components/ui/Panel";
+import { StatTile } from "@/components/ui/StatTile";
+import { StatusDot } from "@/components/ui/StatusDot";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingSpinner } from "@/components/Skeleton";
+import { statusTone } from "@/lib/ui/status";
+import { cssVar } from "@/lib/ui/cssVar";
 
 interface GraphNode {
     id: string;
@@ -16,7 +28,6 @@ interface GraphNode {
     vx: number;
     vy: number;
     radius: number;
-    color: string;
 }
 
 interface GraphEdge {
@@ -46,19 +57,55 @@ interface Relation {
     };
 }
 
-const statusColors: Record<string, string> = {
-    ACTIVE: "#22c55e",
-    DEPRECATED: "#ef4444",
-    MAINTENANCE: "#eab308",
-};
+type Tone = "accent" | "success" | "warning" | "danger" | "neutral";
 
-const relationTypeColors: Record<string, string> = {
-    DEPENDS_ON: "#ef4444",
-    RUNS_ON: "#3b82f6",
-    CONNECTED_TO: "#22c55e",
-    CONTAINS: "#a855f7",
-    DEFAULT: "#6b7280",
+// Relation type -> colour token (also named in the legend, never colour alone).
+const relationTypeTones: Record<string, Tone> = {
+    DEPENDS_ON: "danger",
+    RUNS_ON: "accent",
+    CONNECTED_TO: "success",
+    CONTAINS: "warning",
 };
+const relationTone = (type: string): Tone => relationTypeTones[type] ?? "neutral";
+const legendTypes: [string, Tone][] = [...Object.entries(relationTypeTones), ["OTHER", "neutral"]];
+const swatchClass: Record<Tone, string> = {
+    accent: "bg-accent",
+    success: "bg-success",
+    warning: "bg-warning",
+    danger: "bg-danger",
+    neutral: "bg-neutral",
+};
+const statuses = ["ACTIVE", "MAINTENANCE", "DEPRECATED"];
+
+interface Palette {
+    surface: string;
+    text: string;
+    muted: string;
+    border: string;
+    accent: string;
+    success: string;
+    warning: string;
+    danger: string;
+    neutral: string;
+    sans: string;
+    mono: string;
+}
+
+function readPalette(): Palette {
+    return {
+        surface: cssVar("--surface"),
+        text: cssVar("--text"),
+        muted: cssVar("--text-muted"),
+        border: cssVar("--border-strong"),
+        accent: cssVar("--accent"),
+        success: cssVar("--success"),
+        warning: cssVar("--warning"),
+        danger: cssVar("--danger"),
+        neutral: cssVar("--neutral"),
+        sans: cssVar("--font-sans") || "sans-serif",
+        mono: cssVar("--font-mono") || "monospace",
+    };
+}
 
 export default function RelationshipGraphPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -79,6 +126,45 @@ export default function RelationshipGraphPage() {
     const [animationEnabled, setAnimationEnabled] = useState(true);
 
     const animationRef = useRef<number | undefined>(undefined);
+    const [palette, setPalette] = useState<Palette | null>(null);
+    const [size, setSize] = useState({ w: 0, h: 0 });
+    const sizeRef = useRef({ w: 1000, h: 700 });
+    const hasGraph = nodes.length > 0;
+
+    // Canvas colours come from the theme tokens; re-read when <html class> flips dark/light.
+    useEffect(() => {
+        const update = () => setPalette(readPalette());
+        const raf = requestAnimationFrame(update);
+        const observer = new MutationObserver(update);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+        return () => {
+            cancelAnimationFrame(raf);
+            observer.disconnect();
+        };
+    }, []);
+
+    // Keep the canvas sized to its container.
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const update = () => {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const prev = sizeRef.current;
+            sizeRef.current = { w, h };
+            setSize({ w, h });
+            // Keep the layout inside the canvas when it resizes (matters while paused).
+            if (w > 0 && h > 0 && prev.w > 0 && prev.h > 0 && (prev.w !== w || prev.h !== h)) {
+                setNodes((nodesNow) =>
+                    nodesNow.map((n) => ({ ...n, x: (n.x * w) / prev.w, y: (n.y * h) / prev.h }))
+                );
+            }
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(container);
+        return () => ro.disconnect();
+    }, [loading, hasGraph]);
 
 
     // Fetch all relations
@@ -116,12 +202,11 @@ export default function RelationshipGraphPage() {
                     type: "ConfigurationItem",
                     typeName: rel.source.itemType?.name,
                     status: rel.source.status,
-                    x: Math.random() * 800 + 100,
-                    y: Math.random() * 600 + 100,
+                    x: Math.random() * Math.max(sizeRef.current.w - 200, 100) + 100,
+                    y: Math.random() * Math.max(sizeRef.current.h - 200, 100) + 100,
                     vx: 0,
                     vy: 0,
                     radius: 25,
-                    color: statusColors[rel.source.status] || "#6b7280",
                 });
             }
 
@@ -133,12 +218,11 @@ export default function RelationshipGraphPage() {
                     type: "ConfigurationItem",
                     typeName: rel.target.itemType?.name,
                     status: rel.target.status,
-                    x: Math.random() * 800 + 100,
-                    y: Math.random() * 600 + 100,
+                    x: Math.random() * Math.max(sizeRef.current.w - 200, 100) + 100,
+                    y: Math.random() * Math.max(sizeRef.current.h - 200, 100) + 100,
                     vx: 0,
                     vy: 0,
                     radius: 25,
-                    color: statusColors[rel.target.status] || "#6b7280",
                 });
             }
 
@@ -161,8 +245,9 @@ export default function RelationshipGraphPage() {
 
         setNodes((prevNodes) => {
             const newNodes = [...prevNodes];
-            const centerX = 500;
-            const centerY = 400;
+            const { w: width, h: height } = sizeRef.current;
+            const centerX = width / 2;
+            const centerY = height / 2;
             const repulsionForce = 5000;
             const springLength = 150;
             const springStrength = 0.05;
@@ -218,8 +303,8 @@ export default function RelationshipGraphPage() {
                     node.y += node.vy;
 
                     // Keep within bounds
-                    node.x = Math.max(node.radius, Math.min(1000 - node.radius, node.x));
-                    node.y = Math.max(node.radius, Math.min(800 - node.radius, node.y));
+                    node.x = Math.max(node.radius, Math.min(width - node.radius, node.x));
+                    node.y = Math.max(node.radius, Math.min(height - node.radius, node.y));
                 }
             });
 
@@ -250,15 +335,24 @@ export default function RelationshipGraphPage() {
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        if (!ctx || !palette || size.w === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas.width !== Math.round(size.w * dpr) || canvas.height !== Math.round(size.h * dpr)) {
+            canvas.width = Math.round(size.w * dpr);
+            canvas.height = Math.round(size.h * dpr);
+        }
+        const toneColor = (tone: Tone) => palette[tone];
 
         // Clear canvas
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = palette.surface;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Apply transform
         ctx.save();
-        ctx.translate(offset.x, offset.y);
-        ctx.scale(zoom, zoom);
+        ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * offset.x, dpr * offset.y);
 
         // Filter nodes based on search
         const filteredNodes = nodes.filter((node) =>
@@ -286,7 +380,7 @@ export default function RelationshipGraphPage() {
             ctx.beginPath();
             ctx.moveTo(source.x, source.y);
             ctx.lineTo(target.x, target.y);
-            ctx.strokeStyle = relationTypeColors[edge.type] || relationTypeColors.DEFAULT;
+            ctx.strokeStyle = toneColor(relationTone(edge.type));
             ctx.lineWidth = 2;
             ctx.stroke();
 
@@ -314,8 +408,8 @@ export default function RelationshipGraphPage() {
             if (showLabels) {
                 const midX = (source.x + target.x) / 2;
                 const midY = (source.y + target.y) / 2;
-                ctx.fillStyle = relationTypeColors[edge.type] || relationTypeColors.DEFAULT;
-                ctx.font = "10px sans-serif";
+                ctx.fillStyle = toneColor(relationTone(edge.type));
+                ctx.font = `10px ${palette.sans}`;
                 ctx.textAlign = "center";
                 ctx.fillText(edge.type.replace(/_/g, " "), midX, midY - 5);
             }
@@ -326,30 +420,30 @@ export default function RelationshipGraphPage() {
             // Node circle
             ctx.beginPath();
             ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-            ctx.fillStyle = node.color;
+            ctx.fillStyle = toneColor(statusTone(node.status).tone);
             ctx.fill();
 
             // Highlight hovered or selected
             if (node === hoveredNode || node === selectedNode) {
-                ctx.strokeStyle = "#3b82f6";
+                ctx.strokeStyle = palette.accent;
                 ctx.lineWidth = 3;
                 ctx.stroke();
             } else {
-                ctx.strokeStyle = "#374151";
+                ctx.strokeStyle = palette.border;
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
 
             // Node label
             if (showLabels) {
-                ctx.fillStyle = "#1f2937";
-                ctx.font = "bold 12px sans-serif";
+                ctx.fillStyle = palette.text;
+                ctx.font = `bold 12px ${palette.mono}`;
                 ctx.textAlign = "center";
                 ctx.fillText(node.name.substring(0, 15), node.x, node.y + node.radius + 15);
 
                 if (node.typeName) {
-                    ctx.fillStyle = "#6b7280";
-                    ctx.font = "10px sans-serif";
+                    ctx.fillStyle = palette.muted;
+                    ctx.font = `10px ${palette.sans}`;
                     ctx.fillText(node.typeName, node.x, node.y + node.radius + 28);
                 }
             }
@@ -363,15 +457,15 @@ export default function RelationshipGraphPage() {
                 0,
                 Math.PI * 2
             );
-            ctx.fillStyle = statusColors[node.status] || "#6b7280";
+            ctx.fillStyle = toneColor(statusTone(node.status).tone);
             ctx.fill();
-            ctx.strokeStyle = "#ffffff";
+            ctx.strokeStyle = palette.surface;
             ctx.lineWidth = 2;
             ctx.stroke();
         });
 
         ctx.restore();
-    }, [nodes, edges, hoveredNode, selectedNode, filterType, searchQuery, zoom, offset, showLabels]);
+    }, [nodes, edges, hoveredNode, selectedNode, filterType, searchQuery, zoom, offset, showLabels, palette, size]);
 
     // Mouse handlers
     const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -414,11 +508,18 @@ export default function RelationshipGraphPage() {
         setDraggedNode(null);
     };
 
-    const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        setZoom((prev) => Math.max(0.5, Math.min(2, prev * delta)));
-    };
+    // Native non-passive listener so preventDefault stops the page from scrolling while zooming.
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const handleWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            setZoom((prev) => Math.max(0.5, Math.min(2, prev * delta)));
+        };
+        canvas.addEventListener("wheel", handleWheel, { passive: false });
+        return () => canvas.removeEventListener("wheel", handleWheel);
+    }, [loading, hasGraph]);
 
     // Get unique relation types
     const relationTypes = Array.from(new Set(edges.map((e) => e.type)));
@@ -449,252 +550,191 @@ export default function RelationshipGraphPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                <main className="max-w-7xl mx-auto p-8">
-                    <div className="flex justify-center items-center h-96">
-                        <LoadingSpinner size="lg" />
-                    </div>
-                </main>
+            <div className="flex h-96 items-center justify-center">
+                <LoadingSpinner size="lg" />
             </div>
         );
     }
 
+    const statTiles: { label: string; value: number; tone: "accent" | "success" | "warning" | "neutral" }[] = [
+        { label: "Assets", value: stats.totalNodes, tone: "accent" },
+        { label: "Relations", value: stats.totalEdges, tone: "accent" },
+        { label: "Active", value: stats.activeNodes, tone: "success" },
+        { label: "Maintenance", value: stats.maintenanceNodes, tone: "warning" },
+        { label: "Deprecated", value: stats.deprecatedNodes, tone: "neutral" },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="max-w-7xl mx-auto p-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                    <div>
-                        <h1 className="text-4xl font-bold text-gray-800">Relationship Graph</h1>
-                        <p className="text-gray-600 mt-1">
-                            Visualize connections between your configuration items
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button onClick={() => setAnimationEnabled(!animationEnabled)} variant="outline">
-                            {animationEnabled ? "⏸ Pause" : "▶ Play"}
+        <div>
+            <PageHeader
+                title="Relationship Graph"
+                description="Visualize connections between your configuration items"
+                actions={
+                    <>
+                        <Button onClick={() => setAnimationEnabled(!animationEnabled)} variant="secondary">
+                            {animationEnabled ? (
+                                <Pause className="size-4" aria-hidden="true" />
+                            ) : (
+                                <Play className="size-4" aria-hidden="true" />
+                            )}
+                            {animationEnabled ? "Pause" : "Play"}
                         </Button>
                         <Button
                             onClick={() => {
                                 setZoom(1);
                                 setOffset({ x: 0, y: 0 });
                             }}
-                            variant="outline"
+                            variant="secondary"
                         >
+                            <RotateCcw className="size-4" aria-hidden="true" />
                             Reset View
                         </Button>
-                    </div>
-                </div>
+                    </>
+                }
+            />
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Assets</p>
-                        <p className="text-2xl font-bold text-brand-primary">{stats.totalNodes}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Relations</p>
-                        <p className="text-2xl font-bold text-blue-600">{stats.totalEdges}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Active</p>
-                        <p className="text-2xl font-bold text-green-600">{stats.activeNodes}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                        <p className="text-2xl font-bold text-yellow-600">{stats.maintenanceNodes}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">Deprecated</p>
-                        <p className="text-2xl font-bold text-red-600">{stats.deprecatedNodes}</p>
-                    </div>
-                </div>
+            <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+                {statTiles.map((t) => (
+                    <StatTile key={t.label} label={t.label} value={t.value} tone={t.tone} />
+                ))}
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Controls */}
-                    <div className="lg:col-span-1 space-y-4">
-                        {/* Search */}
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Search Assets</label>
-                            <input
-                                type="text"
-                                placeholder="Search by name..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-primary"
-                            />
-                        </div>
-
-                        {/* Filter by Relation Type */}
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Filter by Relation Type
-                            </label>
-                            <select
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-primary"
-                            >
-                                <option value="ALL">All Types</option>
-                                {relationTypes.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type.replace(/_/g, " ")}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Display Options */}
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-700 mb-3">Display Options</h3>
-                            <label className="flex items-center gap-2 mb-2">
-                                <input
-                                    type="checkbox"
-                                    checked={showLabels}
-                                    onChange={(e) => setShowLabels(e.target.checked)}
-                                    className="rounded"
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                {/* Controls */}
+                <div className="space-y-4 lg:col-span-1">
+                    <Panel title="Filter">
+                        <div className="space-y-4">
+                            <Field label="Search Assets" htmlFor="graph-search">
+                                <Input
+                                    id="graph-search"
+                                    type="text"
+                                    placeholder="Search by name..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                 />
-                                <span className="text-sm text-gray-600">Show Labels</span>
+                            </Field>
+                            <Field label="Filter by Relation Type" htmlFor="graph-filter">
+                                <Select
+                                    id="graph-filter"
+                                    value={filterType}
+                                    onValueChange={setFilterType}
+                                    options={[
+                                        { value: "ALL", label: "All Types" },
+                                        ...relationTypes.map((type) => ({
+                                            value: type,
+                                            label: type.replace(/_/g, " "),
+                                        })),
+                                    ]}
+                                />
+                            </Field>
+                        </div>
+                    </Panel>
+
+                    <Panel title="Display Options">
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-sm text-text">
+                                <Checkbox checked={showLabels} onCheckedChange={(c) => setShowLabels(c === true)} />
+                                Show Labels
                             </label>
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
+                            <label className="flex items-center gap-2 text-sm text-text">
+                                <Checkbox
                                     checked={animationEnabled}
-                                    onChange={(e) => setAnimationEnabled(e.target.checked)}
-                                    className="rounded"
+                                    onCheckedChange={(c) => setAnimationEnabled(c === true)}
                                 />
-                                <span className="text-sm text-gray-600">Animation</span>
+                                Animation
                             </label>
                         </div>
+                    </Panel>
 
-                        {/* Legend */}
-                        <div className="bg-white p-4 rounded-lg shadow-sm">
-                            <h3 className="text-sm font-medium text-gray-700 mb-3">Status Legend</h3>
-                            <div className="space-y-2">
-                                {Object.entries(statusColors).map(([status, color]) => (
-                                    <div key={status} className="flex items-center gap-2">
-                                        <div
-                                            className="w-4 h-4 rounded-full"
-                                            style={{ backgroundColor: color }}
-                                        />
-                                        <span className="text-sm text-gray-600">{status}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <h3 className="text-sm font-medium text-gray-700 mb-3 mt-4">Relation Types</h3>
-                            <div className="space-y-2">
-                                {Object.entries(relationTypeColors).map(([type, color]) => (
-                                    <div key={type} className="flex items-center gap-2">
-                                        <div
-                                            className="w-8 h-1 rounded"
-                                            style={{ backgroundColor: color }}
-                                        />
-                                        <span className="text-sm text-gray-600">{type.replace(/_/g, " ")}</span>
-                                    </div>
-                                ))}
-                            </div>
+                    <Panel title="Legend">
+                        <h3 className="mb-2 text-xs font-medium text-muted">Status</h3>
+                        <div className="space-y-2">
+                            {statuses.map((status) => (
+                                <div key={status}>
+                                    <StatusDot status={status} />
+                                </div>
+                            ))}
                         </div>
-
-                        {/* Selected Node Details */}
-                        {selectedNode && (
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">Selected Asset</h3>
-                                <div className="space-y-2">
-                                    <p className="font-semibold text-gray-800">{selectedNode.name}</p>
-                                    {selectedNode.typeName && (
-                                        <p className="text-sm text-gray-600">Type: {selectedNode.typeName}</p>
-                                    )}
-                                    <p className="text-sm text-gray-600">
-                                        Status:{" "}
-                                        <span
-                                            className="inline-flex w-2 h-2 rounded-full ml-1"
-                                            style={{ backgroundColor: selectedNode.color }}
-                                        />
-                                        {" "}{selectedNode.status}
-                                    </p>
-                                    <Link href={`/items/${selectedNode.id}`}>
-                                        <Button size="sm" className="w-full mt-2">
-                                            View Details →
-                                        </Button>
-                                    </Link>
+                        <h3 className="mb-2 mt-4 text-xs font-medium text-muted">Relation Types</h3>
+                        <div className="space-y-2">
+                            {legendTypes.map(([type, tone]) => (
+                                <div key={type} className="flex items-center gap-2">
+                                    <span className={`h-1 w-8 shrink-0 rounded ${swatchClass[tone]}`} aria-hidden="true" />
+                                    <span className="text-sm text-text">{type.replace(/_/g, " ")}</span>
                                 </div>
+                            ))}
+                        </div>
+                    </Panel>
 
-                                {/* Connected nodes */}
-                                <div className="mt-4 pt-4 border-t">
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Connections</h4>
-                                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                                        {getConnectedNodes(selectedNode.id).map(({ node, relation }, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="text-xs p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-                                                onClick={() => setSelectedNode(node)}
-                                            >
-                                                <span className="font-medium">{node.name}</span>
-                                                <span
-                                                    className="block text-gray-500"
-                                                    style={{ color: relationTypeColors[relation.type] }}
-                                                >
-                                                    {relation.type.replace(/_/g, " ")}
-                                                </span>
-                                            </div>
-                                        ))}
-                                        {getConnectedNodes(selectedNode.id).length === 0 && (
-                                            <p className="text-xs text-gray-500 italic">No connections</p>
-                                        )}
-                                    </div>
+                    {selectedNode && (
+                        <Panel title="Selected Asset">
+                            <div className="space-y-2">
+                                <p className="break-all font-mono text-sm font-semibold text-text">{selectedNode.name}</p>
+                                {selectedNode.typeName && (
+                                    <p className="text-sm text-muted">Type: {selectedNode.typeName}</p>
+                                )}
+                                <StatusDot status={selectedNode.status} />
+                                <Link
+                                    href={`/items/${selectedNode.id}`}
+                                    className="mt-2 inline-flex h-8 w-full items-center justify-center rounded-md bg-accent px-3 text-xs font-medium text-accent-fg transition-colors hover:bg-accent/90 max-sm:min-h-11"
+                                >
+                                    View Details
+                                </Link>
+                            </div>
+
+                            <div className="mt-4 border-t border-border pt-4">
+                                <h4 className="mb-2 text-sm font-medium text-text">Connections</h4>
+                                <div className="max-h-40 space-y-1 overflow-y-auto">
+                                    {getConnectedNodes(selectedNode.id).map(({ node, relation }, idx) => (
+                                        <button
+                                            type="button"
+                                            key={idx}
+                                            className="block w-full rounded bg-surface-2 p-2 text-left text-xs hover:bg-border"
+                                            onClick={() => setSelectedNode(node)}
+                                        >
+                                            <span className="block break-all font-mono font-medium text-text">{node.name}</span>
+                                            <span className="block text-muted">
+                                                {relation.type.replace(/_/g, " ")}
+                                            </span>
+                                        </button>
+                                    ))}
+                                    {getConnectedNodes(selectedNode.id).length === 0 && (
+                                        <p className="text-xs italic text-muted">No connections</p>
+                                    )}
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </Panel>
+                    )}
+                </div>
 
-                    {/* Graph Canvas */}
-                    <div className="lg:col-span-3">
+                {/* Graph Canvas */}
+                <div className="min-w-0 lg:col-span-3">
+                    {!hasGraph ? (
+                        <EmptyState
+                            icon={Share2}
+                            title="No Relations Found"
+                            description='Create relations between your configuration items to see them visualized here. Go to any item and click "Relations" to get started.'
+                        />
+                    ) : (
                         <div
                             ref={containerRef}
-                            className="bg-white rounded-lg shadow-sm overflow-hidden"
-                            style={{ height: "700px" }}
+                            className="h-[480px] overflow-hidden rounded-lg border border-border bg-surface lg:h-[700px]"
                         >
-                            {nodes.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                                    <svg
-                                        className="w-16 h-16 mb-4 text-gray-300"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                                        />
-                                    </svg>
-                                    <h3 className="text-lg font-medium mb-2">No Relations Found</h3>
-                                    <p className="text-sm text-center max-w-md">
-                                        Create relations between your configuration items to see them visualized here.
-                                        Go to any item and click &quot;Relations&quot; to get started.
-                                    </p>
-                                </div>
-                            ) : (
-                                <canvas
-                                    ref={canvasRef}
-                                    width={1000}
-                                    height={800}
-                                    className="w-full h-full cursor-move"
-                                    onMouseMove={handleMouseMove}
-                                    onMouseDown={handleMouseDown}
-                                    onMouseUp={handleMouseUp}
-                                    onMouseLeave={handleMouseUp}
-                                    onWheel={handleWheel}
-                                />
-                            )}
+                            <canvas
+                                ref={canvasRef}
+                                className="block h-full w-full cursor-move"
+                                onMouseMove={handleMouseMove}
+                                onMouseDown={handleMouseDown}
+                                onMouseUp={handleMouseUp}
+                                onMouseLeave={handleMouseUp}
+                            />
                         </div>
-                        <p className="text-sm text-gray-500 mt-2">
-                            💡 Tip: Click and drag nodes to reposition them. Use mouse wheel to zoom.
-                        </p>
-                    </div>
+                    )}
+                    <p className="mt-2 text-sm text-muted">
+                        Tip: click and drag nodes to reposition them. Use the mouse wheel to zoom.
+                    </p>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
