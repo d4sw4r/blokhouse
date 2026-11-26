@@ -14,6 +14,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Textarea } from "@/components/ui/Textarea";
 import { TagBadge } from "@/components/TagBadge";
 import { SkeletonCard } from "@/components/Skeleton";
+import { useToast } from "@/components/ToastProvider";
 
 interface Tag {
     id: string;
@@ -27,6 +28,7 @@ interface Tag {
 }
 
 export default function TagsPage() {
+    const { addToast } = useToast();
     const [tags, setTags] = useState<Tag[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -151,11 +153,11 @@ export default function TagsPage() {
                 setSelectedTag(null);
             } else {
                 const error = await res.json();
-                alert(error.error || "Failed to delete tag");
+                addToast({ type: "error", title: "Error", message: error.error || "Failed to delete tag" });
             }
         } catch (error) {
             console.error("Error deleting tag:", error);
-            alert("Network error");
+            addToast({ type: "error", title: "Error", message: "Network error" });
         } finally {
             setSubmitting(false);
         }

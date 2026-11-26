@@ -370,7 +370,7 @@ export default function ComparePage() {
                           >
                             {item.name}
                           </Link>
-                          <StatusDot status={item.status} className="mt-1 text-xs font-normal" />
+                          <StatusDot status={item.status} className="mt-1" />
                         </th>
                       ))}
                     </tr>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarCheck, Plus } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
@@ -15,6 +16,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { Textarea } from "@/components/ui/Textarea";
 import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
+import { useToast } from "@/components/ToastProvider";
 
 interface MaintenanceSchedule {
     id: string;
@@ -64,6 +66,8 @@ const priorityOptions = [
 ];
 
 export default function MaintenancePage() {
+    const { addToast } = useToast();
+    const [scheduleToDelete, setScheduleToDelete] = useState<MaintenanceSchedule | null>(null);
     const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -120,7 +124,7 @@ export default function MaintenancePage() {
 
     const createSchedule = async () => {
         if (!formData.configurationItemId || !formData.title || !formData.scheduledDate) {
-            alert("Please fill in all required fields");
+            addToast({ type: "error", title: "Validation Error", message: "Please fill in all required fields" });
             return;
         }
 
@@ -144,7 +148,7 @@ export default function MaintenancePage() {
                 fetchSchedules();
             } else {
                 const err = await res.json();
-                alert(`Error: ${err.error}`);
+                addToast({ type: "error", title: "Error", message: err.error || "Failed to create schedule" });
             }
         } catch (error) {
             console.error("Error creating schedule:", error);
@@ -173,8 +177,6 @@ export default function MaintenancePage() {
     };
 
     const deleteSchedule = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this maintenance schedule?")) return;
-
         try {
             const res = await fetch(`/api/maintenance/${id}`, {
                 method: "DELETE",
@@ -341,7 +343,7 @@ export default function MaintenancePage() {
                                                 </Button>
                                             )}
                                             <Button
-                                                onClick={() => deleteSchedule(schedule.id)}
+                                                onClick={() => setScheduleToDelete(schedule)}
                                                 size="sm"
                                                 variant="danger"
                                             >
@@ -355,6 +357,16 @@ export default function MaintenancePage() {
                     </TBody>
                 </Table>
             )}
+
+            <ConfirmDialog
+                open={scheduleToDelete !== null}
+                onOpenChange={(o) => { if (!o) setScheduleToDelete(null); }}
+                title="Delete maintenance schedule"
+                description={`Are you sure you want to delete this maintenance schedule${scheduleToDelete ? ` "${scheduleToDelete.title}"` : ""}?`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => { if (scheduleToDelete) deleteSchedule(scheduleToDelete.id); }}
+            />
 
             {/* Create Modal */}
             <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>

@@ -67,7 +67,7 @@ export function Select({ value, onValueChange, options, placeholder, id, disable
                                         <Check className="size-4 text-accent" aria-hidden="true" />
                                     </SelectPrimitive.ItemIndicator>
                                 </span>
-                                <span className="min-w-0 truncate"><SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText></span>
+                                <span className="min-w-0 truncate" title={o.label}><SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText></span>
                             </SelectPrimitive.Item>
                         ))}
                     </SelectPrimitive.Viewport>
