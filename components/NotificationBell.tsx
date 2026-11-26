@@ -36,7 +36,7 @@ const notificationTypeIcons: Record<string, string> = {
   SYSTEM: "⚙️",
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ navItem = false }: { navItem?: boolean } = {}) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -147,6 +147,7 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        {...(navItem ? { "data-nav-item": true } : {})}
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-brand-secondary hover:text-brand-text hover:bg-brand-primary/10 rounded-full transition-colors"
         aria-label="Notifications"

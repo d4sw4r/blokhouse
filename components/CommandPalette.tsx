@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Box, ChevronRight, CornerDownLeft, FileText, Hash, Search, Tag } from "lucide-react";
 import { navForRole, isMenu } from "@/lib/ui/nav";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import { Kbd } from "@/components/ui/Kbd";
 
 interface SearchResult {
@@ -43,36 +44,39 @@ export default function CommandPalette() {
     }, [pages, query]);
     const all = useMemo(() => [...matchedPages, ...results], [matchedPages, results]);
 
+    const lastFocus = useRef<HTMLElement | null>(null);
+
+    const handleOpenChange = useCallback((open: boolean) => {
+        if (open) lastFocus.current = document.activeElement as HTMLElement | null;
+        setIsOpen(open);
+        if (!open) {
+            setQuery("");
+            setResults([]);
+        }
+        setSelectedIndex(0);
+    }, []);
+
     // Keyboard shortcut: Cmd/Ctrl + K to open
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
                 e.preventDefault();
-                setIsOpen(true);
+                handleOpenChange(true);
             }
             if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
                 const t = e.target as HTMLElement | null;
                 const typing = !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
                 if (!typing) {
                     e.preventDefault();
-                    setIsOpen(true);
+                    handleOpenChange(true);
                 }
-            }
-            if (e.key === "Escape") {
-                setIsOpen(false);
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [handleOpenChange]);
 
-    // Focus input when opened
-    useEffect(() => {
-        if (isOpen && inputRef.current) {
-            setTimeout(() => inputRef.current?.focus(), 50);
-        }
-    }, [isOpen]);
 
     // Search API call
     useEffect(() => {
@@ -88,7 +92,6 @@ export default function CommandPalette() {
                 if (res.ok) {
                     const data = await res.json();
                     setResults(data.results || []);
-                    setSelectedIndex(0);
                 }
             } catch (error) {
                 console.error("Search failed:", error);
@@ -101,10 +104,9 @@ export default function CommandPalette() {
     }, [query]);
 
     const handleSelect = useCallback((result: SearchResult) => {
-        setIsOpen(false);
-        setQuery("");
+        handleOpenChange(false);
         router.push(result.href);
-    }, [router]);
+    }, [router, handleOpenChange]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (all.length === 0) return;
@@ -122,29 +124,28 @@ export default function CommandPalette() {
 
     // Listen for custom open event from Navbar
     useEffect(() => {
-        const handleOpen = () => setIsOpen(true);
+        const handleOpen = () => handleOpenChange(true);
         document.addEventListener("openCommandPalette", handleOpen);
         return () => document.removeEventListener("openCommandPalette", handleOpen);
-    }, []);
+    }, [handleOpenChange]);
 
     const icons = { item: Box, type: Tag, tag: Hash, page: FileText } as const;
     const statusDot = (status?: string) =>
         status === "ACTIVE" ? "bg-success" : status === "DEPRECATED" ? "bg-danger" : status === "MAINTENANCE" ? "bg-warning" : "bg-neutral";
 
-    if (!isOpen) {
-        return null; // Trigger is in the top bar
-    }
-
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh]">
-            <div className="absolute inset-0 bg-bg/70" onClick={() => setIsOpen(false)} />
-
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-label="Command palette"
-                className="relative w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-surface text-text shadow-lg"
+        <DialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange}>
+          <DialogPrimitive.Portal>
+            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-bg/70" />
+            <DialogPrimitive.Content
+                aria-describedby={undefined}
+                onCloseAutoFocus={(e) => {
+                    e.preventDefault();
+                    lastFocus.current?.focus();
+                }}
+                className="fixed left-1/2 top-[15vh] z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 overflow-hidden rounded-lg border border-border bg-surface text-text shadow-lg"
             >
+                <DialogPrimitive.Title className="sr-only">Command palette</DialogPrimitive.Title>
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3">
                     <Search className="size-5 shrink-0 text-muted" aria-hidden="true" />
                     <input
@@ -155,6 +156,11 @@ export default function CommandPalette() {
                         onKeyDown={handleKeyDown}
                         placeholder="Search pages, assets, types, tags..."
                         aria-label="Search"
+                        role="combobox"
+                        aria-expanded="true"
+                        aria-controls="palette-listbox"
+                        aria-autocomplete="list"
+                        aria-activedescendant={all[selectedIndex] ? `palette-opt-${selectedIndex}` : undefined}
                         className="min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-muted"
                     />
                     {loading && <div className="size-4 animate-spin rounded-full border-2 border-border-strong border-t-accent motion-reduce:animate-none" />}
@@ -168,13 +174,17 @@ export default function CommandPalette() {
                             <p className="text-sm">Try a different search term</p>
                         </div>
                     ) : (
-                        <ul className="py-1">
+                        <ul id="palette-listbox" role="listbox" aria-label="Results" className="py-1">
                             {all.map((result, index) => {
                                 const Icon = icons[result.type];
                                 return (
-                                    <li key={`${result.type}-${result.id}`}>
+                                    <li key={`${result.type}-${result.id}`} role="presentation">
                                         <button
                                             type="button"
+                                            role="option"
+                                            id={`palette-opt-${index}`}
+                                            aria-selected={index === selectedIndex}
+                                            tabIndex={-1}
                                             onClick={() => handleSelect(result)}
                                             onMouseMove={() => setSelectedIndex(index)}
                                             className={`flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 motion-reduce:transition-none ${
@@ -220,7 +230,8 @@ export default function CommandPalette() {
                     </div>
                     <span>{all.length} results</span>
                 </div>
-            </div>
-        </div>
+            </DialogPrimitive.Content>
+          </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
     );
 }

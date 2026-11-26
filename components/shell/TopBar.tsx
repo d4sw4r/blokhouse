@@ -21,7 +21,7 @@ export default function TopBar() {
 
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-surface">
-            <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-1 px-2 sm:gap-2 sm:px-5 lg:px-7">
+            <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-1 px-4 sm:gap-2 sm:px-7">
                 {user && items.length > 0 && <MobileNav items={items} />}
                 <Logo />
                 <div className="ml-2 min-w-0 flex-1">
@@ -46,9 +46,7 @@ export default function TopBar() {
                             onClick={openPalette}
                             className="lg:hidden"
                         />
-                        <div data-nav-item className="flex items-center">
-                            <NotificationBell />
-                        </div>
+                        <NotificationBell navItem />
                         <UserMenu name={user.name || user.email || "User"} role={role} />
                     </>
                 )}
