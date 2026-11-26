@@ -188,7 +188,7 @@ export default function CommandPalette() {
                                             onClick={() => handleSelect(result)}
                                             onMouseMove={() => setSelectedIndex(index)}
                                             className={`flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 motion-reduce:transition-none ${
-                                                index === selectedIndex ? "bg-surface-2" : ""
+                                                index === selectedIndex ? "bg-surface-2 outline-2 -outline-offset-2 outline-accent" : ""
                                             }`}
                                         >
                                             <span className="rounded-md bg-surface-2 p-1.5 text-muted">

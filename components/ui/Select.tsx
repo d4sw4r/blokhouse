@@ -60,7 +60,7 @@ export function Select({ value, onValueChange, options, placeholder, id, disable
                             <SelectPrimitive.Item
                                 key={o.value}
                                 value={toInner(o.value)}
-                                className="relative flex min-h-8 cursor-default select-none items-center rounded-sm py-1.5 pr-3 pl-8 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2 max-sm:min-h-11"
+                                className="relative flex min-h-8 cursor-default select-none items-center rounded-sm py-1.5 pr-3 pl-8 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2 data-[highlighted]:outline-solid data-[highlighted]:outline-2 data-[highlighted]:-outline-offset-2 data-[highlighted]:outline-accent max-sm:min-h-11"
                             >
                                 <span className="absolute left-2 inline-flex size-4 items-center justify-center">
                                     <SelectPrimitive.ItemIndicator>
