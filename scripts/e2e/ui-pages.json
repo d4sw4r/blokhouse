@@ -1,1 +1,9 @@
-[{ "path": "/dashboard" }, { "path": "/items" }, { "path": "/items/:first" }, { "path": "/graph" }]
+[
+  { "path": "/dashboard" },
+  { "path": "/items" },
+  { "path": "/items/:first" },
+  { "path": "/graph" },
+  { "path": "/compare" },
+  { "path": "/tags" },
+  { "path": "/maintenance" }
+]

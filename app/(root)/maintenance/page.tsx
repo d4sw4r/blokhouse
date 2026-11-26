@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/Button";
-import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
 import Link from "next/link";
+import { CalendarCheck, Plus } from "lucide-react";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Select } from "@/components/ui/Select";
+import { StatTile } from "@/components/ui/StatTile";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
+import { Textarea } from "@/components/ui/Textarea";
+import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
 
 interface MaintenanceSchedule {
     id: string;
@@ -23,19 +34,34 @@ interface MaintenanceSchedule {
     };
 }
 
-const statusColors: Record<string, string> = {
-    SCHEDULED: "bg-brand-primary/20 text-brand-primary",
-    IN_PROGRESS: "bg-brand-secondary/20 text-brand-secondary",
-    COMPLETED: "bg-brand-primary/20 text-brand-primary",
-    CANCELLED: "bg-brand-secondary/20 text-brand-secondary",
+const statusTones: Record<string, BadgeTone> = {
+    SCHEDULED: "accent",
+    IN_PROGRESS: "warning",
+    COMPLETED: "success",
+    CANCELLED: "neutral",
 };
 
-const priorityColors: Record<string, string> = {
-    LOW: "bg-brand-secondary/20 text-brand-secondary",
-    MEDIUM: "bg-brand-primary/20 text-brand-primary",
-    HIGH: "bg-brand-accent/20 text-brand-accent",
-    CRITICAL: "bg-brand-accent/30 text-brand-accent",
+const priorityTones: Record<string, BadgeTone> = {
+    LOW: "neutral",
+    MEDIUM: "accent",
+    HIGH: "warning",
+    CRITICAL: "danger",
 };
+
+const statusFilterOptions = [
+    { value: "ALL", label: "All" },
+    { value: "SCHEDULED", label: "Scheduled" },
+    { value: "IN_PROGRESS", label: "In Progress" },
+    { value: "COMPLETED", label: "Completed" },
+    { value: "CANCELLED", label: "Cancelled" },
+];
+
+const priorityOptions = [
+    { value: "LOW", label: "Low" },
+    { value: "MEDIUM", label: "Medium" },
+    { value: "HIGH", label: "High" },
+    { value: "CRITICAL", label: "Critical" },
+];
 
 export default function MaintenancePage() {
     const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
@@ -180,264 +206,224 @@ export default function MaintenancePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                <main className="max-w-7xl mx-auto p-8">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-8">Maintenance Schedule</h1>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        {[...Array(4)].map((_, i) => (
-                            <SkeletonCard key={i} />
-                        ))}
-                    </div>
-                    <SkeletonTable rows={5} />
-                </main>
+            <div>
+                <PageHeader title="Maintenance Schedule" />
+                <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                    {[...Array(4)].map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))}
+                </div>
+                <SkeletonTable rows={5} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="max-w-7xl mx-auto p-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div>
-                        <h1 className="text-4xl font-bold text-brand-text">Maintenance Schedule</h1>
-                        <p className="text-brand-secondary mt-1">Manage and track maintenance tasks for your assets</p>
-                    </div>
-                    <Button onClick={() => setShowCreateModal(true)}>+ Schedule Maintenance</Button>
-                </div>
+        <div>
+            <PageHeader
+                title="Maintenance Schedule"
+                description="Manage and track maintenance tasks for your assets"
+                actions={
+                    <Button onClick={() => setShowCreateModal(true)}>
+                        <Plus className="size-4" aria-hidden="true" />
+                        Schedule Maintenance
+                    </Button>
+                }
+            />
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-brand-secondary">Total Tasks</p>
-                        <p className="text-2xl font-bold text-brand-primary">{stats.total}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-brand-secondary">Scheduled</p>
-                        <p className="text-2xl font-bold text-brand-primary">{stats.scheduled}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-brand-secondary">In Progress</p>
-                        <p className="text-2xl font-bold text-brand-secondary">{stats.inProgress}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-brand-secondary">Completed</p>
-                        <p className="text-2xl font-bold text-brand-primary">{stats.completed}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <p className="text-sm font-medium text-brand-secondary">Overdue</p>
-                        <p className={`text-2xl font-bold ${stats.overdue > 0 ? "text-brand-accent" : "text-brand-secondary"}`}>
-                            {stats.overdue}
-                        </p>
-                    </div>
-                </div>
+            {/* Stats */}
+            <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+                <StatTile label="Total Tasks" value={stats.total} />
+                <StatTile label="Scheduled" value={stats.scheduled} />
+                <StatTile label="In Progress" value={stats.inProgress} />
+                <StatTile label="Completed" value={stats.completed} />
+                <StatTile label="Overdue" value={stats.overdue} tone={stats.overdue > 0 ? "danger" : "neutral"} />
+            </div>
 
-                {/* Filter */}
-                <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-                    <div className="flex items-center gap-4">
-                        <label className="text-sm font-medium text-brand-secondary">Filter by Status:</label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border rounded-lg px-3 py-2"
-                        >
-                            <option value="ALL">All</option>
-                            <option value="SCHEDULED">Scheduled</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="COMPLETED">Completed</option>
-                            <option value="CANCELLED">Cancelled</option>
-                        </select>
-                    </div>
-                </div>
+            {/* Filter */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <label htmlFor="maintenance-status-filter" className="text-sm font-medium text-text">
+                    Filter by Status:
+                </label>
+                <Select
+                    id="maintenance-status-filter"
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                    options={statusFilterOptions}
+                    className="w-44"
+                />
+            </div>
 
-                {/* Schedules Table */}
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                    {schedules.length === 0 ? (
-                        <div className="p-12 text-center text-brand-secondary">
-                            <svg className="w-16 h-16 mx-auto mb-4 text-brand-secondary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            <h3 className="text-lg font-medium text-brand-text mb-2">No Maintenance Tasks</h3>
-                            <p className="text-sm text-brand-secondary">Create your first maintenance schedule to get started</p>
-                        </div>
-                    ) : (
-                        <table className="min-w-full">
-                            <thead className="bg-brand-primary/10">
-                                <tr>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Task</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Asset</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Scheduled Date</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Priority</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Status</th>
-                                    <th className="py-3 px-4 text-left text-sm font-medium text-brand-secondary">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-brand-secondary/20">
-                                {schedules.map((schedule) => (
-                                    <tr key={schedule.id} className="hover:bg-brand-primary/5">
-                                        <td className="py-3 px-4">
-                                            <div>
-                                                <p className="font-medium text-gray-800">{schedule.title}</p>
-                                                {schedule.description && (
-                                                    <p className="text-sm text-gray-500">{schedule.description}</p>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <Link
-                                                href={`/items/${schedule.configurationItem.id}`}
-                                                className="text-brand-primary hover:underline"
-                                            >
-                                                {schedule.configurationItem.name}
-                                            </Link>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={isOverdue(schedule.scheduledDate) && schedule.status === "SCHEDULED" ? "text-red-600 font-medium" : ""}>
-                                                {formatDate(schedule.scheduledDate)}
-                                                {isOverdue(schedule.scheduledDate) && schedule.status === "SCHEDULED" && (
-                                                    <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">Overdue</span>
-                                                )}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[schedule.priority]}`}>
-                                                {schedule.priority}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[schedule.status]}`}>
-                                                {schedule.status.replace("_", " ")}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex gap-2">
-                                                {schedule.status === "SCHEDULED" && (
-                                                    <Button
-                                                        onClick={() => updateStatus(schedule.id, "IN_PROGRESS")}
-                                                        size="sm"
-                                                        variant="outline"
-                                                    >
-                                                        Start
-                                                    </Button>
-                                                )}
-                                                {schedule.status === "IN_PROGRESS" && (
-                                                    <Button
-                                                        onClick={() => updateStatus(schedule.id, "COMPLETED")}
-                                                        size="sm"
-                                                        className="bg-green-600 hover:bg-green-700 text-white"
-                                                    >
-                                                        Complete
-                                                    </Button>
-                                                )}
-                                                {schedule.status !== "COMPLETED" && schedule.status !== "CANCELLED" && (
-                                                    <Button
-                                                        onClick={() => updateStatus(schedule.id, "CANCELLED")}
-                                                        size="sm"
-                                                        variant="outline"
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                )}
+            {/* Schedules Table */}
+            {schedules.length === 0 ? (
+                <EmptyState
+                    icon={CalendarCheck}
+                    title="No Maintenance Tasks"
+                    description="Create your first maintenance schedule to get started"
+                />
+            ) : (
+                <Table>
+                    <THead>
+                        <tr>
+                            <TH>Task</TH>
+                            <TH>Asset</TH>
+                            <TH>Scheduled Date</TH>
+                            <TH>Priority</TH>
+                            <TH>Status</TH>
+                            <TH>Actions</TH>
+                        </tr>
+                    </THead>
+                    <TBody>
+                        {schedules.map((schedule) => {
+                            const overdue = isOverdue(schedule.scheduledDate) && schedule.status === "SCHEDULED";
+                            return (
+                                <TR key={schedule.id}>
+                                    <TD className="min-w-48 max-w-sm">
+                                        <p className="font-medium break-words">{schedule.title}</p>
+                                        {schedule.description && (
+                                            <p className="text-xs break-words text-muted">{schedule.description}</p>
+                                        )}
+                                    </TD>
+                                    <TD mono className="max-w-48">
+                                        <Link
+                                            href={`/items/${schedule.configurationItem.id}`}
+                                            className="block truncate text-accent hover:underline"
+                                            title={schedule.configurationItem.name}
+                                        >
+                                            {schedule.configurationItem.name}
+                                        </Link>
+                                    </TD>
+                                    <TD mono className="whitespace-nowrap">
+                                        <span className={overdue ? "font-medium" : ""}>
+                                            {formatDate(schedule.scheduledDate)}
+                                        </span>
+                                        {overdue && (
+                                            <Badge tone="danger" className="ml-2 font-sans">Overdue</Badge>
+                                        )}
+                                    </TD>
+                                    <TD>
+                                        <Badge tone={priorityTones[schedule.priority] ?? "neutral"}>
+                                            {schedule.priority}
+                                        </Badge>
+                                    </TD>
+                                    <TD>
+                                        <Badge tone={statusTones[schedule.status] ?? "neutral"}>
+                                            {schedule.status.replace("_", " ")}
+                                        </Badge>
+                                    </TD>
+                                    <TD>
+                                        <div className="flex flex-wrap gap-2">
+                                            {schedule.status === "SCHEDULED" && (
                                                 <Button
-                                                    onClick={() => deleteSchedule(schedule.id)}
+                                                    onClick={() => updateStatus(schedule.id, "IN_PROGRESS")}
                                                     size="sm"
-                                                    variant="destructive"
+                                                    variant="secondary"
                                                 >
-                                                    Delete
+                                                    Start
                                                 </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                            )}
+                                            {schedule.status === "IN_PROGRESS" && (
+                                                <Button
+                                                    onClick={() => updateStatus(schedule.id, "COMPLETED")}
+                                                    size="sm"
+                                                >
+                                                    Complete
+                                                </Button>
+                                            )}
+                                            {schedule.status !== "COMPLETED" && schedule.status !== "CANCELLED" && (
+                                                <Button
+                                                    onClick={() => updateStatus(schedule.id, "CANCELLED")}
+                                                    size="sm"
+                                                    variant="secondary"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            )}
+                                            <Button
+                                                onClick={() => deleteSchedule(schedule.id)}
+                                                size="sm"
+                                                variant="danger"
+                                            >
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </TD>
+                                </TR>
+                            );
+                        })}
+                    </TBody>
+                </Table>
+            )}
 
-                {/* Create Modal */}
-                {showCreateModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                            <h2 className="text-xl font-semibold mb-4">Schedule Maintenance</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Asset *</label>
-                                    <select
-                                        value={formData.configurationItemId}
-                                        onChange={(e) => setFormData({ ...formData, configurationItemId: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                    >
-                                        <option value="">Select an asset</option>
-                                        {availableItems.map((item) => (
-                                            <option key={item.id} value={item.id}>
-                                                {item.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Title *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                        placeholder="e.g., Quarterly Server Maintenance"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                        rows={3}
-                                        placeholder="Maintenance details..."
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Scheduled Date *</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={formData.scheduledDate}
-                                        onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Priority</label>
-                                    <select
-                                        value={formData.priority}
-                                        onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                    >
-                                        <option value="LOW">Low</option>
-                                        <option value="MEDIUM">Medium</option>
-                                        <option value="HIGH">High</option>
-                                        <option value="CRITICAL">Critical</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Assigned To</label>
-                                    <input
-                                        type="text"
-                                        value={formData.assignedTo}
-                                        onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                                        className="w-full border rounded-lg p-2"
-                                        placeholder="User ID or name"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-2 mt-6">
-                                <Button onClick={createSchedule}>Create Schedule</Button>
-                                <Button onClick={() => setShowCreateModal(false)} variant="outline">
-                                    Cancel
-                                </Button>
-                            </div>
-                        </div>
+            {/* Create Modal */}
+            <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+                <DialogContent
+                    title="Schedule Maintenance"
+                    footer={
+                        <>
+                            <Button onClick={() => setShowCreateModal(false)} variant="secondary">
+                                Cancel
+                            </Button>
+                            <Button onClick={createSchedule}>Create Schedule</Button>
+                        </>
+                    }
+                >
+                    <div className="space-y-4">
+                        <Field label="Asset *" htmlFor="maint-asset">
+                            <Select
+                                id="maint-asset"
+                                value={formData.configurationItemId}
+                                onValueChange={(v) => setFormData({ ...formData, configurationItemId: v })}
+                                options={availableItems.map((item) => ({ value: item.id, label: item.name }))}
+                                placeholder="Select an asset"
+                            />
+                        </Field>
+                        <Field label="Title *" htmlFor="maint-title">
+                            <Input
+                                id="maint-title"
+                                type="text"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                placeholder="e.g., Quarterly Server Maintenance"
+                            />
+                        </Field>
+                        <Field label="Description" htmlFor="maint-description">
+                            <Textarea
+                                id="maint-description"
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                rows={3}
+                                placeholder="Maintenance details..."
+                            />
+                        </Field>
+                        <Field label="Scheduled Date *" htmlFor="maint-date">
+                            <Input
+                                id="maint-date"
+                                type="datetime-local"
+                                value={formData.scheduledDate}
+                                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                            />
+                        </Field>
+                        <Field label="Priority" htmlFor="maint-priority">
+                            <Select
+                                id="maint-priority"
+                                value={formData.priority}
+                                onValueChange={(v) => setFormData({ ...formData, priority: v })}
+                                options={priorityOptions}
+                            />
+                        </Field>
+                        <Field label="Assigned To" htmlFor="maint-assigned">
+                            <Input
+                                id="maint-assigned"
+                                type="text"
+                                value={formData.assignedTo}
+                                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                                placeholder="User ID or name"
+                            />
+                        </Field>
                     </div>
-                )}
-            </main>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
