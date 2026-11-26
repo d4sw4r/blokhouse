@@ -1,32 +1,47 @@
 "use client";
 import React, { forwardRef, ButtonHTMLAttributes } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     className?: string;
-    variant?: "destructive" | "outline";
+    /** "outline" and "destructive" are legacy aliases until Task 16. */
+    variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | "destructive";
+    /** "lg" is a legacy alias of "md" until Task 16. */
     size?: "sm" | "md" | "lg";
+    loading?: boolean;
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, children, variant, size = "md", ...props }, ref) => {
-        let variantClass = "bg-brand-primary text-white hover:bg-brand-accent";
-        if (variant === "outline") {
-            variantClass = "border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white";
-        } else if (variant === "destructive") {
-            variantClass = "bg-red-500 text-white hover:bg-red-600";
-        }
-        const baseClass = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-hidden focus:ring-2 focus:ring-offset-2";
-        
-        const sizeClasses = {
-            sm: "h-8 py-1.5 px-3 text-xs",
-            md: "h-10 py-2 px-4",
-            lg: "h-12 py-3 px-6 text-base",
-        };
-        const sizeClass = sizeClasses[size];
+const variants = {
+    primary: "bg-accent text-accent-fg hover:bg-accent/90",
+    secondary: "bg-surface text-text border border-border-strong hover:bg-surface-2",
+    ghost: "bg-transparent text-text hover:bg-surface-2",
+    danger: "bg-danger text-bg hover:bg-danger/90",
+} as const;
 
+const sizes = {
+    sm: "h-8 px-3 text-xs",
+    md: "h-9 px-4 text-sm",
+} as const;
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ className, children, variant = "primary", size = "md", loading = false, disabled, ...props }, ref) => {
+        const v = variant === "outline" ? "secondary" : variant === "destructive" ? "danger" : variant;
+        const s = size === "lg" ? "md" : size;
         return (
-            <button ref={ref} className={cn(baseClass, variantClass, sizeClass, className)} {...props}>
+            <button
+                ref={ref}
+                disabled={disabled || loading}
+                aria-busy={loading || undefined}
+                className={cn(
+                    "inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors duration-150 motion-reduce:transition-none max-sm:min-h-11 disabled:opacity-50 disabled:pointer-events-none",
+                    variants[v],
+                    sizes[s],
+                    className,
+                )}
+                {...props}
+            >
+                {loading && <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
                 {children}
             </button>
         );
@@ -34,3 +49,4 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 export { Button };
+export default Button;

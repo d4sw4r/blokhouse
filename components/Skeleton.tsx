@@ -7,14 +7,14 @@ interface SkeletonProps {
 export function Skeleton({ className = "" }: SkeletonProps) {
     return (
         <div
-            className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}
+            className={`animate-pulse bg-surface-2 rounded-md motion-reduce:animate-none ${className}`}
         />
     );
 }
 
 export function SkeletonCard() {
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+        <div className="bg-surface border border-border p-6 rounded-lg">
             <Skeleton className="h-6 w-32 mb-4" />
             <Skeleton className="h-12 w-24" />
         </div>
@@ -23,7 +23,7 @@ export function SkeletonCard() {
 
 export function SkeletonActivity() {
     return (
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+        <div className="p-4 border-b border-border last:border-b-0">
             <div className="flex items-start gap-3">
                 <Skeleton className="h-5 w-16" />
                 <div className="flex-1">
@@ -37,9 +37,9 @@ export function SkeletonActivity() {
 
 export function SkeletonTable({ rows = 5 }: { rows?: number }) {
     return (
-        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-sm overflow-hidden">
+        <div className="bg-surface border border-border rounded-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-gray-100 dark:bg-gray-700 px-4 py-3">
+            <div className="bg-surface-2 px-4 py-3">
                 <div className="flex gap-4">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-4 w-32" />
@@ -50,7 +50,7 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
             </div>
             {/* Rows */}
             {Array.from({ length: rows }).map((_, i) => (
-                <div key={i} className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+                <div key={i} className="px-4 py-3 border-t border-border">
                     <div className="flex gap-4">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-4 w-32" />
@@ -84,7 +84,7 @@ export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
     return (
         <div className="flex items-center justify-center">
             <svg
-                className={`animate-spin ${sizeClasses[size]} text-brand-primary`}
+                className={`animate-spin motion-reduce:animate-none ${sizeClasses[size]} text-accent`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -109,7 +109,7 @@ export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
 
 export function LoadingOverlay() {
     return (
-        <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-bg/80 flex items-center justify-center z-10">
             <LoadingSpinner size="lg" />
         </div>
     );
