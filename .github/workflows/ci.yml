@@ -196,6 +196,35 @@ jobs:
           done
           docker compose logs app
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: UI check (layout, themes, navigation)
+        env:
+          BASE_URL: http://localhost:3000
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: ci-admin-password
+          READONLY_EMAIL: readonly@example.com
+          READONLY_PASSWORD: ci-readonly-password
+        run: |
+          npm i --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+          # Fresh install first (empty states), then seeded data.
+          node scripts/e2e/ui-check.mjs --empty
+          node scripts/e2e/ui-seed.mjs
+          node scripts/e2e/ui-check.mjs
+
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ui-screenshots
+          path: ui-screenshots/
+          if-no-files-found: ignore
+
       - name: Smoke test
         run: ADMIN_PASSWORD=ci-admin-password sh scripts/smoke-test.sh
 
@@ -210,12 +239,6 @@ jobs:
           sudo gem install --no-document puppet-lint
           (cd integrations/puppet && puppet parser validate manifests && puppet epp validate templates/*.epp && puppet-lint manifests)
           ADMIN_PASSWORD=ci-admin-password sh integrations/puppet/tests/e2e/run.sh
-
-      - name: Setup Node.js (SSO end-to-end test)
-        uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-          cache: "npm"
 
       - name: SSO end-to-end test (Keycloak)
         run: |
