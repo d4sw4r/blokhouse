@@ -43,7 +43,7 @@ values again) sends no event.
 ```http
 POST /hooks/blokhouse HTTP/1.1
 Content-Type: application/json
-User-Agent: Blokhouse-Webhook/0.4.0
+User-Agent: Blokhouse-Webhook/0.5.0
 X-Blokhouse-Event: item.updated
 X-Blokhouse-Delivery: cm4k9…            (unique per delivery; use it to detect duplicates)
 X-Blokhouse-Timestamp: 1764068400       (Unix seconds)

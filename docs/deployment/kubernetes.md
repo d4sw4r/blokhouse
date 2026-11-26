@@ -9,7 +9,7 @@ Requirements: a Kubernetes cluster and Helm 3. The chart is tested on kind with 
 The chart is published to `oci://ghcr.io/d4sw4r/charts/blokhouse` with every Blokhouse release (from 0.4.0 on), with the same version as the release:
 
 ```bash
-helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.4.0 \
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.5.0 \
   --namespace blokhouse --create-namespace
 ```
 

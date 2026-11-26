@@ -1,5 +1,16 @@
 # Upgrading
 
+## v0.4 → v0.5
+
+No database migrations and no configuration changes. The release changes the web interface only:
+
+- **Theme:** dark is the default. Theme choices from earlier versions are not carried over;
+  switch to light or system in the user menu (top right).
+- **Navigation:** pages are grouped in the top bar. API tokens and webhooks are under
+  **Automation**, custom fields under **Model**, users, audit log and settings under **Admin**.
+- **Confirmations:** deleting users, items, tags, types, tokens, webhooks, custom fields,
+  relations and maintenance windows now asks for confirmation in a dialog.
+
 ## v0.3 → v0.4
 
 Database migrations run automatically on start (a new column for deactivated users). Nothing
