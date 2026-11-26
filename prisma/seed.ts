@@ -32,6 +32,14 @@ function passwordFilePath() {
 const SEED_LOCK_KEY = 724300001;
 
 async function main() {
+    // Cheap unlocked pre-check: the common case (already seeded) must neither
+    // validate ADMIN_PASSWORD nor pay for bcrypt. Re-checked under the lock below.
+    const seeded = await prisma.user.findFirst({ where: { role: "ADMIN" }, select: { email: true } });
+    if (seeded) {
+        console.log(`Admin user already exists (${seeded.email}) — skipping seed.`);
+        return;
+    }
+
     const email = process.env.ADMIN_EMAIL || "admin@example.com";
     const generated = !process.env.ADMIN_PASSWORD;
     const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(18).toString("base64url");

@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import prisma from "@/lib/prisma";
 import { resetDb } from "./helpers";
 
@@ -14,7 +14,6 @@ function runSeed(password: string, email = "seed@test.io"): Promise<{ code: numb
         const child = spawn("npx", ["tsx", "prisma/seed.ts"], {
             env: {
                 ...process.env,
-                DATABASE_URL: process.env.DATABASE_URL,
                 ADMIN_EMAIL: email,
                 ADMIN_PASSWORD: password,
                 ADMIN_PASSWORD_FILE: path.join(tmpDir, "initial-admin-password"),
@@ -29,6 +28,7 @@ function runSeed(password: string, email = "seed@test.io"): Promise<{ code: numb
 
 describe("prisma/seed.ts", () => {
     beforeEach(resetDb);
+    afterAll(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
 
     it("concurrent seeds create one admin", async () => {
         for (let round = 0; round < 5; round++) {
@@ -60,5 +60,15 @@ describe("prisma/seed.ts", () => {
         const after = await prisma.user.findUniqueOrThrow({ where: { id: admin.id } });
         expect(after.password).toBe("existing-hash");
         expect(await prisma.user.count()).toBe(1);
+    }, 60_000);
+
+    it("an invalid ADMIN_PASSWORD does not break an already-seeded database", async () => {
+        const admin = await prisma.user.create({
+            data: { email: "existing@test.io", password: "existing-hash", role: "ADMIN" },
+        });
+        const r = await runSeed("short");
+        expect(r.code, r.output).toBe(0);
+        const after = await prisma.user.findUniqueOrThrow({ where: { id: admin.id } });
+        expect(after.password).toBe("existing-hash");
     }, 60_000);
 });
