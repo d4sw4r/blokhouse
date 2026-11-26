@@ -25,9 +25,14 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 const VIEWPORT_ATTR = "data-toast-viewport";
 
+// Radix defers "pointer down outside" to the click, when a toast's close button may already
+// have removed the toast from the DOM; remember the pointerdown target so it is still known.
+let lastToastPointerTarget: EventTarget | null = null;
+
 /** True when an event target lies inside the toast viewport. Dialogs use it so that clicking
  *  a toast (e.g. its close button) does not count as an outside click that dismisses them. */
 export function isInToastViewport(target: EventTarget | null): boolean {
+    if (target !== null && target === lastToastPointerTarget) return true;
     return typeof Element !== "undefined" && target instanceof Element && !!target.closest(`[${VIEWPORT_ATTR}]`);
 }
 
@@ -89,6 +94,9 @@ function ToastContainer({
             {...{ [VIEWPORT_ATTR]: "" }}
             aria-live="polite"
             aria-relevant="additions text"
+            onPointerDownCapture={(e) => {
+                lastToastPointerTarget = e.target;
+            }}
             className="pointer-events-auto fixed right-4 bottom-4 z-[100] flex flex-col gap-2"
         >
             {toasts.map((toast) => (
