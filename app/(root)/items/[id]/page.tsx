@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/components/ToastProvider";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -65,11 +66,9 @@ interface CustomField {
     options: string[];
 }
 
-interface CustomFieldValue {
-    id: string;
-    value: string;
-    customFieldId: string;
-    customField: CustomField;
+interface CustomFieldWithValue extends CustomField {
+    value: string | null;
+    valueId: string | null;
 }
 
 const actionTones: Record<string, "accent" | "warning" | "danger"> = {
@@ -108,11 +107,11 @@ export default function AssetDetailPage() {
     const { status } = useSession();
     const params = useParams();
     const router = useRouter();
+    const { addToast } = useToast();
     const itemId = params.id as string;
 
     const [item, setItem] = useState<ConfigItem | null>(null);
     const [history, setHistory] = useState<AuditLogEntry[]>([]);
-    const [, setCustomFieldValues] = useState<CustomFieldValue[]>([]);
     const [customFieldDefs, setCustomFieldDefs] = useState<CustomField[]>([]);
     const [cfEdits, setCfEdits] = useState<Record<string, string>>({});
     const [cfSaving, setCfSaving] = useState<string | null>(null);
@@ -156,11 +155,10 @@ export default function AssetDetailPage() {
                 fetch(`/api/configuration-items/${itemId}`),
             ]);
             if (valRes.ok) {
-                const vals: CustomFieldValue[] = await valRes.json();
-                setCustomFieldValues(vals);
+                const vals: CustomFieldWithValue[] = await valRes.json();
                 // Build edits map from existing values
                 const edits: Record<string, string> = {};
-                vals.forEach(v => { edits[v.customFieldId] = v.value; });
+                vals.forEach(v => { if (v.value !== null && v.value !== undefined) edits[v.id] = v.value; });
                 setCfEdits(edits);
             }
             // After we have the item, fetch field defs for its type (+ global)
@@ -179,11 +177,16 @@ export default function AssetDetailPage() {
         setCfSaving(fieldId);
         try {
             const res = await fetch(`/api/configuration-items/${itemId}/custom-fields`, {
-                method: "POST",
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ customFieldId: fieldId, value: cfEdits[fieldId] ?? "" }),
+                body: JSON.stringify({ values: { [fieldId]: cfEdits[fieldId] ?? "" } }),
             });
-            if (res.ok) await fetchCustomFields();
+            if (res.ok) {
+                await fetchCustomFields();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                addToast({ type: "error", title: "Could not save field", message: err.error || "Failed to save custom field value" });
+            }
         } catch (err) {
             console.error("Failed to save custom field value:", err);
         }
@@ -286,11 +289,12 @@ export default function AssetDetailPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <FavoriteButton itemId={item.id} itemName={item.name} size="lg" />
-                    <Link href={`/items?id=${item.id}`}>
-                        <Button variant="secondary">
-                            <Pencil className="size-4" aria-hidden="true" />
-                            Edit
-                        </Button>
+                    <Link
+                        href={`/items?id=${item.id}`}
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium whitespace-nowrap text-text transition-colors duration-150 hover:bg-surface-2 motion-reduce:transition-none max-sm:min-h-11"
+                    >
+                        <Pencil className="size-4" aria-hidden="true" />
+                        Edit
                     </Link>
                     <Button variant="danger" onClick={() => setConfirmDelete(true)}>
                         <Trash2 className="size-4" aria-hidden="true" />

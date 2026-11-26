@@ -316,7 +316,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </Field>
-            <div className="max-h-48 overflow-y-auto rounded-md border border-border" role="listbox" aria-label="Target assets">
+            <div className="max-h-48 overflow-y-auto rounded-md border border-border">
               {availableItems.length === 0 ? (
                 <div className="p-4 text-center text-sm text-muted">
                   {searchQuery ? "No matching assets found" : "Type to search for assets"}
@@ -326,8 +326,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
                   <button
                     key={item.id}
                     type="button"
-                    role="option"
-                    aria-selected={selectedTarget === item.id}
+                    aria-pressed={selectedTarget === item.id}
                     onClick={() => setSelectedTarget(item.id)}
                     className={cn(
                       "block w-full border-b border-border p-3 text-left transition-colors duration-150 last:border-b-0 hover:bg-surface-2 motion-reduce:transition-none",
