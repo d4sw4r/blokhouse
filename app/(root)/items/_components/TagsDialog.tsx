@@ -37,12 +37,21 @@ export function TagsDialog({
 }: TagsDialogProps) {
     const [errors, setErrors] = useState<TagFormErrors>({});
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => {
+                if (!o) setErrors({});
+                onOpenChange(o);
+            }}
+        >
             <DialogContent
                 title="Tags"
                 description="Create and delete the tags used to label configuration items."
                 footer={
-                    <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                    <Button variant="secondary" onClick={() => {
+                            setErrors({});
+                            onOpenChange(false);
+                        }}>
                         Close
                     </Button>
                 }

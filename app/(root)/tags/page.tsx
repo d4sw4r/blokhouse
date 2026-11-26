@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
 import { TagBadge } from "@/components/TagBadge";
-import { TagForm, validateTag, type TagFormErrors } from "@/components/TagForm";
+import { DEFAULT_TAG_COLOR, EMPTY_TAG, TagForm, validateTag, type TagFormErrors, type TagFormValues } from "@/components/TagForm";
 import { SkeletonCard } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 
@@ -40,11 +40,7 @@ export default function TagsPage() {
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
     
     // Form states
-    const [formData, setFormData] = useState({
-        name: "",
-        color: "#3b82f6",
-        description: "",
-    });
+    const [formData, setFormData] = useState<TagFormValues>({ ...EMPTY_TAG });
     const [formErrors, setFormErrors] = useState<TagFormErrors>({});
     const [submitting, setSubmitting] = useState(false);
 
@@ -89,7 +85,7 @@ export default function TagsPage() {
             if (res.ok) {
                 await fetchTags();
                 setShowCreateModal(false);
-                setFormData({ name: "", color: "#3b82f6", description: "" });
+                setFormData({ ...EMPTY_TAG });
                 setFormErrors({});
             } else {
                 const error = await res.json();
@@ -118,7 +114,7 @@ export default function TagsPage() {
                 await fetchTags();
                 setShowEditModal(false);
                 setSelectedTag(null);
-                setFormData({ name: "", color: "#3b82f6", description: "" });
+                setFormData({ ...EMPTY_TAG });
                 setFormErrors({});
             } else {
                 const error = await res.json();
@@ -161,7 +157,7 @@ export default function TagsPage() {
         setSelectedTag(tag);
         setFormData({
             name: tag.name,
-            color: tag.color || "#3b82f6",
+            color: tag.color || DEFAULT_TAG_COLOR,
             description: tag.description || "",
         });
         setFormErrors({});
@@ -184,7 +180,7 @@ export default function TagsPage() {
     const unusedTags = tags.filter(tag => tag._count.configurationItems === 0).length;
 
     const openCreateModal = () => {
-        setFormData({ name: "", color: "#3b82f6", description: "" });
+        setFormData({ ...EMPTY_TAG });
         setFormErrors({});
         setShowCreateModal(true);
     };

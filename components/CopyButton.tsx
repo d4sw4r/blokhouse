@@ -32,7 +32,7 @@ export default function CopyButton({ text, className = "" }: CopyButtonProps) {
             icon={copied ? Check : Copy}
             label={copied ? "Copied" : "Copy to clipboard"}
             onClick={handleCopy}
-            className={cn("shrink-0", copied && "text-text", className)}
+            className={cn("shrink-0", copied && "[&>svg]:text-text", className)}
         />
     );
 }

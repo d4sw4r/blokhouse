@@ -87,12 +87,12 @@ function ToastContainer({
             onPointerDownCapture={(e) => rememberToastPointerTarget(e.target)}
             className="pointer-events-auto fixed right-4 bottom-4 z-[100] flex flex-col"
         >
-            <div role="status" aria-live="polite" aria-relevant="additions text" className="flex flex-col gap-2">
+            <div role="status" aria-live="polite" aria-relevant="additions text" className="flex flex-col gap-2 not-empty:has-[+*:not(:empty)]:mb-2">
                 {others.map((toast) => (
                     <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
                 ))}
             </div>
-            <div role="alert" aria-live="assertive" aria-relevant="additions text" className="flex flex-col gap-2 not-empty:mt-2">
+            <div role="alert" aria-live="assertive" aria-relevant="additions text" className="flex flex-col gap-2">
                 {errors.map((toast) => (
                     <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
                 ))}
