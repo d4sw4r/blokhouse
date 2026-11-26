@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Invalid SSO configuration stops the app at start with a clear message
 - **Deactivate users** under Admin -> Users: takes effect at once, also for open sessions and API tokens.
 - API tokens of SSO users must have an expiry of at most `OIDC_TOKEN_MAX_DAYS` days (default 90); service accounts with role `API` are the way to automate.
+- **Helm chart** with an optional bundled PostgreSQL, published to `oci://ghcr.io/d4sw4r/charts/blokhouse` from the next release on, see [docs/deployment/kubernetes.md](https://github.com/d4sw4r/blokhouse/blob/main/docs/deployment/kubernetes.md).
+
+### Fixed
+- Several instances starting at the same time no longer race when creating the first administrator (the seed runs under a database lock).
 
 ### Changed
 - Public signup is always off when `PASSWORD_LOGIN=false`.
