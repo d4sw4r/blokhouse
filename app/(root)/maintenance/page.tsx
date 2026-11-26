@@ -245,13 +245,14 @@ export default function MaintenancePage() {
                 <label htmlFor="maintenance-status-filter" className="text-sm font-medium text-text">
                     Filter by Status:
                 </label>
-                <Select
-                    id="maintenance-status-filter"
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                    options={statusFilterOptions}
-                    className="w-44"
-                />
+                <div className="w-44">
+                    <Select
+                        id="maintenance-status-filter"
+                        value={statusFilter}
+                        onValueChange={setStatusFilter}
+                        options={statusFilterOptions}
+                    />
+                </div>
             </div>
 
             {/* Schedules Table */}

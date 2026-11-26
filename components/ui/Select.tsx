@@ -53,7 +53,7 @@ export function Select({ value, onValueChange, options, placeholder, id, disable
                 <SelectPrimitive.Content
                     position="popper"
                     sideOffset={4}
-                    className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface text-text shadow-lg"
+                    className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-md border border-border bg-surface text-text shadow-lg"
                 >
                     <SelectPrimitive.Viewport className="p-1">
                         {options.map((o) => (
@@ -67,7 +67,7 @@ export function Select({ value, onValueChange, options, placeholder, id, disable
                                         <Check className="size-4 text-accent" aria-hidden="true" />
                                     </SelectPrimitive.ItemIndicator>
                                 </span>
-                                <SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText>
+                                <span className="min-w-0 truncate"><SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText></span>
                             </SelectPrimitive.Item>
                         ))}
                     </SelectPrimitive.Viewport>

@@ -385,9 +385,10 @@ export default function ComparePage() {
                         <tr key={field.key}>
                           <th
                             scope="row"
-                            className="sticky left-0 z-10 bg-surface p-0 text-left align-top font-medium text-text"
+                            className="sticky left-0 z-10 bg-surface px-3 py-2 text-left align-top font-medium text-text"
                           >
-                            <div className={cn('flex flex-wrap items-center gap-2 px-3 py-2', marked && 'bg-warning/10')}>
+                            {marked && <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-warning/10" />}
+                            <div className="relative flex flex-wrap items-center gap-2">
                               {field.label}
                               {!isEqual && <Badge tone="warning">diff</Badge>}
                             </div>
