@@ -6,6 +6,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import { GET, POST } from "../app/api/auth/signup/route.js";
 import prisma from "@/lib/prisma";
+import { signupEnabled } from "@/lib/users";
 
 const req = (body) =>
     new Request("http://localhost:3000/api/auth/signup", {
@@ -38,6 +39,15 @@ describe("Auth Signup API", () => {
 
         it("reports signup as enabled", async () => {
             expect((await (await GET()).json()).enabled).toBe(true);
+        });
+
+        it("is disabled when PASSWORD_LOGIN=false", async () => {
+            vi.stubEnv("PASSWORD_LOGIN", "false");
+            expect(signupEnabled()).toBe(false);
+            expect((await (await GET()).json()).enabled).toBe(false);
+            const res = await POST(req(valid));
+            expect(res.status).toBe(403);
+            expect(prisma.user.create).not.toHaveBeenCalled();
         });
 
         it("creates a READONLY user with a bcrypt hash and never returns it", async () => {
