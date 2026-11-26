@@ -119,17 +119,19 @@ await check("anna sees rolf on the users page with SSO badge and locked role", a
     const { context, page } = await ssoLogin("anna", "anna-pass");
     try {
         await page.goto("/admin/users");
-        const row = page.locator("tr", { hasText: "rolf@example.com" });
+        const row = page.getByRole("row").filter({ hasText: "rolf@example.com" });
         await row.waitFor();
         await row.getByText("SSO", { exact: true }).waitFor();
         await row.getByText("Managed by SSO").waitFor();
         await row.getByRole("button", { name: "Edit" }).click();
         // In edit mode the email is an input, so find the row by its value.
-        const editRow = page.locator("tr", { has: page.locator('input[value="rolf@example.com"]') });
-        const select = editRow.locator("select");
+        const editRow = page.getByRole("row").filter({ has: page.getByRole("textbox", { name: "Email" }) });
+        const select = editRow.getByRole("combobox", { name: "Role" });
         await select.waitFor();
+        assert((await editRow.getByRole("textbox", { name: "Email" }).inputValue()) === "rolf@example.com", "edit row is not rolf's");
         assert(await select.isDisabled(), "role select for rolf must be disabled");
-        assert((await select.inputValue()) === "READONLY", `rolf role select: ${await select.inputValue()}`);
+        const role = ((await select.textContent()) || "").trim();
+        assert(role === "READONLY", `rolf role select: ${role}`);
         await editRow.getByText("Role is managed by SSO.").waitFor();
     } finally {
         await context.close();
