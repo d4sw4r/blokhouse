@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/Field";
 import { IconButton } from "@/components/ui/IconButton";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
-import { Textarea } from "@/components/ui/Textarea";
 import { TagBadge } from "@/components/TagBadge";
+import { TagForm, validateTag, type TagFormErrors } from "@/components/TagForm";
 import { SkeletonCard } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 
@@ -46,7 +45,7 @@ export default function TagsPage() {
         color: "#3b82f6",
         description: "",
     });
-    const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+    const [formErrors, setFormErrors] = useState<TagFormErrors>({});
     const [submitting, setSubmitting] = useState(false);
 
     const fetchTags = async () => {
@@ -71,13 +70,7 @@ export default function TagsPage() {
     }, []);
 
     const validateForm = () => {
-        const errors: {[key: string]: string} = {};
-        if (!formData.name.trim()) {
-            errors.name = "Tag name is required";
-        }
-        if (formData.color && !/^#[0-9A-Fa-f]{6}$/.test(formData.color)) {
-            errors.color = "Invalid hex color format";
-        }
+        const errors = validateTag(formData);
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -195,51 +188,6 @@ export default function TagsPage() {
         setFormErrors({});
         setShowCreateModal(true);
     };
-
-    const tagForm = (idPrefix: string, withPlaceholders: boolean) => (
-        <div className="space-y-4">
-            <Field label="Name *" htmlFor={`${idPrefix}-name`} error={formErrors.name}>
-                <Input
-                    id={`${idPrefix}-name`}
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={withPlaceholders ? "e.g., production" : undefined}
-                />
-            </Field>
-            <Field label="Color" htmlFor={`${idPrefix}-color`} error={formErrors.color}>
-                <div className="flex items-center gap-3">
-                    <input
-                        type="color"
-                        aria-label="Pick a colour"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="h-9 w-16 shrink-0 cursor-pointer rounded-md border border-border-strong bg-surface p-1 max-sm:h-11"
-                    />
-                    <Input
-                        id={`${idPrefix}-color`}
-                        type="text"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="min-w-0 flex-1 font-mono"
-                        placeholder={withPlaceholders ? "#3b82f6" : undefined}
-                    />
-                </div>
-            </Field>
-            <Field label="Description" htmlFor={`${idPrefix}-description`}>
-                <Textarea
-                    id={`${idPrefix}-description`}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                    placeholder={withPlaceholders ? "Optional description for this tag" : undefined}
-                />
-            </Field>
-            {formErrors.submit && (
-                <p role="alert" className="text-sm text-danger">{formErrors.submit}</p>
-            )}
-        </div>
-    );
 
     if (loading) {
         return (
@@ -369,7 +317,7 @@ export default function TagsPage() {
                         </>
                     }
                 >
-                    {tagForm("create-tag", true)}
+                    <TagForm idPrefix="create-tag" values={formData} onChange={setFormData} errors={formErrors} withPlaceholders />
                 </DialogContent>
             </Dialog>
 
@@ -388,7 +336,7 @@ export default function TagsPage() {
                         </>
                     }
                 >
-                    {tagForm("edit-tag", false)}
+                    <TagForm idPrefix="edit-tag" values={formData} onChange={setFormData} errors={formErrors} />
                 </DialogContent>
             </Dialog>
 
