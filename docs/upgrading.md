@@ -1,5 +1,15 @@
 # Upgrading
 
+## v0.3 → v0.4
+
+Database migrations run automatically on start (a new column for deactivated users). Nothing
+needs to change for existing installations; single sign-on is off until you configure it.
+
+- **Signup:** public signup is always off when `PASSWORD_LOGIN=false`.
+- **Single sign-on** (optional): see [docs/authentication.md](authentication.md). Keep a local
+  admin with a password for break-glass access.
+- **Kubernetes:** the new Helm chart, see [docs/deployment/kubernetes.md](deployment/kubernetes.md).
+
 ## v0.2 → v0.3
 
 Database migrations run automatically on start. Check these changes:

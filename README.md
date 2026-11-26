@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml/badge.svg)](https://github.com/d4sw4r/blokhouse/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)](https://ghcr.io/d4sw4r/blokhouse)
-[![Version](https://img.shields.io/badge/version-0.3.0-green)](https://github.com/d4sw4r/blokhouse/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-green)](https://github.com/d4sw4r/blokhouse/releases)
 
 **Blokhouse** is a simple, automation-first open source CMDB. Track your infrastructure assets and power your automation tools — Ansible, Puppet and your own scripts through a versioned REST API.
 
@@ -55,11 +55,11 @@ or set `ADMIN_PASSWORD` in `.env` before the first start to choose the password 
 ## 🚀 Quick Start (Kubernetes / Helm)
 
 ```bash
-helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <version> \
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.4.0 \
   --namespace blokhouse --create-namespace
 ```
 
-This starts Blokhouse with its own PostgreSQL (for trying out and small installations); for production, point it at your own database. The chart is published from the next release on; until then use `helm install blokhouse ./charts/blokhouse` from a git checkout. A checkout installs Blokhouse 0.3.0, which has no SSO yet (the SSO values need the next release); keep `replicaCount: 1` until then. See [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md).
+This starts Blokhouse with its own PostgreSQL (for trying out and small installations); for production, point it at your own database. See [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md).
 
 ## 🚀 Quick Start (Install Script)
 
