@@ -2,61 +2,29 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { ChevronDown, Download, FileJson, FileSpreadsheet, Package, Plus, Tag as TagIcon, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import Image from "next/image";
-import Link from "next/link";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import AssetRelations from "@/components/AssetRelations";
-import ValidatedInput from "@/components/ValidatedInput";
-import CopyButton from "@/components/CopyButton";
 import { isValidIP, isValidMAC } from "@/lib/validation";
 import { SkeletonTable, LoadingSpinner } from "@/components/Skeleton";
 import BulkOperations from "@/components/BulkOperations";
 import { useToast } from "@/components/ToastProvider";
-
-interface Tag {
-    id: string;
-    name: string;
-    color?: string | null;
-    description?: string | null;
-}
-
-type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
-
-interface ConfigItem {
-    id: string;
-    name: string;
-    description?: string;
-    ip?: string;
-    mac?: string;
-    itemTypeId?: string;
-    itemType?: { id: string; name: string } | null;
-status: AssetStatus;
-    tags: Tag[];
-}
-
-interface Type {
-    id: string;
-    name: string;
-}
-
-interface PaginationData {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-}
-
-const statusColors: Record<AssetStatus, string> = {
-    ACTIVE: "bg-brand-primary/20 text-brand-primary",
-    DEPRECATED: "bg-brand-accent/20 text-brand-accent",
-    MAINTENANCE: "bg-brand-secondary/20 text-brand-secondary",
-};
-
-const statusLabels: Record<AssetStatus, string> = {
-    ACTIVE: "Active",
-    DEPRECATED: "Deprecated",
-    MAINTENANCE: "Maintenance",
-};
+import { ImportDialog } from "./_components/ImportDialog";
+import { ItemFilters } from "./_components/ItemFilters";
+import { ItemFormDialog } from "./_components/ItemFormDialog";
+import { ItemsTable } from "./_components/ItemsTable";
+import { TagsDialog } from "./_components/TagsDialog";
+import type { AssetStatus, ConfigItem, ItemFormData, PaginationData, Tag, Type } from "./_components/types";
 
 export default function ItemsPage() {
     const { data: session, status } = useSession();
@@ -106,6 +74,13 @@ status: "ACTIVE" as AssetStatus,
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [newTagDescription, setNewTagDescription] = useState("");
 
+    // Dialog state (create/edit forms, import, tag deletion and item deletion confirmations)
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
+    const [showImportDialog, setShowImportDialog] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<ConfigItem | null>(null);
+    const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
+    const [loaded, setLoaded] = useState(false);
+
     // Relations modal state
     const [showRelationsModal, setShowRelationsModal] = useState(false);
     const [relationsItem, setRelationsItem] = useState<ConfigItem | null>(null);
@@ -151,6 +126,8 @@ status: "ACTIVE" as AssetStatus,
             setPagination(data.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 });
         } catch (err) {
             console.error("Fetch error:", err);
+        } finally {
+            setLoaded(true);
         }
     };
 
@@ -244,6 +221,7 @@ status: "ACTIVE" as AssetStatus,
             setItems((prev) => [created, ...prev]);
             setNewItem({ name: "", description: "", itemTypeId: "", ip: "", mac: "", status: "ACTIVE", tagIds: [] });
             addToast({ type: "success", title: "Item created", message: `"${created.name}" has been added successfully` });
+            setShowCreateDialog(false);
             fetchItems();
         } catch (err) {
             addToast({ type: "error", title: "Network error", message: String(err) });
@@ -341,6 +319,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             if (res.ok) {
                 addToast({ type: "success", title: "CSV uploaded", message: "Items have been imported successfully" });
                 setCsvContent("");
+                setShowImportDialog(false);
                 fetchItems();
             } else {
                 const err = await res.json();
@@ -385,7 +364,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     };
 
     const deleteTag = async (tagId: string) => {
-        if (!confirm("Are you sure you want to delete this tag?")) return;
         try {
             const res = await fetch(`/api/tags/${tagId}`, { method: "DELETE" });
             if (res.ok) {
@@ -491,591 +469,229 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         return range;
     };
 
+    const statusOptionsForBulk: { value: AssetStatus; label: string }[] = [
+        { value: "ACTIVE", label: "Active" },
+        { value: "MAINTENANCE", label: "Maintenance" },
+        { value: "DEPRECATED", label: "Deprecated" },
+    ];
+
+    const filtersActive = searchQuery !== "" || selectedTypeId !== "" || statusFilter !== "ALL";
+
     if (status === "loading") {
         return (
-            <div className="min-h-screen bg-gray-50 p-8">
-                <div className="max-w-7xl mx-auto">
-                    <LoadingSpinner size="lg" />
-                    <div className="mt-8">
-                        <SkeletonTable rows={5} />
-                    </div>
+            <div>
+                <LoadingSpinner size="lg" />
+                <div className="mt-8">
+                    <SkeletonTable rows={5} />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-brand-background">
-            <main className="max-w-7xl mx-auto p-8 space-y-10">
-                {/* Tag Management Section */}
-                <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold text-brand-text">Tags</h2>
-                        <Button onClick={() => setShowTagModal(true)}>+ Create Tag</Button>
-                    </div>
-                    {availableTags.length === 0 ? (
-                        <p className="text-brand-secondary">No tags created yet.</p>
-                    ) : (
-                        <div className="flex flex-wrap gap-2">
-                            {availableTags.map((tag) => (
-                                <div
-                                    key={tag.id}
-                                    className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
-                                    style={{
-                                        backgroundColor: tag.color ? `${tag.color}20` : '#e5e7eb',
-                                        border: `1px solid ${tag.color || '#d1d5db'}`
-                                    }}
-                                >
-                                    <span style={{ color: tag.color || '#374151' }}>{tag.name}</span>
-                                    <button
-                                        onClick={() => deleteTag(tag.id)}
-                                        className="text-brand-secondary hover:text-brand-accent font-bold"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
+        <div>
+            <PageHeader
+                title="Items"
+                description={`${pagination.total} configuration ${pagination.total === 1 ? "item" : "items"}`}
+                actions={
+                    <>
+                        <Button variant="secondary" onClick={() => setShowTagModal(true)}>
+                            <TagIcon className="size-4" aria-hidden="true" />
+                            Tags
+                        </Button>
+                        <Button variant="secondary" onClick={() => setShowImportDialog(true)}>
+                            <Upload className="size-4" aria-hidden="true" />
+                            Import
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="secondary">
+                                    <Download className="size-4" aria-hidden="true" />
+                                    Export
+                                    <ChevronDown className="size-4" aria-hidden="true" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => exportData("json")}>
+                                    <FileJson className="size-4" aria-hidden="true" />
+                                    Export JSON
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => exportData("csv")}>
+                                    <FileSpreadsheet className="size-4" aria-hidden="true" />
+                                    Export CSV
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button onClick={() => setShowCreateDialog(true)}>
+                            <Plus className="size-4" aria-hidden="true" />
+                            New item
+                        </Button>
+                    </>
+                }
+            />
 
-                {/* Tag Modal */}
-                {showTagModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                            <h3 className="text-xl font-semibold text-brand-text mb-4">Create New Tag</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Name *</label>
-                                    <input
-                                        type="text"
-                                        value={newTagName}
-                                        onChange={(e) => setNewTagName(e.target.value)}
-                                        className="w-full border rounded-sm p-2"
-                                        placeholder="e.g., production"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Color</label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="color"
-                                            value={newTagColor}
-                                            onChange={(e) => setNewTagColor(e.target.value)}
-                                            className="h-10 w-20"
-                                        />
-                                        <span className="text-sm text-brand-secondary">{newTagColor}</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-brand-secondary mb-1">Description</label>
-                                    <input
-                                        type="text"
-                                        value={newTagDescription}
-                                        onChange={(e) => setNewTagDescription(e.target.value)}
-                                        className="w-full border rounded-sm p-2"
-                                        placeholder="Optional description"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-2 mt-6">
-                                <Button onClick={createTag}>Create</Button>
-                                <Button onClick={() => setShowTagModal(false)} variant="outline">Cancel</Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+            <ItemFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedTypeId={selectedTypeId}
+                onTypeChange={(value) => {
+                    setSelectedTypeId(value);
+                    setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                statusFilter={statusFilter}
+                onStatusChange={(value) => {
+                    setStatusFilter(value);
+                    setPagination(prev => ({ ...prev, page: 1 }));
+                }}
+                availableTypes={availableTypes}
+                onClear={clearFilters}
+            />
 
-                {/* CSV Upload Section */}
-                <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <div className="flex items-center">
-                        <Image src="file.svg" width={24} height={24} alt="file" ></Image>
-                        <h2 className="text-2xl font-semibold text-brand-text mb-4">Upload CSV File</h2>
-                    </div>
-                    <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleCsvFileChange}
-                            className="mb-4 md:mb-0"
-                        />
-                        <Button onClick={uploadCsv}>Upload CSV</Button>
-                        {/* Info icon with tooltip */}
-                        <div className="relative inline-block group ml-4">
-                            <svg
-                                className="w-6 h-6 text-brand-secondary cursor-help"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
-                            </svg>
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-brand-text text-brand-background text-xs rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                <p className="mb-1 font-semibold">Example CSV Format:</p>
-                                <code>Name,Description,IP,MAC,ItemTypeId,Status</code>
-                                <br />
-                                <code>Server 1,Main server,192.168.1.10,00:11:22:33:44:55,abc123,ACTIVE</code>
-                                <p className="mt-1">Status: ACTIVE, MAINTENANCE, DEPRECATED</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            {/* Bulk Operations */}
+            <BulkOperations
+                selectedIds={selectedIds}
+                availableTags={availableTags}
+                availableStatuses={statusOptionsForBulk}
+                onClearSelection={clearSelection}
+                onRefresh={fetchItems}
+            />
 
-                {/* New Item Form */}
-                <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Add New Configuration Item</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input
-                            type="text"
-                            placeholder="Name"
-                            value={newItem.name}
-                            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                            className="border rounded-sm p-2"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Description"
-                            value={newItem.description}
-                            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                            className="border rounded-sm p-2"
-                        />
-                        <ValidatedInput
-                            type="ip"
-                            value={newItem.ip}
-                            onChange={(value) => setNewItem({ ...newItem, ip: value })}
-                            placeholder="IP Address (e.g., 192.168.1.1)"
-                        />
-                        <ValidatedInput
-                            type="mac"
-                            value={newItem.mac}
-                            onChange={(value) => setNewItem({ ...newItem, mac: value })}
-                            placeholder="MAC Address (e.g., 00:11:22:33:44:55)"
-                        />
-                        <select
-                            value={newItem.itemTypeId}
-                            onChange={(e) => setNewItem({ ...newItem, itemTypeId: e.target.value })}
-                            className="border rounded-sm p-2"
-                        >
-                            <option value="">Select a type (optional)</option>
-                            {availableTypes.map((type) => (
-                                <option key={type.id} value={type.id}>
-                                    {type.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            value={newItem.status}
-                            onChange={(e) => setNewItem({ ...newItem, status: e.target.value as AssetStatus })}
-                            className="border rounded-sm p-2"
-                        >
-                            <option value="ACTIVE">Active</option>
-                            <option value="MAINTENANCE">Maintenance</option>
-                            <option value="DEPRECATED">Deprecated</option>
-                        </select>
-                    </div>
-                    {/* Tags selection */}
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-brand-secondary mb-2">Tags</label>
-                        <div className="flex flex-wrap gap-2">
-                            {availableTags.map((tag) => (
-                                <button
-                                    key={tag.id}
-                                    onClick={() => toggleTagSelection(tag.id, false)}
-                                    className={`px-3 py-1 rounded-full text-sm transition-all ${
-                                        newItem.tagIds.includes(tag.id)
-                                            ? 'ring-2 ring-offset-1'
-                                            : 'opacity-60 hover:opacity-100'
-                                    }`}
-                                    style={{
-                                        backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
-                                        border: `1px solid ${tag.color || '#d1d5db'}`,
-                                        color: tag.color || '#374151'
-                                    }}
-                                >
-                                    {newItem.tagIds.includes(tag.id) && '✓ '}{tag.name}
-                                </button>
-                            ))}
-                            {availableTags.length === 0 && (
-                                <span className="text-sm text-brand-secondary">No tags available. Create some above!</span>
-                            )}
-                        </div>
-                    </div>
-                    <div className="mt-4">
-                        <Button onClick={createItem}>Add Item</Button>
-                    </div>
-                </section>
-
-                {/* Search and Filter Section */}
-                <section className="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Search & Filter</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Search</label>
-                            <input
-                                type="text"
-                                placeholder="Search name, IP, MAC, description..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full border rounded-sm p-2"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Filter by Type</label>
-                            <select
-                                value={selectedTypeId}
-                                onChange={(e) => {
-                                    setSelectedTypeId(e.target.value);
-                                    setPagination(prev => ({ ...prev, page: 1 }));
-                                }}
-                                className="w-full border rounded-sm p-2"
-                            >
-                                <option value="">All Types</option>
-                                {availableTypes.map((type) => (
-                                    <option key={type.id} value={type.id}>
-                                        {type.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-brand-secondary mb-1">Filter by Status</label>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => {
-                                    setStatusFilter(e.target.value as AssetStatus | "ALL");
-                                    setPagination(prev => ({ ...prev, page: 1 }));
-                                }}
-                                className="w-full border rounded-sm p-2"
-                            >
-                                <option value="ALL">All Statuses</option>
-                                <option value="ACTIVE">Active</option>
-                                <option value="MAINTENANCE">Maintenance</option>
-                                <option value="DEPRECATED">Deprecated</option>
-                            </select>
-                        </div>
-                        <div className="flex items-end gap-2">
-                            <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
-                        </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                        <p className="text-sm text-brand-secondary">
-                            Showing {items.length} of {pagination.total} items
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-brand-secondary mr-2">Export:</span>
-                            <Button onClick={() => exportData("json")} variant="outline" size="sm">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                                </svg>
-                                JSON
+            {/* Items Table */}
+            {!loaded ? (
+                <SkeletonTable rows={5} />
+            ) : items.length === 0 ? (
+                <EmptyState
+                    icon={Package}
+                    title={filtersActive ? "No items match your filters" : "No items yet"}
+                    description={
+                        filtersActive
+                            ? "No items found. Try adjusting your search or filters."
+                            : "Create your first configuration item or import a CSV file."
+                    }
+                    action={
+                        filtersActive ? (
+                            <Button variant="secondary" onClick={clearFilters}>
+                                Clear filters
                             </Button>
-                            <Button onClick={() => exportData("csv")} variant="outline" size="sm">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                CSV
+                        ) : (
+                            <Button onClick={() => setShowCreateDialog(true)}>
+                                <Plus className="size-4" aria-hidden="true" />
+                                New item
                             </Button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Bulk Operations */}
-                <BulkOperations
-                    selectedIds={selectedIds}
-                    availableTags={availableTags}
-                    availableStatuses={[
-                        { value: "ACTIVE", label: "Active", color: statusColors.ACTIVE },
-                        { value: "MAINTENANCE", label: "Maintenance", color: statusColors.MAINTENANCE },
-                        { value: "DEPRECATED", label: "Deprecated", color: statusColors.DEPRECATED },
-                    ]}
-                    onClearSelection={clearSelection}
-                    onRefresh={fetchItems}
+                        )
+                    }
                 />
+            ) : (
+                <ItemsTable
+                    items={items}
+                    selectedIds={selectedIds}
+                    onToggleSelection={toggleSelection}
+                    onToggleAll={toggleAllSelection}
+                    onEdit={startEditing}
+                    onRelations={(item) => { setRelationsItem(item); setShowRelationsModal(true); }}
+                    onDelete={setItemToDelete}
+                    pagination={pagination}
+                    paginationRange={getPaginationRange()}
+                    onGoToPage={goToPage}
+                />
+            )}
 
-                {/* Items Table */}
-                <section className="bg-white shadow-sm rounded-sm overflow-x-auto">
-                    <table className="min-w-full">
-                        <thead className="bg-brand-primary/10">
-                            <tr>
-                                <th className="py-3 px-2 border text-center w-10">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedIds.length === items.length && items.length > 0}
-                                        onChange={toggleAllSelection}
-                                        className="cursor-pointer"
-                                    />
-                                </th>
-                                <th className="py-3 px-4 border">Name</th>
-                                <th className="py-3 px-4 border">Description</th>
-                                <th className="py-3 px-4 border">IP</th>
-                                <th className="py-3 px-4 border">MAC</th>
-                                <th className="py-3 px-4 border">Type</th>
-<th className="py-3 px-4 border">Status</th>
-                                <th className="py-3 px-4 border">Tags</th>
-                                <th className="py-3 px-4 border">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="py-8 px-4 text-center text-brand-secondary">
-                                        No items found. Try adjusting your search or filters.
-                                    </td>
-                                </tr>
-                            ) : (
-                                items.map((item) =>
-                                    editingItemId === item.id ? (
-                                        <tr key={item.id}>
-                                            <td className="py-2 px-2 border text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.includes(item.id)}
-                                                    onChange={() => toggleSelection(item.id)}
-                                                    className="cursor-pointer"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <input
-                                                    type="text"
-                                                    value={editingItemData.name}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, name: e.target.value })
-                                                    }
-                                                    className="w-full border rounded-sm p-1"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <input
-                                                    type="text"
-                                                    value={editingItemData.description}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, description: e.target.value })
-                                                    }
-                                                    className="w-full border rounded-sm p-1"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <ValidatedInput
-                                                    type="ip"
-                                                    value={editingItemData.ip}
-                                                    onChange={(value) =>
-                                                        setEditingItemData({ ...editingItemData, ip: value })
-                                                    }
-                                                    placeholder="IP Address"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <ValidatedInput
-                                                    type="mac"
-                                                    value={editingItemData.mac}
-                                                    onChange={(value) =>
-                                                        setEditingItemData({ ...editingItemData, mac: value })
-                                                    }
-                                                    placeholder="MAC Address"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <select
-                                                    value={editingItemData.itemTypeId}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, itemTypeId: e.target.value })
-                                                    }
-                                                    className="w-full border rounded-sm p-1"
-                                                >
-                                                    <option value="">None</option>
-                                                    {availableTypes.map((type) => (
-                                                        <option key={type.id} value={type.id}>
-                                                            {type.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td className="py-2 px-4 border">
-<select
-                                                    value={editingItemData.status}
-                                                    onChange={(e) =>
-                                                        setEditingItemData({ ...editingItemData, status: e.target.value as AssetStatus })
-                                                    }
-                                                    className="w-full border rounded-sm p-1"
-                                                >
-                                                    <option value="ACTIVE">Active</option>
-                                                    <option value="MAINTENANCE">Maintenance</option>
-                                                    <option value="DEPRECATED">Deprecated</option>
-                                                </select>
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {availableTags.map((tag) => (
-                                                        <button
-                                                            key={tag.id}
-                                                            onClick={() => toggleTagSelection(tag.id, true)}
-                                                            className={`px-2 py-0.5 rounded-full text-xs transition-all ${
-                                                                editingItemData.tagIds.includes(tag.id)
-                                                                    ? 'ring-1 ring-offset-1'
-                                                                    : 'opacity-50'
-                                                            }`}
-                                                            style={{
-                                                                backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
-                                                                border: `1px solid ${tag.color || '#d1d5db'}`,
-                                                                color: tag.color || '#374151',
-                                                            }}
-                                                        >
-                                                            {editingItemData.tagIds.includes(tag.id) ? '✓ ' : ''}{tag.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-4 border flex gap-2">
-                                                <Button onClick={() => updateItem(item.id)}>Save</Button>
-                                                <Button onClick={cancelEditing} variant="outline">Cancel</Button>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        <tr key={item.id} className="hover:bg-brand-primary/5">
-                                            <td className="py-2 px-2 border text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.includes(item.id)}
-                                                    onChange={() => toggleSelection(item.id)}
-                                                    className="cursor-pointer"
-                                                />
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <Link href={`/items/${item.id}`} className="text-brand-primary hover:underline font-medium">
-                                                    {item.name}
-                                                </Link>
-                                            </td>
-                                            <td className="py-2 px-4 border">{item.description}</td>
-                                            <td className="py-2 px-4 border">
-                                                <div className="flex items-center gap-2">
-                                                    {item.ip && (
-                                                        <>
-                                                            <span className="font-mono text-sm">{item.ip}</span>
-                                                            <CopyButton text={item.ip} />
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <div className="flex items-center gap-2">
-                                                    {item.mac && (
-                                                        <>
-                                                            <span className="font-mono text-sm">{item.mac}</span>
-                                                            <CopyButton text={item.mac} />
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-4 border text-brand-secondary">{item.itemType ? item.itemType.name : "None"}</td>
-                                            <td className="py-2 px-4 border">
-<span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
-                                                    {statusLabels[item.status]}
-                                                </span>
-                                            </td>
-                                            <td className="py-2 px-4 border">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {item.tags?.map((tag) => (
-                                                        <span
-                                                            key={tag.id}
-                                                            className="px-2 py-0.5 rounded-full text-xs"
-                                                            style={{
-                                                                backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
-                                                                border: `1px solid ${tag.color || '#d1d5db'}`,
-                                                                color: tag.color || '#374151',
-                                                            }}
-                                                        >
-                                                            {tag.name}
-                                                        </span>
-                                                    ))}
-                                                    {(!item.tags || item.tags.length === 0) && (
-                                                        <span className="text-brand-secondary/50 text-xs">-</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="py-2 px-4 border flex gap-2">
-                                                <Button onClick={() => startEditing(item)}>Edit</Button>
-                                                <Button onClick={() => { setRelationsItem(item); setShowRelationsModal(true); }} variant="outline">Relations</Button>
-                                                <Button onClick={() => deleteItem(item.id)} variant="destructive">Delete</Button>
-                                            </td>
-                                        </tr>
-                                    )
-                                )
-                            )}
-                        </tbody>
-                    </table>
+            {/* New item */}
+            <ItemFormDialog
+                open={showCreateDialog}
+                onOpenChange={setShowCreateDialog}
+                title="New item"
+                submitLabel="Add item"
+                idPrefix="new-item"
+                data={newItem}
+                onChange={setNewItem}
+                availableTypes={availableTypes}
+                availableTags={availableTags}
+                onToggleTag={(tagId) => toggleTagSelection(tagId, false)}
+                onSubmit={createItem}
+            />
 
-                    {/* Pagination Controls */}
-                    {pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-brand-primary/5 border-t">
-                            <div className="flex items-center">
-                                <span className="text-sm text-brand-secondary">
-                                    Page {pagination.page} of {pagination.totalPages}
-                                </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                                <Button
-                                    onClick={() => goToPage(pagination.page - 1)}
-                                    disabled={pagination.page === 1}
-                                    variant="outline"
-                                >
-                                    Previous
-                                </Button>
-                                {getPaginationRange().map((page, idx) =>
-                                    page === "..." ? (
-                                        <span key={idx} className="px-3 py-1 text-gray-500">...</span>
-                                    ) : (
-                                        <Button
-                                            key={idx}
-                                            onClick={() => goToPage(page as number)}
-                                            variant={pagination.page === page ? undefined : "outline"}
-                                        >
-                                            {page}
-                                        </Button>
-                                    )
-                                )}
-                                <Button
-                                    onClick={() => goToPage(pagination.page + 1)}
-                                    disabled={pagination.page === pagination.totalPages}
-                                    variant="outline"
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+            {/* Edit item */}
+            <ItemFormDialog
+                open={editingItemId !== null}
+                onOpenChange={(open) => { if (!open) cancelEditing(); }}
+                title="Edit item"
+                submitLabel="Save"
+                idPrefix="edit-item"
+                data={editingItemData}
+                onChange={setEditingItemData}
+                availableTypes={availableTypes}
+                availableTags={availableTags}
+                onToggleTag={(tagId) => toggleTagSelection(tagId, true)}
+                onSubmit={() => { if (editingItemId) updateItem(editingItemId); }}
+            />
+
+            {/* Import CSV */}
+            <ImportDialog
+                open={showImportDialog}
+                onOpenChange={(open) => {
+                    setShowImportDialog(open);
+                    if (!open) setCsvContent("");
+                }}
+                onFileChange={handleCsvFileChange}
+                onUpload={uploadCsv}
+            />
+
+            {/* Tags */}
+            <TagsDialog
+                open={showTagModal}
+                onOpenChange={setShowTagModal}
+                tags={availableTags}
+                onRequestDelete={setTagToDelete}
+                name={newTagName}
+                onNameChange={setNewTagName}
+                color={newTagColor}
+                onColorChange={setNewTagColor}
+                description={newTagDescription}
+                onDescriptionChange={setNewTagDescription}
+                onCreate={createTag}
+            />
+
+            <ConfirmDialog
+                open={tagToDelete !== null}
+                onOpenChange={(open) => { if (!open) setTagToDelete(null); }}
+                title="Delete tag"
+                description={`Are you sure you want to delete the tag "${tagToDelete?.name ?? ""}"?`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => { if (tagToDelete) deleteTag(tagToDelete.id); }}
+            />
+
+            <ConfirmDialog
+                open={itemToDelete !== null}
+                onOpenChange={(open) => { if (!open) setItemToDelete(null); }}
+                title="Delete item"
+                description={`Delete "${itemToDelete?.name ?? ""}"? This cannot be undone.`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => { if (itemToDelete) deleteItem(itemToDelete.id); }}
+            />
+
+            {/* Relations Modal */}
+            <Dialog
+                open={showRelationsModal && relationsItem !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setShowRelationsModal(false);
+                        setRelationsItem(null);
+                    }
+                }}
+            >
+                <DialogContent
+                    title={`Asset relations: ${relationsItem?.name ?? ""}`}
+                    description="Manage relationships with other configuration items"
+                    className="max-w-3xl"
+                >
+                    {relationsItem && (
+                        <AssetRelations itemId={relationsItem.id} itemName={relationsItem.name} />
                     )}
-                </section>
-                {/* Relations Modal */}
-                {showRelationsModal && relationsItem && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-brand-background p-6 rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-4">
-                                <div>
-                                    <h2 className="text-2xl font-semibold text-brand-text">
-                                        Asset Relations: {relationsItem.name}
-                                    </h2>
-                                    <p className="text-sm text-brand-secondary">
-                                        Manage relationships with other configuration items
-                                    </p>
-                                </div>
-                                <Button
-                                    onClick={() => {
-                                        setShowRelationsModal(false);
-                                        setRelationsItem(null);
-                                    }}
-                                    variant="outline"
-                                >
-                                    Close
-                                </Button>
-                            </div>
-                            <AssetRelations
-                                itemId={relationsItem.id}
-                                itemName={relationsItem.name}
-                            />
-                        </div>
-                    </div>
-                )}
-            </main>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

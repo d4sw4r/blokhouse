@@ -2,7 +2,14 @@
 "use client";
 
 import { useState } from "react";
+import { AlertTriangle, Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatusDot } from "@/components/ui/StatusDot";
+import { useToast } from "@/components/ToastProvider";
+import { cn } from "@/lib/utils";
+import { TagToggle } from "@/components/TagToggle";
 
 interface Tag {
     id: string;
@@ -15,7 +22,7 @@ type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 interface BulkOperationsProps {
     selectedIds: string[];
     availableTags: Tag[];
-    availableStatuses: { value: AssetStatus; label: string; color: string }[];
+    availableStatuses: { value: AssetStatus; label: string; color?: string }[];
     onClearSelection: () => void;
     onRefresh: () => void;
 }
@@ -32,12 +39,12 @@ export default function BulkOperations({
     const [selectedStatus, setSelectedStatus] = useState<AssetStatus>("ACTIVE");
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [confirming, setConfirming] = useState<"status" | "addTags" | "delete" | null>(null);
+    const { addToast } = useToast();
 
     if (selectedIds.length === 0) return null;
 
     const handleStatusChange = async () => {
-        if (!confirm(`Change status to "${selectedStatus}" for ${selectedIds.length} items?`)) return;
-        
         setLoading(true);
         try {
             const res = await fetch("/api/configuration-items/bulk", {
@@ -56,10 +63,10 @@ export default function BulkOperations({
                 setIsOpen(false);
                 setOperation(null);
             } else {
-                alert("Bulk status update failed");
+                addToast({ type: "error", title: "Bulk status update failed" });
             }
         } catch {
-            alert("Network error");
+            addToast({ type: "error", title: "Network error" });
         } finally {
             setLoading(false);
         }
@@ -67,8 +74,6 @@ export default function BulkOperations({
 
     const handleAddTags = async () => {
         if (selectedTagIds.length === 0) return;
-        if (!confirm(`Add ${selectedTagIds.length} tag(s) to ${selectedIds.length} items?`)) return;
-        
         setLoading(true);
         try {
             // Add tags one by one for each item
@@ -77,7 +82,7 @@ export default function BulkOperations({
                     await fetch(`/api/configuration-items/${itemId}/tags`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ tagId }),
+                        body: JSON.stringify({ tagIds: [tagId] }),
                     });
                 }
             }
@@ -87,15 +92,13 @@ export default function BulkOperations({
             setOperation(null);
             setSelectedTagIds([]);
         } catch {
-            alert("Network error");
+            addToast({ type: "error", title: "Network error" });
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async () => {
-        if (!confirm(`⚠️ Delete ${selectedIds.length} items permanently? This cannot be undone!`)) return;
-        
         setLoading(true);
         try {
             for (const itemId of selectedIds) {
@@ -108,7 +111,7 @@ export default function BulkOperations({
             setIsOpen(false);
             setOperation(null);
         } catch {
-            alert("Network error");
+            addToast({ type: "error", title: "Network error" });
         } finally {
             setLoading(false);
         }
@@ -122,62 +125,96 @@ export default function BulkOperations({
         );
     };
 
+    const closePanel = () => {
+        setIsOpen(false);
+        setOperation(null);
+    };
+
+    const confirmCopy = {
+        status: {
+            title: "Change status",
+            description: `Change status to "${selectedStatus}" for ${selectedIds.length} items?`,
+            confirmLabel: "Change status",
+            tone: undefined,
+        },
+        addTags: {
+            title: "Add tags",
+            description: `Add ${selectedTagIds.length} tag(s) to ${selectedIds.length} items?`,
+            confirmLabel: "Add tags",
+            tone: undefined,
+        },
+        delete: {
+            title: "Delete items",
+            description: `Delete ${selectedIds.length} items permanently? This cannot be undone!`,
+            confirmLabel: "Delete items",
+            tone: "danger" as const,
+        },
+    };
+    const active = confirming ? confirmCopy[confirming] : null;
+
     return (
-        <div className="bg-brand-primary/10 border border-brand-primary/30 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between">
+        <div className="mb-4 rounded-lg border border-border bg-surface-2 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <span className="bg-brand-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                    <Badge tone="accent" className="font-mono">
                         {selectedIds.length} selected
-                    </span>
-                    <span className="text-gray-600 text-sm">Bulk operations available</span>
+                    </Badge>
+                    <span className="text-sm text-muted">Bulk operations available</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {!isOpen && (
                         <>
-                            <Button onClick={() => { setIsOpen(true); setOperation("status"); }} size="sm" variant="outline">
+                            <Button onClick={() => { setIsOpen(true); setOperation("status"); }} size="sm" variant="secondary">
                                 Change Status
                             </Button>
-                            <Button onClick={() => { setIsOpen(true); setOperation("addTags"); }} size="sm" variant="outline">
+                            <Button onClick={() => { setIsOpen(true); setOperation("addTags"); }} size="sm" variant="secondary">
                                 Add Tags
                             </Button>
-                            <Button onClick={() => { setIsOpen(true); setOperation("delete"); }} size="sm" variant="destructive">
+                            <Button onClick={() => { setIsOpen(true); setOperation("delete"); }} size="sm" variant="danger">
                                 Delete
                             </Button>
                         </>
                     )}
-                    <Button onClick={onClearSelection} size="sm" variant="outline">
+                    <Button onClick={onClearSelection} size="sm" variant="ghost">
+                        <X className="size-4" aria-hidden="true" />
                         Clear
                     </Button>
                 </div>
             </div>
 
             {isOpen && (
-                <div className="mt-4 pt-4 border-t border-brand-primary/20">
+                <div className="mt-3 border-t border-border pt-3">
                     {operation === "status" && (
                         <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <span id="bulk-status-label" className="block text-sm font-medium text-text">
                                 Change status to:
-                            </label>
-                            <div className="flex flex-wrap gap-2">
+                            </span>
+                            <div role="group" aria-labelledby="bulk-status-label" className="flex flex-wrap gap-2">
                                 {availableStatuses.map((status) => (
                                     <button
                                         key={status.value}
+                                        type="button"
+                                        aria-pressed={selectedStatus === status.value}
                                         onClick={() => setSelectedStatus(status.value)}
-                                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                        className={cn(
+                                            "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none max-sm:min-h-11",
                                             selectedStatus === status.value
-                                                ? "ring-2 ring-offset-1 " + status.color
-                                                : "opacity-60 hover:opacity-100 " + status.color
-                                        }`}
+                                                ? "border-accent bg-accent/10"
+                                                : "border-border-strong bg-surface hover:bg-surface-2",
+                                        )}
                                     >
-                                        {selectedStatus === status.value && "✓ "}{status.label}
+                                        {selectedStatus === status.value && (
+                                            <Check className="size-3.5 text-accent" aria-hidden="true" />
+                                        )}
+                                        <StatusDot status={status.value} />
                                     </button>
                                 ))}
                             </div>
-                            <div className="flex gap-2 pt-2">
-                                <Button onClick={handleStatusChange} disabled={loading} size="sm">
+                            <div className="flex gap-2 pt-1">
+                                <Button onClick={() => setConfirming("status")} disabled={loading} size="sm" loading={loading}>
                                     {loading ? "Updating..." : "Apply"}
                                 </Button>
-                                <Button onClick={() => { setIsOpen(false); setOperation(null); }} size="sm" variant="outline">
+                                <Button onClick={closePanel} size="sm" variant="secondary">
                                     Cancel
                                 </Button>
                             </div>
@@ -186,41 +223,32 @@ export default function BulkOperations({
 
                     {operation === "addTags" && (
                         <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700">
+                            <span id="bulk-tags-label" className="block text-sm font-medium text-text">
                                 Select tags to add:
-                            </label>
-                            <div className="flex flex-wrap gap-2">
+                            </span>
+                            <div role="group" aria-labelledby="bulk-tags-label" className="flex flex-wrap gap-2">
                                 {availableTags.map((tag) => (
-                                    <button
+                                    <TagToggle
                                         key={tag.id}
-                                        onClick={() => toggleTagSelection(tag.id)}
-                                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                                            selectedTagIds.includes(tag.id)
-                                                ? 'ring-2 ring-offset-1'
-                                                : 'opacity-60 hover:opacity-100'
-                                        }`}
-                                        style={{
-                                            backgroundColor: tag.color ? `${tag.color}30` : '#e5e7eb',
-                                            border: `1px solid ${tag.color || '#d1d5db'}`,
-                                            color: tag.color || '#374151',
-                                        }}
-                                    >
-                                        {selectedTagIds.includes(tag.id) && '✓ '}{tag.name}
-                                    </button>
+                                        tag={tag}
+                                        selected={selectedTagIds.includes(tag.id)}
+                                        onToggle={() => toggleTagSelection(tag.id)}
+                                    />
                                 ))}
                                 {availableTags.length === 0 && (
-                                    <span className="text-sm text-gray-500">No tags available</span>
+                                    <span className="text-sm text-muted">No tags available</span>
                                 )}
                             </div>
-                            <div className="flex gap-2 pt-2">
-                                <Button 
-                                    onClick={handleAddTags} 
-                                    disabled={loading || selectedTagIds.length === 0} 
+                            <div className="flex gap-2 pt-1">
+                                <Button
+                                    onClick={() => setConfirming("addTags")}
+                                    disabled={loading || selectedTagIds.length === 0}
                                     size="sm"
+                                    loading={loading}
                                 >
                                     {loading ? "Adding..." : `Add ${selectedTagIds.length} Tag(s)`}
                                 </Button>
-                                <Button onClick={() => { setIsOpen(false); setOperation(null); }} size="sm" variant="outline">
+                                <Button onClick={closePanel} size="sm" variant="secondary">
                                     Cancel
                                 </Button>
                             </div>
@@ -229,16 +257,23 @@ export default function BulkOperations({
 
                     {operation === "delete" && (
                         <div className="space-y-3">
-                            <div className="bg-red-50 border border-red-200 rounded p-3">
-                                <p className="text-red-800 text-sm font-medium">
-                                    ⚠️ Warning: This will permanently delete {selectedIds.length} items!
+                            <div className="flex items-start gap-2 rounded-md border border-danger/40 bg-danger/10 p-3">
+                                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
+                                <p className="text-sm font-medium text-danger">
+                                    Warning: This will permanently delete {selectedIds.length} items!
                                 </p>
                             </div>
                             <div className="flex gap-2">
-                                <Button onClick={handleDelete} disabled={loading} size="sm" variant="destructive">
+                                <Button
+                                    onClick={() => setConfirming("delete")}
+                                    disabled={loading}
+                                    size="sm"
+                                    variant="danger"
+                                    loading={loading}
+                                >
                                     {loading ? "Deleting..." : "Confirm Delete"}
                                 </Button>
-                                <Button onClick={() => { setIsOpen(false); setOperation(null); }} size="sm" variant="outline">
+                                <Button onClick={closePanel} size="sm" variant="secondary">
                                     Cancel
                                 </Button>
                             </div>
@@ -246,6 +281,22 @@ export default function BulkOperations({
                     )}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirming !== null}
+                onOpenChange={(open) => {
+                    if (!open) setConfirming(null);
+                }}
+                title={active?.title ?? ""}
+                description={active?.description ?? ""}
+                confirmLabel={active?.confirmLabel ?? "Confirm"}
+                tone={active?.tone}
+                onConfirm={() => {
+                    if (confirming === "status") handleStatusChange();
+                    else if (confirming === "addTags") handleAddTags();
+                    else if (confirming === "delete") handleDelete();
+                }}
+            />
         </div>
     );
 }
