@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Single sign-on with OpenID Connect** (Keycloak, Microsoft Entra ID and other providers), see [docs/authentication.md](https://github.com/d4sw4r/blokhouse/blob/main/docs/authentication.md):
+  - Roles from groups or app roles via `OIDC_ROLE_MAP`, applied at every sign-in; users without a mapped role cannot sign in
+  - New users are created at first sign-in; existing accounts are linked only for verified emails (`OIDC_TRUST_EMAIL` for providers without `email_verified`); local admins with a password are never linked
+  - `PASSWORD_LOGIN=false` to turn off password login, `SESSION_MAX_AGE` to set the session lifetime
+  - Invalid SSO configuration stops the app at start with a clear message
+- **Deactivate users** under Admin -> Users: takes effect at once, also for open sessions and API tokens.
+- API tokens of SSO users must have an expiry of at most `OIDC_TOKEN_MAX_DAYS` days (default 90); service accounts with role `API` are the way to automate.
+
+### Changed
+- Public signup is always off when `PASSWORD_LOGIN=false`.
+- The role of SSO users cannot be changed in Blokhouse while `OIDC_ROLE_MAP` is set, and SSO users cannot get a password (HTTP 409).
+
 ## [0.3.0] - 2026-11-25
 
 Automation release: a stable API for automation, an Ansible collection, a Puppet module and

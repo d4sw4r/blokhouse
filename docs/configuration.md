@@ -64,7 +64,8 @@ runs its logic when no `ADMIN` user exists yet.
 #### `ALLOW_SIGNUP`
 Allow public self-registration on `/signup`. Default: `false`.
 New self-registered accounts get the `READONLY` role; an administrator must
-promote them. Leave this disabled for internet-facing instances.
+promote them. Leave this disabled for internet-facing instances. Signup is always off
+when `PASSWORD_LOGIN=false`.
 
 ```bash
 ALLOW_SIGNUP=true
@@ -86,6 +87,35 @@ DISCOVERY_USE_SUDO=false        # set to true to run `sudo -n nmap` (needed for 
 Every app process sends [webhooks](webhooks.md) in the background. Set `WEBHOOK_WORKER=false`
 on replicas that should not send them. Several replicas with the worker enabled are fine: each
 delivery is sent by exactly one of them.
+
+### Single sign-on (OIDC)
+
+Optional. Setting `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` enables sign-in with an
+OpenID Connect provider; setting only some of them stops the app from starting. Set-up guides for
+Keycloak and Microsoft Entra ID are in [authentication.md](authentication.md).
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OIDC_ISSUER` | | Issuer URL of the provider (`/.well-known/openid-configuration` must be below it). |
+| `OIDC_CLIENT_ID` | | Client ID. |
+| `OIDC_CLIENT_SECRET` | | Client secret. |
+| `OIDC_NAME` | `Single sign-on` | Label of the sign-in button. |
+| `OIDC_SCOPES` | `openid email profile` | Scopes to request. |
+| `OIDC_ROLE_CLAIM` | `groups` | ID token claim with the user's groups or roles (`roles` for Entra ID app roles). |
+| `OIDC_ROLE_MAP` | empty | `value=ROLE,...` Role per claim value, first match wins, no match means no access. Roles: `ADMIN`, `USER`, `AUDIT`, `READONLY`. |
+| `OIDC_DEFAULT_ROLE` | `READONLY` | Role of new users when `OIDC_ROLE_MAP` is empty. Not `API`. |
+| `OIDC_TRUST_EMAIL` | `false` | Treat the `email` claim as verified when the provider sends no `email_verified`. Read the risks in [authentication.md](authentication.md#the-email-address-and-oidc_trust_email). |
+| `OIDC_TOKEN_MAX_DAYS` | `90` | Maximum lifetime of API tokens of SSO users (expiry is required). |
+| `PASSWORD_LOGIN` | `true` | `false` turns off email/password sign-in and public signup. Requires OIDC. |
+| `SESSION_MAX_AGE` | `2592000` | Session lifetime in seconds (30 days). `28800` (8 hours) is recommended with SSO. |
+
+```bash
+OIDC_ISSUER=https://keycloak.example.com/realms/company
+OIDC_CLIENT_ID=blokhouse
+OIDC_CLIENT_SECRET=...
+OIDC_ROLE_MAP=cmdb-admins=ADMIN,cmdb-users=USER,cmdb-read=READONLY
+SESSION_MAX_AGE=28800
+```
 
 ## Complete Example
 
