@@ -33,9 +33,9 @@ export const DialogContent = React.forwardRef<
         >
             <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
                 <div className="min-w-0">
-                    <DialogPrimitive.Title className="text-base font-semibold">{title}</DialogPrimitive.Title>
+                    <DialogPrimitive.Title className="text-base font-semibold break-words">{title}</DialogPrimitive.Title>
                     {description ? (
-                        <DialogPrimitive.Description className="mt-1 text-sm text-muted">
+                        <DialogPrimitive.Description className="mt-1 text-sm text-muted break-words">
                             {description}
                         </DialogPrimitive.Description>
                     ) : null}

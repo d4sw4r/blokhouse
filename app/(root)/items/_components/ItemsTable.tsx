@@ -65,6 +65,13 @@ export function ItemsTable({
                     </tr>
                 </THead>
                 <TBody>
+                    {items.length === 0 && (
+                        <TR>
+                            <TD colSpan={9} className="py-8 text-center text-muted">
+                                No items found. Try adjusting your search or filters.
+                            </TD>
+                        </TR>
+                    )}
                     {items.map((item) => (
                         <TR key={item.id}>
                             <TD>

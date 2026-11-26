@@ -22,7 +22,7 @@ type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 interface BulkOperationsProps {
     selectedIds: string[];
     availableTags: Tag[];
-    availableStatuses: { value: AssetStatus; label: string; color?: string }[];
+    availableStatuses: { value: AssetStatus; label: string }[];
     onClearSelection: () => void;
     onRefresh: () => void;
 }
@@ -76,16 +76,19 @@ export default function BulkOperations({
         if (selectedTagIds.length === 0) return;
         setLoading(true);
         try {
+            let failed = 0;
             // Add tags one by one for each item
             for (const itemId of selectedIds) {
                 for (const tagId of selectedTagIds) {
-                    await fetch(`/api/configuration-items/${itemId}/tags`, {
+                    const res = await fetch(`/api/configuration-items/${itemId}/tags`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ tagIds: [tagId] }),
                     });
+                    if (!res.ok) failed++;
                 }
             }
+            if (failed > 0) addToast({ type: "error", title: "Some tags could not be added", message: `${failed} request(s) failed` });
             onClearSelection();
             onRefresh();
             setIsOpen(false);
@@ -101,11 +104,14 @@ export default function BulkOperations({
     const handleDelete = async () => {
         setLoading(true);
         try {
+            let failed = 0;
             for (const itemId of selectedIds) {
-                await fetch(`/api/configuration-items/${itemId}`, {
+                const res = await fetch(`/api/configuration-items/${itemId}`, {
                     method: "DELETE",
                 });
+                if (!res.ok) failed++;
             }
+            if (failed > 0) addToast({ type: "error", title: "Some items could not be deleted", message: `${failed} request(s) failed` });
             onClearSelection();
             onRefresh();
             setIsOpen(false);

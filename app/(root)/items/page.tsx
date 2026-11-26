@@ -24,7 +24,7 @@ import { ItemFilters } from "./_components/ItemFilters";
 import { ItemFormDialog } from "./_components/ItemFormDialog";
 import { ItemsTable } from "./_components/ItemsTable";
 import { TagsDialog } from "./_components/TagsDialog";
-import type { AssetStatus, ConfigItem, ItemFormData, PaginationData, Tag, Type } from "./_components/types";
+import { statusOptions, type AssetStatus, type ConfigItem, ItemFormData, PaginationData, Tag, Type } from "./_components/types";
 
 export default function ItemsPage() {
     const { data: session, status } = useSession();
@@ -124,6 +124,10 @@ status: "ACTIVE" as AssetStatus,
             const data = await res.json();
             setItems(data.items || []);
             setPagination(data.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 });
+            // The requested page no longer exists (e.g. its last item was deleted): go back to the last page
+            if ((data.items || []).length === 0 && pagination.page > 1) {
+                setPagination(prev => ({ ...prev, page: Math.max(1, data.pagination?.totalPages ?? 1) }));
+            }
         } catch (err) {
             console.error("Fetch error:", err);
         } finally {
@@ -276,7 +280,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             const res = await fetch(`/api/configuration-items/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(editingItemData),
+                body: JSON.stringify({ ...editingItemData, itemTypeId: editingItemData.itemTypeId || null }),
             });
             if (!res.ok) {
                 const err = await res.json();
@@ -352,7 +356,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 setNewTagName("");
                 setNewTagColor("#3b82f6");
                 setNewTagDescription("");
-                setShowTagModal(false);
                 addToast({ type: "success", title: "Tag created", message: `"${newTag.name}" has been created successfully` });
             } else {
                 const err = await res.json();
@@ -469,11 +472,6 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         return range;
     };
 
-    const statusOptionsForBulk: { value: AssetStatus; label: string }[] = [
-        { value: "ACTIVE", label: "Active" },
-        { value: "MAINTENANCE", label: "Maintenance" },
-        { value: "DEPRECATED", label: "Deprecated" },
-    ];
 
     const filtersActive = searchQuery !== "" || selectedTypeId !== "" || statusFilter !== "ALL";
 
@@ -492,7 +490,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
         <div>
             <PageHeader
                 title="Items"
-                description={`${pagination.total} configuration ${pagination.total === 1 ? "item" : "items"}`}
+                description={<><span className="font-mono">{pagination.total}</span> configuration {pagination.total === 1 ? "item" : "items"}</>}
                 actions={
                     <>
                         <Button variant="secondary" onClick={() => setShowTagModal(true)}>
@@ -551,7 +549,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             <BulkOperations
                 selectedIds={selectedIds}
                 availableTags={availableTags}
-                availableStatuses={statusOptionsForBulk}
+                availableStatuses={statusOptions}
                 onClearSelection={clearSelection}
                 onRefresh={fetchItems}
             />
@@ -559,26 +557,16 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             {/* Items Table */}
             {!loaded ? (
                 <SkeletonTable rows={5} />
-            ) : items.length === 0 ? (
+            ) : items.length === 0 && pagination.total === 0 && !filtersActive ? (
                 <EmptyState
                     icon={Package}
-                    title={filtersActive ? "No items match your filters" : "No items yet"}
-                    description={
-                        filtersActive
-                            ? "No items found. Try adjusting your search or filters."
-                            : "Create your first configuration item or import a CSV file."
-                    }
+                    title="No items yet"
+                    description="Create your first configuration item or import a CSV file."
                     action={
-                        filtersActive ? (
-                            <Button variant="secondary" onClick={clearFilters}>
-                                Clear filters
-                            </Button>
-                        ) : (
-                            <Button onClick={() => setShowCreateDialog(true)}>
-                                <Plus className="size-4" aria-hidden="true" />
-                                New item
-                            </Button>
-                        )
+                        <Button onClick={() => setShowCreateDialog(true)}>
+                            <Plus className="size-4" aria-hidden="true" />
+                            New item
+                        </Button>
                     }
                 />
             ) : (
