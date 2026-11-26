@@ -2,6 +2,14 @@
 import { useState, useEffect } from "react";
 import { SkeletonCard, SkeletonActivity } from "@/components/Skeleton";
 import FavoritesWidget from "@/components/FavoritesWidget";
+import Link from "next/link";
+import { Bell, CheckCircle2, Plus, Tags, BarChart3, Search } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { StatTile } from "@/components/ui/StatTile";
+import { StatusDot } from "@/components/ui/StatusDot";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { statusTone } from "@/lib/ui/status";
 
 type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
 type MaintenancePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -41,28 +49,21 @@ interface MaintenanceItem {
     };
 }
 
-const statusColors: Record<AssetStatus, string> = {
-    ACTIVE: "bg-green-100 text-green-800 border-green-200",
-    DEPRECATED: "bg-red-100 text-red-800 border-red-200",
-    MAINTENANCE: "bg-yellow-100 text-yellow-800 border-yellow-200",
+const priorityTones: Record<MaintenancePriority, BadgeTone> = {
+    LOW: "neutral",
+    MEDIUM: "accent",
+    HIGH: "warning",
+    CRITICAL: "danger",
 };
 
-const priorityColors: Record<MaintenancePriority, string> = {
-    LOW: "bg-brand-secondary/20 text-brand-secondary",
-    MEDIUM: "bg-brand-primary/20 text-brand-primary",
-    HIGH: "bg-brand-accent/20 text-brand-accent",
-    CRITICAL: "bg-brand-accent/30 text-brand-accent",
+const activityTones: Record<string, BadgeTone> = {
+    CREATE: "success",
+    UPDATE: "accent",
+    DELETE: "danger",
+    API_TOKEN_DELETED: "danger",
 };
 
-const activityActionColors: Record<string, string> = {
-    CREATE: "bg-brand-primary/20 text-brand-primary",
-    UPDATE: "bg-brand-secondary/20 text-brand-secondary",
-    DELETE: "bg-brand-accent/20 text-brand-accent",
-    LOGIN: "bg-brand-primary/20 text-brand-primary",
-    LOGOUT: "bg-brand-secondary/20 text-brand-secondary",
-    API_TOKEN_CREATED: "bg-brand-primary/20 text-brand-primary",
-    API_TOKEN_DELETED: "bg-brand-accent/20 text-brand-accent",
-};
+const statusBar = { success: "bg-success", warning: "bg-warning", neutral: "bg-neutral" } as const;
 
 function formatTimeAgo(dateString: string): string {
     const date = new Date(dateString);
@@ -85,42 +86,6 @@ function formatDate(dateString: string): string {
         month: "short",
         day: "numeric",
     });
-}
-
-// Quick Action Card Component
-function QuickActionCard({
-    href,
-    icon,
-    title,
-    description,
-    color,
-}: {
-    href: string;
-    icon: string;
-    title: string;
-    description: string;
-    color: string;
-}) {
-    return (
-        <a
-            href={href}
-            className="group bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all border border-brand-secondary/20 hover:border-brand-primary/30"
-        >
-            <div className="flex items-start gap-4">
-                <div
-                    className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}
-                >
-                    {icon}
-                </div>
-                <div className="flex-1">
-                    <h3 className="font-semibold text-brand-text group-hover:text-brand-primary transition-colors">
-                        {title}
-                    </h3>
-                    <p className="text-sm text-brand-secondary mt-1">{description}</p>
-                </div>
-            </div>
-        </a>
-    );
 }
 
 export default function Dashboard() {
@@ -184,263 +149,207 @@ export default function Dashboard() {
 
     if (loading || !dashboard) {
         return (
-            <div className="min-h-screen">
-                <main className="max-w-7xl mx-auto p-8">
-                    <h1 className="text-4xl font-bold text-brand-primary mb-8">Dashboard</h1>
-                    <SkeletonCard />
-                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2">
-                            <SkeletonCard />
-                        </div>
-                        <div className="lg:col-span-1">
-                            <SkeletonActivity />
-                        </div>
+            <div>
+                <PageHeader title="Dashboard" />
+                <SkeletonCard />
+                <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                        <SkeletonCard />
                     </div>
-                </main>
+                    <div className="lg:col-span-1">
+                        <SkeletonActivity />
+                    </div>
+                </div>
             </div>
         );
     }
 
+    const statusTotal = dashboard.itemsPerStatus.reduce((sum, g) => sum + g.count, 0);
+    const quickActions = [
+        { href: "/items/new", label: "Add item", icon: Plus },
+        { href: "/admin", label: "Manage types", icon: Tags },
+        { href: "/reports", label: "Reports", icon: BarChart3 },
+        { href: "/discovery", label: "Discovery", icon: Search },
+    ];
+    const linkClass = "text-sm font-medium text-accent hover:underline";
+    const rowClass = "px-4 py-3 hover:bg-surface-2 transition-colors";
+
     return (
-        <div className="min-h-screen">
-            <main className="max-w-7xl mx-auto p-8">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-4xl font-bold text-brand-primary">Dashboard</h1>
-                    {dashboard.unreadNotifications > 0 && (
-                        <a
+        <div>
+            <PageHeader
+                title="Dashboard"
+                actions={
+                    dashboard.unreadNotifications > 0 ? (
+                        <Link
                             href="/notifications"
-                            className="flex items-center gap-2 px-4 py-2 bg-brand-accent/20 text-brand-accent rounded-lg hover:bg-brand-accent/30 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-2"
                         >
-                            <span>🔔</span>
-                            <span className="font-medium">{dashboard.unreadNotifications} unread</span>
-                        </a>
+                            <Bell className="size-4 text-accent" aria-hidden="true" />
+                            {dashboard.unreadNotifications} unread
+                        </Link>
+                    ) : undefined
+                }
+            />
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+                <StatTile label="Total items" value={dashboard.totalItems} />
+                <StatTile label="Types" value={dashboard.totalTypes} />
+                <StatTile label="Tags" value={dashboard.totalTags} />
+                <StatTile label="Relations" value={dashboard.totalRelations} />
+                <StatTile label="Untyped" value={dashboard.untypedItems} tone={dashboard.untypedItems > 0 ? "warning" : "neutral"} />
+                <StatTile label="Maintenance" value={dashboard.upcomingMaintenance} tone={dashboard.upcomingMaintenance > 0 ? "accent" : "neutral"} />
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+                {quickActions.map(({ href, label, icon: Icon }) => (
+                    <Link
+                        key={href}
+                        href={href}
+                        className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-2"
+                    >
+                        <Icon className="size-4 text-muted" aria-hidden="true" />
+                        {label}
+                    </Link>
+                ))}
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="min-w-0 space-y-6 lg:col-span-2">
+                    <Panel title="Status overview">
+                        {dashboard.itemsPerStatus.length === 0 ? (
+                            <p className="text-sm text-muted">No status data available.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {statusTotal > 0 && (
+                                    <div className="flex h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
+                                        {dashboard.itemsPerStatus.map((g) => (
+                                            <div
+                                                key={g.status}
+                                                className={statusBar[statusTone(g.status).tone]}
+                                                style={{ width: `${(g.count / statusTotal) * 100}%` }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                                <ul className="divide-y divide-border">
+                                    {dashboard.itemsPerStatus.map((g) => (
+                                        <li key={g.status} className="flex items-center justify-between py-2">
+                                            <StatusDot status={g.status} />
+                                            <span className="font-mono text-sm tabular-nums text-text">{g.count}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </Panel>
+
+                    {dashboard.itemsPerType.length > 0 && (
+                        <Panel title="Items per type" padded={false}>
+                            <ul className="divide-y divide-border">
+                                {dashboard.itemsPerType.map((g) => (
+                                    <li key={g.itemTypeId} className="flex items-center justify-between gap-3 px-4 py-2">
+                                        <span className="min-w-0 truncate text-sm text-text" title={g.typeName}>
+                                            {g.typeName}
+                                        </span>
+                                        <span className="font-mono text-sm tabular-nums text-text">{g.count}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </Panel>
                     )}
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Total Items</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-primary">{dashboard.totalItems}</p>
-                    </div>
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Types</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-primary">{dashboard.totalTypes}</p>
-                    </div>
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Tags</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-secondary">{dashboard.totalTags}</p>
-                    </div>
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Relations</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-accent">{dashboard.totalRelations}</p>
-                    </div>
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Untyped</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-primary/80">{dashboard.untypedItems}</p>
-                    </div>
-                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
-                        <p className="text-sm text-brand-secondary font-medium">Maintenance</p>
-                        <p className="mt-2 text-3xl font-bold text-brand-secondary">{dashboard.upcomingMaintenance}</p>
-                    </div>
-                </div>
+                <div className="min-w-0 space-y-6 lg:col-span-1">
+                    <FavoritesWidget />
 
-                {/* Quick Actions */}
-                <div className="mt-8">
-                    <h2 className="text-xl font-bold text-brand-text mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <QuickActionCard
-                            href="/items/new"
-                            icon="➕"
-                            title="Add Item"
-                            description="Create a new configuration item"
-                            color="bg-brand-primary/20"
-                        />
-                        <QuickActionCard
-                            href="/admin"
-                            icon="🏷️"
-                            title="Manage Types"
-                            description="Create or edit item types"
-                            color="bg-brand-secondary/20"
-                        />
-                        <QuickActionCard
-                            href="/reports"
-                            icon="📊"
-                            title="View Reports"
-                            description="Detailed analytics and insights"
-                            color="bg-brand-primary/20"
-                        />
-                        <QuickActionCard
-                            href="/discovery"
-                            icon="🔍"
-                            title="Discovery"
-                            description="Network discovery scan"
-                            color="bg-brand-accent/20"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                    {/* Left Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Status Overview */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <h2 className="text-xl font-bold text-brand-text mb-4">Status Overview</h2>
-                            {dashboard.itemsPerStatus.length === 0 ? (
-                                <p className="text-brand-secondary">No status data available.</p>
-                            ) : (
-                                <div className="grid grid-cols-3 gap-4">
-                                    {dashboard.itemsPerStatus.map((group) => (
-                                        <div
-                                            key={group.status}
-                                            className={`p-4 rounded-lg border-2 ${statusColors[group.status]} text-center`}
-                                        >
-                                            <p className="text-2xl font-bold">{group.count}</p>
-                                            <p className="text-sm font-medium capitalize mt-1">
-                                                {group.status.toLowerCase()}
-                                            </p>
-                                        </div>
-                                    ))}
+                    <Panel
+                        title="Upcoming maintenance"
+                        padded={false}
+                        actions={
+                            <Link href="/maintenance" className={linkClass}>
+                                View all
+                            </Link>
+                        }
+                    >
+                        <div className="divide-y divide-border">
+                            {maintenanceLoading ? (
+                                <>
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                </>
+                            ) : maintenance.length === 0 ? (
+                                <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-muted">
+                                    <CheckCircle2 className="size-6" aria-hidden="true" />
+                                    <p>No upcoming maintenance</p>
                                 </div>
+                            ) : (
+                                maintenance.map((item) => (
+                                    <div key={item.id} className={rowClass}>
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <Badge tone={priorityTones[item.priority] ?? "neutral"}>{item.priority}</Badge>
+                                            <span className="font-mono text-xs text-muted">{formatDate(item.scheduledDate)}</span>
+                                        </div>
+                                        <p className="truncate text-sm font-medium text-text" title={item.title}>
+                                            {item.title}
+                                        </p>
+                                        <p className="mt-0.5 truncate font-mono text-xs text-muted" title={item.configurationItem.name}>
+                                            {item.configurationItem.name}
+                                            {item.configurationItem.itemType && (
+                                                <span className="font-sans"> · {item.configurationItem.itemType.name}</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                ))
                             )}
                         </div>
+                    </Panel>
 
-                        {/* Items Per Type */}
-                        {dashboard.itemsPerType.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                                <h2 className="text-xl font-bold text-brand-text mb-4">Items Per Type</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {dashboard.itemsPerType.map((group) => (
-                                        <div
-                                            key={group.itemTypeId}
-                                            className="p-4 bg-brand-primary/5 rounded-lg text-center hover:bg-brand-primary/10 transition-colors"
-                                        >
-                                            <p className="text-2xl font-bold text-brand-primary">{group.count}</p>
-                                            <p className="text-sm text-brand-secondary mt-1 truncate">{group.typeName}</p>
-                                        </div>
-                                    ))}
+                    <Panel
+                        title="Recent activity"
+                        padded={false}
+                        actions={
+                            <Link href="/admin" className={linkClass}>
+                                Audit logs
+                            </Link>
+                        }
+                    >
+                        <div className="divide-y divide-border">
+                            {activityLoading ? (
+                                <>
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                    <SkeletonActivity />
+                                </>
+                            ) : activities.length === 0 ? (
+                                <div className="p-6 text-center text-sm text-muted">
+                                    <p>No recent activity.</p>
+                                    <p className="mt-1">Actions will appear here as you use the system.</p>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="lg:col-span-1 space-y-8">
-                        {/* Favorites Widget */}
-                        <FavoritesWidget />
-
-                        {/* Upcoming Maintenance */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-4 border-b border-gray-200">
-                                <h2 className="text-lg font-bold text-brand-text">Upcoming Maintenance</h2>
-                            </div>
-                            <div className="divide-y divide-gray-100">
-                                {maintenanceLoading ? (
-                                    <>
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                    </>
-                                ) : maintenance.length === 0 ? (
-                                    <div className="p-4 text-center text-gray-500">
-                                        <p className="text-2xl mb-2">✅</p>
-                                        <p>No upcoming maintenance</p>
-                                    </div>
-                                ) : (
-                                    maintenance.map((item) => (
-                                        <div key={item.id} className="p-4 hover:bg-brand-primary/5 transition-colors">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span
-                                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityColors[item.priority]}`}
-                                                >
-                                                    {item.priority}
-                                                </span>
-                                                <span className="text-sm text-brand-secondary">{formatDate(item.scheduledDate)}</span>
-                                            </div>
-                                            <p className="font-medium text-brand-text text-sm truncate">{item.title}</p>
-                                            <p className="text-xs text-brand-secondary mt-1 truncate">
-                                                {item.configurationItem.name}
-                                                {item.configurationItem.itemType && (
-                                                    <span className="text-brand-secondary/60">
-                                                        {" "}
-                                                        · {item.configurationItem.itemType.name}
-                                                    </span>
-                                                )}
+                            ) : (
+                                activities.map((activity) => (
+                                    <div key={activity.id} className={rowClass}>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Badge tone={activityTones[activity.action] ?? "neutral"}>{activity.action}</Badge>
+                                            <span className="text-xs text-muted">{formatTimeAgo(activity.createdAt)}</span>
+                                        </div>
+                                        <p className="mt-1 break-words text-sm text-text">
+                                            {activity.description || `${activity.action} ${activity.entityType}`}
+                                        </p>
+                                        {activity.user && (
+                                            <p className="mt-0.5 truncate text-xs text-muted">
+                                                by {activity.user.name || activity.user.email || "Unknown"}
                                             </p>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                            <div className="p-3 border-t border-brand-secondary/20 bg-brand-primary/5">
-                                <a
-                                    href="/maintenance"
-                                    className="text-sm text-brand-primary hover:text-brand-accent font-medium"
-                                >
-                                    View all maintenance →
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Recent Activity */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-4 border-b border-gray-200">
-                                <h2 className="text-lg font-bold text-brand-text">Recent Activity</h2>
-                            </div>
-                            <div className="divide-y divide-gray-100">
-                                {activityLoading ? (
-                                    <>
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                        <SkeletonActivity />
-                                    </>
-                                ) : activities.length === 0 ? (
-                                    <div className="p-4 text-center text-brand-secondary">
-                                        <p>No recent activity.</p>
-                                        <p className="text-sm mt-1">Actions will appear here as you use the system.</p>
+                                        )}
                                     </div>
-                                ) : (
-                                    activities.map((activity) => (
-                                        <div key={activity.id} className="p-4 hover:bg-brand-primary/5 transition-colors">
-                                            <div className="flex items-start gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span
-                                                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${activityActionColors[activity.action] || "bg-brand-secondary/20 text-brand-secondary"}`}
-                                                        >
-                                                            {activity.action}
-                                                        </span>
-                                                        <span className="text-sm text-brand-secondary">
-                                                            {formatTimeAgo(activity.createdAt)}
-                                                        </span>
-                                                    </div>
-                                                    <p className="mt-1 text-sm text-brand-text">
-                                                        {activity.description || `${activity.action} ${activity.entityType}`}
-                                                    </p>
-                                                    {activity.user && (
-                                                        <p className="text-xs text-brand-secondary mt-1">
-                                                            by {activity.user.name || activity.user.email || "Unknown"}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                            <div className="p-3 border-t border-brand-secondary/20 bg-brand-primary/5">
-                                <a
-                                    href="/admin"
-                                    className="text-sm text-brand-primary hover:text-brand-accent font-medium"
-                                >
-                                    View full audit logs →
-                                </a>
-                            </div>
+                                ))
+                            )}
                         </div>
-                    </div>
+                    </Panel>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
