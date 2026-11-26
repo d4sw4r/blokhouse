@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import CopyButton from "@/components/CopyButton";
 
@@ -29,6 +30,16 @@ export default function AdminAPIPage() {
     const [expiresInDays, setExpiresInDays] = useState("90");
     const [newSecret, setNewSecret] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const { data: session } = useSession();
+    const [maxDays, setMaxDays] = useState<number | null>(null);
+    const limited = Boolean((session?.user as { sso?: boolean } | undefined)?.sso) && maxDays !== null;
+
+    useEffect(() => {
+        fetch("/api/auth/options")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => setMaxDays(typeof d?.ssoTokenMaxDays === "number" ? d.ssoTokenMaxDays : null))
+            .catch(() => {});
+    }, []);
 
     const fetchTokens = async () => {
         try {
@@ -57,6 +68,10 @@ export default function AdminAPIPage() {
         e.preventDefault();
         setError(null);
         setNewSecret(null);
+        const effectiveDays =
+            limited && maxDays !== null && (expiresInDays === "" || Number(expiresInDays) > maxDays)
+                ? String(maxDays)
+                : expiresInDays;
         try {
             const res = await fetch("/api/api-tokens", {
                 method: "POST",
@@ -64,7 +79,7 @@ export default function AdminAPIPage() {
                 body: JSON.stringify({
                     name: name || "API token",
                     scopes,
-                    expiresInDays: expiresInDays === "" ? null : Number(expiresInDays),
+                    expiresInDays: effectiveDays === "" ? null : Number(effectiveDays),
                 }),
             });
             const data = await res.json();
@@ -135,14 +150,24 @@ export default function AdminAPIPage() {
                     <select
                         id="token-exp"
                         className="border rounded-sm px-3 py-2"
-                        value={expiresInDays}
+                        value={limited && maxDays !== null && Number(expiresInDays || 0) > maxDays ? String(maxDays) : expiresInDays}
                         onChange={(e) => setExpiresInDays(e.target.value)}
                     >
-                        <option value="30">30</option>
-                        <option value="90">90</option>
-                        <option value="365">365</option>
-                        <option value="">Never</option>
+                        {[30, 90, 365]
+                            .filter((d) => !limited || d <= (maxDays as number))
+                            .map((d) => (
+                                <option key={d} value={String(d)}>{d}</option>
+                            ))}
+                        {limited && maxDays !== null && ![30, 90, 365].includes(maxDays) && (
+                            <option value={String(maxDays)}>{maxDays}</option>
+                        )}
+                        {!limited && <option value="">Never</option>}
                     </select>
+                    {limited && (
+                        <p className="text-xs text-brand-secondary mt-1">
+                            Tokens for SSO accounts expire after at most {maxDays} days.
+                        </p>
+                    )}
                 </div>
                 {error && <p className="text-red-600">{error}</p>}
                 <Button type="submit" disabled={scopes.length === 0}>Generate API Token</Button>
