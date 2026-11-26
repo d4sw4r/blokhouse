@@ -93,11 +93,8 @@
     }
 }
 
-/* Generated Swagger UI ships light-only styles. In the dark theme its content is inverted so it
-   reads on the dark surface; the host box (token surface) stays untouched. Not a redesign of the docs. */
-.dark .swagger-host .swagger-ui {
-    filter: invert(1) hue-rotate(180deg);
-}
+/* Generated Swagger UI: its own dark rules (html.dark-mode) are toggled from the docs page.
+   Only the host box is ours; the generated content is not redesigned. */
 .swagger-host .swagger-ui .wrapper {
     padding: 0;
     max-width: none;

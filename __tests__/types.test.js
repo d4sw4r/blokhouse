@@ -393,4 +393,38 @@ describe("Types API (Item Types)", () => {
             expect(data.error).toBe("Delete failed");
         });
     });
+
+    describe("/api/types/[id] with Promise params (Next 16)", () => {
+        const session = { user: { id: "user-1", role: "ADMIN" } };
+
+        it("GET resolves the id from a Promise", async () => {
+            getServerSession.mockResolvedValue(session);
+            prisma.itemType.findUnique.mockResolvedValue({ id: "type-1", name: "Server" });
+            const response = await getType(createMockRequest(), { params: Promise.resolve({ id: "type-1" }) });
+            expect(response.status).toBe(200);
+            expect(prisma.itemType.findUnique).toHaveBeenCalledWith({ where: { id: "type-1" } });
+        });
+
+        it("PUT resolves the id from a Promise", async () => {
+            getServerSession.mockResolvedValue(session);
+            prisma.itemType.update.mockResolvedValue({ id: "type-1", name: "New" });
+            const response = await updateType(
+                createMockRequest({ body: { name: "New", description: "d" } }),
+                { params: Promise.resolve({ id: "type-1" }) },
+            );
+            expect(response.status).toBe(200);
+            expect(prisma.itemType.update).toHaveBeenCalledWith({
+                where: { id: "type-1" },
+                data: { name: "New", description: "d" },
+            });
+        });
+
+        it("DELETE resolves the id from a Promise", async () => {
+            getServerSession.mockResolvedValue(session);
+            prisma.itemType.delete.mockResolvedValue({ id: "type-1" });
+            const response = await deleteType(createMockRequest(), { params: Promise.resolve({ id: "type-1" }) });
+            expect(response.status).toBe(200);
+            expect(prisma.itemType.delete).toHaveBeenCalledWith({ where: { id: "type-1" } });
+        });
+    });
 });

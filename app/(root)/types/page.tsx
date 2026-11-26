@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Panel } from '@/components/ui/Panel';
+import { SkeletonTable } from '@/components/Skeleton';
 
 interface ItemType {
     id: string;
@@ -18,6 +19,7 @@ interface ItemType {
 
 export default function TypesPage() {
     const [types, setTypes] = useState<ItemType[]>([]);
+    const [loading, setLoading] = useState(true);
     const [newType, setNewType] = useState({ name: '', description: '' });
     const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
     const [editingTypeData, setEditingTypeData] = useState({ name: '', description: '' });
@@ -39,7 +41,7 @@ export default function TypesPage() {
 
     // Fetch the available types when the component mounts
     useEffect(() => {
-        const load = async () => { await fetchTypes(); };
+        const load = async () => { await fetchTypes(); setLoading(false); };
         load();
     }, []);
 
@@ -112,7 +114,9 @@ export default function TypesPage() {
             </Panel>
 
             <Panel title="Existing Types" padded={false}>
-                {types.length === 0 ? (
+                {loading ? (
+                    <div className="p-4"><SkeletonTable rows={3} /></div>
+                ) : types.length === 0 ? (
                     <div className="p-4">
                         <EmptyState
                             icon={Shapes}

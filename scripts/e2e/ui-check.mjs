@@ -231,7 +231,7 @@ await check("keyboard: nav group menu opens with Enter, ArrowDown moves, Escape 
     try {
         await page.goto("/dashboard");
         await shellReady(page);
-        const onTrigger = () => page.evaluate(() => document.activeElement?.matches("[data-nav-item][aria-haspopup]") ?? false);
+        const onTrigger = () => page.evaluate(() => document.activeElement?.matches('[data-nav-item][aria-haspopup="menu"]') ?? false);
         let found = false;
         for (let i = 0; i < 40 && !found; i++) {
             await page.keyboard.press("Tab");
@@ -249,7 +249,7 @@ await check("keyboard: nav group menu opens with Enter, ArrowDown moves, Escape 
         await page.keyboard.press("Escape");
         await page.getByRole("menu").waitFor({ state: "hidden" });
         assert(
-            await page.evaluate(() => document.activeElement?.matches("[data-nav-item][aria-haspopup]") ?? false),
+            await page.evaluate(() => document.activeElement?.matches('[data-nav-item][aria-haspopup="menu"]') ?? false),
             `focus did not return to the "${label}" trigger`,
         );
         assert((await page.evaluate(() => document.activeElement.textContent.trim())) === label, "focus returned to a different trigger");

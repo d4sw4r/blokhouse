@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SwaggerUI from "swagger-ui-react";
 import "./apidom-registrations";
 import "swagger-ui-react/swagger-ui.css";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { useTheme } from "@/components/ThemeProvider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 const SPECS = [
     {
@@ -25,6 +26,14 @@ const SPECS = [
 export default function ApiDocsPage() {
     const [active, setActive] = useState<(typeof SPECS)[number]["id"]>("v1");
     const spec = SPECS.find((s) => s.id === active)!;
+    const { resolvedTheme } = useTheme();
+
+    // swagger-ui ships dark rules under `html.dark-mode .swagger-ui`; follow our theme.
+    useEffect(() => {
+        const root = document.documentElement;
+        root.classList.toggle("dark-mode", resolvedTheme === "dark");
+        return () => root.classList.remove("dark-mode");
+    }, [resolvedTheme]);
 
     return (
         <div>
@@ -48,6 +57,9 @@ export default function ApiDocsPage() {
                         </TabsTrigger>
                     ))}
                 </TabsList>
+                {SPECS.map((s) => (
+                    <TabsContent key={s.id} value={s.id} className="pt-0" />
+                ))}
             </Tabs>
             <p className="mt-3 mb-4 text-sm text-muted">
                 {spec.hint}{" "}

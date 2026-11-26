@@ -245,7 +245,7 @@ export default function ReportsPage() {
                                 emptyText("No tags created yet.")
                             ) : (
                                 <div className="max-h-64 space-y-3 overflow-y-auto">
-                                    {data.tagsDistribution
+                                    {[...data.tagsDistribution]
                                         .sort((a, b) => b.count - a.count)
                                         .map((tag) => (
                                             <div key={tag.id} className="flex items-center justify-between gap-3">
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                                 emptyText("No types assigned.")
                             ) : (
                                 <div className="max-h-64 space-y-3 overflow-y-auto">
-                                    {data.itemsByType
+                                    {[...data.itemsByType]
                                         .sort((a, b) => b.count - a.count)
                                         .map((type) => (
                                             <div key={type.typeId || "untyped"} className="flex items-center justify-between gap-3">
