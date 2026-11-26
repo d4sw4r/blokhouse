@@ -7,18 +7,18 @@ The full guide (production database, Ingress, SSO, OpenShift, upgrading, uninsta
 ## Quick start
 
 ```bash
-helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <version> \
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.4.0 \
   --namespace blokhouse --create-namespace
 ```
 
-The chart is published to `oci://ghcr.io/d4sw4r/charts/blokhouse` from the next Blokhouse release on, with the same version as the release. Until then, install from a git checkout:
+The chart is published to `oci://ghcr.io/d4sw4r/charts/blokhouse` with every Blokhouse release (from 0.4.0 on), with the same version as the release. To try an unreleased chart, install from a git checkout:
 
 ```bash
 git clone https://github.com/d4sw4r/blokhouse.git
 helm install blokhouse ./blokhouse/charts/blokhouse --namespace blokhouse --create-namespace
 ```
 
-A git checkout installs the released Blokhouse 0.3.0 image (the chart `appVersion`), which has no SSO and no seed lock. Until the next release, `blokhouse.sso.*`, `blokhouse.passwordLogin` and `blokhouse.sessionMaxAge` are ignored, and you should keep `replicaCount: 1`.
+A checkout installs the image of the chart's `appVersion`, i.e. the last release.
 
 The notes printed after the install show the port-forward command and how to read the initial administrator password.
 
@@ -34,7 +34,7 @@ Pass values with `--set key=value` or `-f my-values.yaml`. Empty strings mean "n
 | `image.tag` | `""` | Image tag. Empty: the chart's `appVersion`. |
 | `image.pullPolicy` | `IfNotPresent` | Image pull policy. |
 | `imagePullSecrets` | `[]` | Secrets for pulling the image. |
-| `replicaCount` | `1` | Number of app pods. Several replicas are safe once the next release is installed (see above). Ignored when `autoscaling.enabled` is true. |
+| `replicaCount` | `1` | Number of app pods. Several replicas are safe. Ignored when `autoscaling.enabled` is true. |
 | `resources` | `{}` | Resource requests and limits of the app container. |
 | `nodeSelector`, `tolerations`, `affinity` | `{}`, `[]`, `{}` | Pod scheduling. |
 | `podAnnotations`, `podLabels` | `{}` | Extra annotations and labels of the app pods. |

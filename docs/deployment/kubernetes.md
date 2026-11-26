@@ -6,14 +6,14 @@ Requirements: a Kubernetes cluster and Helm 3. The chart is tested on kind with 
 
 ## Quick start
 
-The chart is published to `oci://ghcr.io/d4sw4r/charts/blokhouse` from the next Blokhouse release on, with the same version as the release:
+The chart is published to `oci://ghcr.io/d4sw4r/charts/blokhouse` with every Blokhouse release (from 0.4.0 on), with the same version as the release:
 
 ```bash
-helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <version> \
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version 0.4.0 \
   --namespace blokhouse --create-namespace
 ```
 
-Until that release, install from a git checkout:
+To try an unreleased version, install from a git checkout:
 
 ```bash
 git clone https://github.com/d4sw4r/blokhouse.git
@@ -21,7 +21,7 @@ cd blokhouse
 helm install blokhouse ./charts/blokhouse --namespace blokhouse --create-namespace
 ```
 
-**Note:** a git checkout installs the released Blokhouse 0.3.0 image (the chart `appVersion`), which has no SSO and no seed lock. Until the next release, the `blokhouse.sso.*`, `blokhouse.passwordLogin` and `blokhouse.sessionMaxAge` values are ignored, and you should keep `replicaCount: 1`. The SSO values need the next release.
+A checkout installs the image of the chart's `appVersion`, i.e. the last release, not the code of the checkout.
 
 The first start applies the database migrations and can take a few minutes. Then open Blokhouse through a port-forward:
 
