@@ -157,7 +157,7 @@ export default function NotificationsPage() {
               return (
                 <li
                   key={notification.id}
-                  className={cn("p-4", !notification.read && "bg-accent/10")}
+                  className={cn("border-l-2 p-4", notification.read ? "border-l-transparent" : "border-l-accent")}
                 >
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
                     <Badge tone={meta.tone} className="shrink-0 gap-1.5 self-start">

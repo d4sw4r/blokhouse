@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, RefreshCw, TriangleAlert } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
@@ -337,23 +338,17 @@ export default function ReportsPage() {
                 </TabsContent>
 
                 <TabsContent value="orphaned" className="space-y-6 pt-6">
-                    <div className="rounded-lg border border-warning/40 bg-warning/10 p-4">
-                        <h3 className="flex items-center gap-2 text-sm font-semibold text-text">
-                            <TriangleAlert className="size-4 text-warning" aria-hidden="true" />
-                            Data Quality Issues
-                        </h3>
-                        <p className="mt-1 text-sm text-muted">
+                    <Callout tone="warning" title={<h3>Data Quality Issues</h3>}>
+                        <p className="mt-1 text-muted">
                             Found <span className="font-mono">{data.orphanedAssets.length}</span> assets with incomplete data.
                             These assets are missing type assignments or tags.
                         </p>
-                    </div>
+                    </Callout>
 
                     {data.orphanedAssets.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2 rounded-lg border border-success/40 bg-success/10 p-8 text-center">
-                            <CheckCircle2 className="size-8 text-success" aria-hidden="true" />
-                            <h3 className="text-sm font-semibold text-text">All Clear!</h3>
-                            <p className="text-sm text-muted">All assets have proper type and tag assignments.</p>
-                        </div>
+                        <Callout tone="success" title={<h3>All Clear!</h3>}>
+                            <p className="mt-1 text-muted">All assets have proper type and tag assignments.</p>
+                        </Callout>
                     ) : (
                         <Table>
                             <THead>

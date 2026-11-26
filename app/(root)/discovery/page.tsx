@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Info, Radar, Search, XCircle } from "lucide-react";
+import { CheckCircle2, Info, Radar, Search, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -208,18 +209,14 @@ export default function DiscoveryPage() {
                     </Button>
                 </div>
                 {error && (
-                    <div role="alert" className="mt-4 rounded-lg border border-danger/40 bg-danger/10 p-4">
-                        <div className="flex items-center gap-2 text-sm font-medium text-danger">
-                            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
-                            <span className="min-w-0 break-words">{error}</span>
-                        </div>
-                        <p className="mt-1 text-sm text-muted">
+                    <Callout tone="danger" role="alert" className="mt-4" title={error}>
+                        <p className="mt-1 text-muted">
                             Make sure nmap is installed and accessible:{" "}
                             <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-text">
                                 sudo apt install nmap
                             </code>
                         </p>
-                    </div>
+                    </Callout>
                 )}
                 <div className="mt-4 rounded-lg border border-border bg-surface-2 p-4">
                     <div className="flex items-start gap-3">

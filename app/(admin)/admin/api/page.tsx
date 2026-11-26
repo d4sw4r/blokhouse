@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -186,15 +187,15 @@ export default function AdminAPIPage() {
             </Panel>
 
             {newSecret && (
-                <div role="status" className="space-y-2 rounded-lg border-2 border-warning bg-warning/10 p-4">
-                    <p className="text-sm font-semibold text-text">
+                <Callout tone="warning" role="status">
+                    <p className="font-semibold">
                         Copy your new token now — it will not be shown again.
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2">
                         <code className="min-w-0 font-mono text-[13px] break-all text-text">{newSecret}</code>
                         <CopyButton text={newSecret} />
                     </div>
-                </div>
+                </Callout>
             )}
 
             {tokens.length === 0 ? (

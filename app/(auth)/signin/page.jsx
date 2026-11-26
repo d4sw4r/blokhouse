@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Panel } from "@/components/ui/Panel";
@@ -53,9 +54,9 @@ export default function SignInPage() {
                     <p className="mt-1 text-sm text-muted">Your infrastructure, block by block.</p>
                 </div>
                 {error && (
-                    <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-text">
+                    <Callout tone="danger" role="alert">
                         {error}
-                    </p>
+                    </Callout>
                 )}
                 {options.sso && (
                     <Button

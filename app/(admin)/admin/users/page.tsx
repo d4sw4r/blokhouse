@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Field } from "@/components/ui/Field";
@@ -158,9 +159,9 @@ export default function AdminUsersPage() {
             <PageHeader title="Users" description="Create accounts, change roles and deactivate or delete users." />
 
             {actionError && (
-                <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+                <Callout tone="danger" role="alert">
                     {actionError}
-                </p>
+                </Callout>
             )}
 
             <Panel title="Add new user">

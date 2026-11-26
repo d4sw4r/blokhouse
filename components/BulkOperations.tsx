@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatusDot } from "@/components/ui/StatusDot";
@@ -263,12 +264,11 @@ export default function BulkOperations({
 
                     {operation === "delete" && (
                         <div className="space-y-3">
-                            <div className="flex items-start gap-2 rounded-md border border-danger/40 bg-danger/10 p-3">
-                                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
-                                <p className="text-sm font-medium text-danger">
+                            <Callout tone="danger" icon={AlertTriangle}>
+                                <p className="font-medium">
                                     Warning: This will permanently delete {selectedIds.length} items!
                                 </p>
-                            </div>
+                            </Callout>
                             <div className="flex gap-2">
                                 <Button
                                     onClick={() => setConfirming("delete")}

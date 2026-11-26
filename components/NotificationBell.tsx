@@ -198,7 +198,7 @@ export default function NotificationBell({ navItem = false }: { navItem?: boolea
                   return (
                     <li
                       key={notification.id}
-                      className={cn("relative flex items-start hover:bg-surface-2/60", !notification.read && "bg-accent/10")}
+                      className={cn("relative flex items-start border-l-2 hover:bg-surface-2/60", notification.read ? "border-l-transparent" : "border-l-accent")}
                     >
                       {link ? (
                         <Link

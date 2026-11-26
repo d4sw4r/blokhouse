@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Box, Pencil, Plus, Search, Tag as TagIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
@@ -412,12 +413,12 @@ export default function TagsPage() {
                                 Are you sure you want to delete the tag <strong>&quot;{selectedTag.name}&quot;</strong>?
                             </p>
                             {selectedTag._count.configurationItems > 0 && (
-                                <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
-                                    <p className="text-sm text-text">
+                                <Callout tone="warning">
+                                    <p>
                                         <strong>Warning:</strong> This tag is assigned to {selectedTag._count.configurationItems} {selectedTag._count.configurationItems === 1 ? "item" : "items"}.{" "}
                                         Deleting it will remove the tag from all items.
                                     </p>
-                                </div>
+                                </Callout>
                             )}
                         </div>
                     )}

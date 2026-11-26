@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ListChecks, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -143,12 +144,9 @@ export default function CustomFieldsAdminPage() {
             />
 
             {msg && (
-                <p
-                    role="status"
-                    className={`mb-6 rounded-md border p-3 text-sm ${msg.ok ? "border-success/40 bg-success/10 text-text" : "border-danger/40 bg-danger/10 text-danger"}`}
-                >
+                <Callout role="status" tone={msg.ok ? "success" : "danger"} className="mb-6">
                     {msg.text}
-                </p>
+                </Callout>
             )}
 
             {showForm && (
