@@ -1,0 +1,110 @@
+{
+  "realm": "blokhouse",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "blokhouse",
+      "name": "Blokhouse CMDB",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ci-oidc-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/api/auth/callback/oidc"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "claim.name": "groups",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "name": "cmdb-admins",
+      "path": "/cmdb-admins"
+    },
+    {
+      "name": "cmdb-read",
+      "path": "/cmdb-read"
+    }
+  ],
+  "users": [
+    {
+      "username": "anna",
+      "email": "anna@example.com",
+      "emailVerified": true,
+      "firstName": "Anna",
+      "lastName": "Admin",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "anna-pass",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/cmdb-admins"
+      ]
+    },
+    {
+      "username": "rolf",
+      "email": "rolf@example.com",
+      "emailVerified": true,
+      "firstName": "Rolf",
+      "lastName": "Reader",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "rolf-pass",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/cmdb-read"
+      ]
+    },
+    {
+      "username": "nora",
+      "email": "nora@example.com",
+      "emailVerified": true,
+      "firstName": "Nora",
+      "lastName": "Nogroup",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "nora-pass",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

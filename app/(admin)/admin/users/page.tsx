@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 
 interface User {
@@ -8,9 +9,24 @@ interface User {
     name: string;
     email: string;
     role: "ADMIN" | "USER" | "API" | "AUDIT" | "READONLY";
+    sso?: boolean;
+    roleManagedBySso?: boolean;
+    disabledAt?: string | null;
+}
+
+async function errorText(res: Response, fallback: string) {
+    try {
+        const data = await res.json();
+        return data?.error || fallback;
+    } catch {
+        return fallback;
+    }
 }
 
 export default function AdminUsersPage() {
+    const { data: session } = useSession();
+    const currentId = (session?.user as { id?: string } | undefined)?.id;
+    const [actionError, setActionError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "USER" });
@@ -80,6 +96,7 @@ export default function AdminUsersPage() {
     };
 
     const updateUser = async (id: string) => {
+        setActionError(null);
         try {
             const res = await fetch(`/api/users/${id}`, {
                 method: "PUT",
@@ -91,10 +108,31 @@ export default function AdminUsersPage() {
                 setUsers((prev) => prev.map((user) => (user.id === id ? updated : user)));
                 cancelEditing();
             } else {
-                console.error("Failed to update user:", await res.text());
+                setActionError(await errorText(res, "Failed to update user"));
             }
         } catch (error) {
             console.error("Error updating user:", error);
+            setActionError("Failed to update user");
+        }
+    };
+
+    const setDisabled = async (id: string, disabled: boolean) => {
+        setActionError(null);
+        try {
+            const res = await fetch(`/api/users/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ disabled }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setUsers((prev) => prev.map((user) => (user.id === id ? updated : user)));
+            } else {
+                setActionError(await errorText(res, "Failed to update user"));
+            }
+        } catch (error) {
+            console.error("Error updating user:", error);
+            setActionError("Failed to update user");
         }
     };
 
@@ -104,6 +142,12 @@ export default function AdminUsersPage() {
         <div className="min-h-screen bg-brand-background">
             <main className="max-w-7xl mx-auto p-8 space-y-8">
                 <h1 className="text-4xl font-bold text-brand-text">Manage Users</h1>
+
+                {actionError && (
+                    <p role="alert" className="bg-red-50 border border-red-300 text-red-700 rounded-sm p-3">
+                        {actionError}
+                    </p>
+                )}
 
                 {/* New User Form */}
                 <div className="bg-white p-6 rounded-sm shadow-sm">
@@ -186,7 +230,8 @@ export default function AdminUsersPage() {
                                                 onChange={(e) =>
                                                     setEditingUserData({ ...editingUserData, role: e.target.value })
                                                 }
-                                                className="w-full border rounded-sm p-1"
+                                                disabled={user.roleManagedBySso}
+                                                className="w-full border rounded-sm p-1 disabled:bg-gray-100 disabled:text-gray-500"
                                             >
                                                 <option value="ADMIN">ADMIN</option>
                                                 <option value="USER">USER</option>
@@ -194,6 +239,9 @@ export default function AdminUsersPage() {
                                                 <option value="AUDIT">AUDIT</option>
                             <option value="READONLY">READONLY</option>
                                             </select>
+                                            {user.roleManagedBySso && (
+                                                <p className="text-xs text-gray-500 mt-1">Role is managed by SSO.</p>
+                                            )}
                                         </td>
                                         <td className="py-2 px-4 border flex gap-2">
                                             <Button onClick={() => updateUser(user.id)}>Save</Button>
@@ -204,11 +252,36 @@ export default function AdminUsersPage() {
                                     </tr>
                                 ) : (
                                     <tr key={user.id}>
-                                        <td className="py-2 px-4 border">{user.name}</td>
+                                        <td className="py-2 px-4 border">
+                                            <span className={user.disabledAt ? "text-gray-400 line-through" : ""}>{user.name}</span>
+                                            {user.sso && (
+                                                <span className="ml-2 text-xs font-semibold bg-brand-primary/10 text-brand-primary rounded-sm px-2 py-0.5">
+                                                    SSO
+                                                </span>
+                                            )}
+                                            {user.disabledAt && (
+                                                <span className="ml-2 text-xs font-semibold bg-gray-200 text-gray-700 rounded-sm px-2 py-0.5">
+                                                    Deactivated
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="py-2 px-4 border">{user.email}</td>
-                                        <td className="py-2 px-4 border">{user.role}</td>
+                                        <td className="py-2 px-4 border">
+                                            {user.role}
+                                            {user.roleManagedBySso && (
+                                                <span className="block text-xs text-gray-500">Managed by SSO</span>
+                                            )}
+                                        </td>
                                         <td className="py-2 px-4 border flex gap-2">
                                             <Button onClick={() => startEditing(user)}>Edit</Button>
+                                            {currentId && user.id !== currentId && (
+                                                <Button
+                                                    onClick={() => setDisabled(user.id, !user.disabledAt)}
+                                                    variant="outline"
+                                                >
+                                                    {user.disabledAt ? "Activate" : "Deactivate"}
+                                                </Button>
+                                            )}
                                             <Button onClick={() => deleteUser(user.id)} variant="destructive">
                                                 Delete
                                             </Button>

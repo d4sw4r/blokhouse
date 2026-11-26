@@ -1,0 +1,27 @@
+# SSO end-to-end test stack (used in CI): Blokhouse + a throwaway Keycloak.
+#   docker compose -f docker-compose.yml -f scripts/e2e/docker-compose.sso.yml up -d
+# The issuer must be the same URL for the browser (on the host) and for the app
+# container: host.docker.internal resolves to the host gateway inside the app
+# container and must point to 127.0.0.1 in the host's /etc/hosts.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_HOSTNAME: http://host.docker.internal:8080
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./scripts/e2e/keycloak:/opt/keycloak/data/import:ro
+
+  app:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      OIDC_ISSUER: http://host.docker.internal:8080/realms/blokhouse
+      OIDC_CLIENT_ID: blokhouse
+      OIDC_CLIENT_SECRET: ci-oidc-secret
+      OIDC_NAME: Keycloak
+      OIDC_ROLE_MAP: cmdb-admins=ADMIN,cmdb-read=READONLY

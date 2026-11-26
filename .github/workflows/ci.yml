@@ -137,6 +137,53 @@ jobs:
           (cd integrations/puppet && puppet parser validate manifests && puppet epp validate templates/*.epp && puppet-lint manifests)
           ADMIN_PASSWORD=ci-admin-password sh integrations/puppet/tests/e2e/run.sh
 
+      - name: Setup Node.js (SSO end-to-end test)
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: SSO end-to-end test (Keycloak)
+        run: |
+          SSO="docker compose -f docker-compose.yml -f scripts/e2e/docker-compose.sso.yml"
+          wait_app() {
+            for i in $(seq 1 60); do
+              if curl -fsS http://localhost:3000/api/health >/dev/null; then return 0; fi
+              sleep 2
+            done
+            $SSO logs app; return 1
+          }
+          # Same issuer URL for the browser here and for the app container.
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+          $SSO up -d
+          for i in $(seq 1 90); do
+            if curl -fsS http://host.docker.internal:8080/realms/blokhouse/.well-known/openid-configuration >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://host.docker.internal:8080/realms/blokhouse/.well-known/openid-configuration >/dev/null || { $SSO logs keycloak; exit 1; }
+          wait_app
+          npm i --no-save playwright@1.63.0 && npx playwright install --with-deps chromium
+          node scripts/e2e/sso.spec.mjs
+
+          # SSO only: no password form, and the credentials callback creates no session.
+          echo "PASSWORD_LOGIN=false" >> .env
+          $SSO up -d --force-recreate app
+          wait_app
+          node scripts/e2e/sso.spec.mjs --password-login-disabled
+          json() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const v=JSON.parse(s||"{}");console.log(v?.[process.argv[1]] ?? "")})' "$1"; }
+          JAR="$(mktemp)"
+          CSRF=$(curl -s -c "$JAR" http://localhost:3000/api/auth/csrf | json csrfToken)
+          [ -n "$CSRF" ] || { echo "FAIL: no CSRF token"; exit 1; }
+          curl -s -b "$JAR" -c "$JAR" -o /dev/null -X POST http://localhost:3000/api/auth/callback/credentials \
+            --data-urlencode "csrfToken=$CSRF" --data-urlencode "email=admin@example.com" --data-urlencode "password=ci-admin-password"
+          SESSION=$(curl -s -b "$JAR" http://localhost:3000/api/auth/session)
+          echo "session after password login attempt: $SESSION"
+          [ -z "$(echo "$SESSION" | json user)" ] || { echo "FAIL: password login created a session with PASSWORD_LOGIN=false"; exit 1; }
+
+          # Leave .env and the stack as the next step expects them (no Keycloak, no SSO-only mode).
+          sed -i '/^PASSWORD_LOGIN=/d' .env
+          $SSO down -v
+
       - name: Generated admin password goes to a 0600 file, not the logs
         run: |
           docker compose down -v
@@ -153,4 +200,4 @@ jobs:
 
       - name: Logs on failure
         if: failure()
-        run: docker compose logs
+        run: docker compose -f docker-compose.yml -f scripts/e2e/docker-compose.sso.yml logs

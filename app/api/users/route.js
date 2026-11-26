@@ -2,13 +2,13 @@
 import prisma from "@/lib/prisma";
 import { requireAuth, isValidRole, ROLES, jsonError } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
-import { USER_SELECT, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
+import { USER_SELECT, USER_SELECT_SSO, withSso, isValidEmail, passwordProblem, hashPassword } from "@/lib/users";
 
 export async function GET(request) {
     const { response } = await requireAuth(request, "admin");
     if (response) return response;
-    const users = await prisma.user.findMany({ select: USER_SELECT });
-    return new Response(JSON.stringify(users), { status: 200 });
+    const users = await prisma.user.findMany({ select: USER_SELECT_SSO });
+    return new Response(JSON.stringify(users.map(withSso)), { status: 200 });
 }
 
 export async function POST(request) {

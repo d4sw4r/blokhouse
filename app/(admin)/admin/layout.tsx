@@ -3,6 +3,7 @@
 import Logo from "@/components/Logo";
 
 import Link from "next/link";
+import { SessionProvider } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -61,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Main content area */}
             < main className="flex-1 p-10" >
-                {children}
+                <SessionProvider>{children}</SessionProvider>
             </main >
         </div >
     );
