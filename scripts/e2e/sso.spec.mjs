@@ -33,7 +33,8 @@ if (process.argv.includes("--password-login-disabled")) {
         const page = await browser.newPage({ baseURL: BASE });
         page.setDefaultTimeout(TIMEOUT);
         await page.goto("/signin");
-        // The form is hidden once /api/auth/options has loaded; wait for that response.
+        // The page renders the password form until /api/auth/options has loaded,
+        // so wait for the form to go away rather than checking right after load.
         const options = await page.request.get("/api/auth/options").then((r) => r.json());
         assert(options.passwordLogin === false, `/api/auth/options: ${JSON.stringify(options)}`);
         await page.getByRole("button", { name: `Sign in with ${SSO_NAME}` }).waitFor();
