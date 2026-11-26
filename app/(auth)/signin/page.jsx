@@ -4,7 +4,9 @@ import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import Logo from "@/components/Logo";
+import { Input } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Panel } from "@/components/ui/Panel";
 import { ssoErrorMessage } from "@/lib/sso-errors";
 
 export default function SignInPage() {
@@ -44,61 +46,70 @@ export default function SignInPage() {
     };
 
     return (
-
-        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
-            <div className="flex justify-center mb-4">
-                <Logo />
-            </div>
-            <p className="text-center text-gray-500 mb-6">Your infrastructure, block by block.</p>
-            <h1 className="text-3xl font-bold text-center text-brandPrimary mb-6">Sign In</h1>
-            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-            {options.sso && (
-                <Button
-                    type="button"
-                    className="w-full mb-4"
-                    onClick={() => signIn("oidc", { callbackUrl: "/dashboard" })}
-                >
-                    Sign in with {options.sso.name}
-                </Button>
-            )}
-            {options.sso && options.passwordLogin && (
-                <p className="text-center text-sm text-gray-500 mb-4">or use email and password</p>
-            )}
-            {options.passwordLogin && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandPrimary"
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border rounded-sm p-3 focus:outline-hidden focus:ring-2 focus:ring-brandPrimary"
-                    required
-                />
-                <Button type="submit" className="w-full">
-                    Sign In
-                </Button>
-            </form>
-            )}
-            {options.passwordLogin && signupEnabled && (
-                <p className="mt-4 text-center text-gray-600">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/signup">
-                        <span className="text-brandPrimary hover:underline">Sign Up</span>
-                    </Link>
+        <Panel className="w-full">
+            <div className="flex flex-col gap-4 p-2 sm:p-3">
+                <div>
+                    <h1 className="text-lg font-semibold text-text">Sign In</h1>
+                    <p className="mt-1 text-sm text-muted">Your infrastructure, block by block.</p>
+                </div>
+                {error && (
+                    <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-text">
+                        {error}
+                    </p>
+                )}
+                {options.sso && (
+                    <Button
+                        type="button"
+                        className="w-full"
+                        onClick={() => signIn("oidc", { callbackUrl: "/dashboard" })}
+                    >
+                        Sign in with {options.sso.name}
+                    </Button>
+                )}
+                {options.sso && options.passwordLogin && (
+                    <p className="text-center text-sm text-muted">or use email and password</p>
+                )}
+                {options.passwordLogin && (
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <Field label="Email" htmlFor="signin-email">
+                            <Input
+                                id="signin-email"
+                                type="email"
+                                placeholder="Email"
+                                autoComplete="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </Field>
+                        <Field label="Password" htmlFor="signin-password">
+                            <Input
+                                id="signin-password"
+                                type="password"
+                                placeholder="Password"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </Field>
+                        <Button type="submit" className="w-full">
+                            Sign In
+                        </Button>
+                    </form>
+                )}
+                {options.passwordLogin && signupEnabled && (
+                    <p className="text-center text-sm text-muted">
+                        Don&apos;t have an account?{" "}
+                        <Link href="/signup" className="text-accent underline-offset-2 hover:underline">
+                            Sign Up
+                        </Link>
+                    </p>
+                )}
+                <p className="text-center text-xs text-muted">
+                    Accounts with the API role are restricted to API token access.
                 </p>
-            )}
-            <p className="mt-2 text-center text-sm text-gray-500">
-                Accounts with the API role are restricted to API token access.
-            </p>
-        </div>
-
+            </div>
+        </Panel>
     );
 }

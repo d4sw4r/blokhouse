@@ -1,23 +1,14 @@
-
-import Logo from "@/components/Logo";
+import { LogoMark } from "@/components/shell/Logo";
 import "../globals.css";
 
-
-
 const Layout = ({ children }: { children: React.ReactNode }) => (
-    <>
-        <div className="flex min-h-screen">
-            <section className="w-1/2 hidden items-center justify-center bg-brand-accent p-10 lg:flex xl:w-2/5">
-                <div className="flex  justify-center">
-                    <Logo />
-                </div>
-            </section>
-
-            <section className="flex flex-1 flex-col items-center justify-center">
-                {children}
-            </section>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-4 py-10 text-text">
+        <div className="mb-6 flex items-center gap-2.5">
+            <LogoMark size={32} />
+            <span className="font-mono text-xl font-medium text-text">blokhouse</span>
         </div>
-    </>
-)
+        <div className="w-full max-w-sm">{children}</div>
+    </div>
+);
 
 export default Layout;

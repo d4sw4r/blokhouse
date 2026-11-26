@@ -64,7 +64,7 @@ async function login(email, password) {
 async function newPage(state, width, theme) {
     const context = await browser.newContext({
         baseURL: BASE,
-        storageState: state,
+        ...(state ? { storageState: state } : {}),
         viewport: { width, height: width > 600 ? 800 : 844 },
     });
     if (theme) {
@@ -102,6 +102,40 @@ async function resolvePath(path) {
 const shellReady = (page) => page.locator('[aria-label="User menu"]').waitFor({ state: "attached" });
 
 const slug = (p) => p.replace(/^\/+|\/+$/g, "").replace(/[^a-zA-Z0-9]+/g, "-") || "root";
+
+// 0. Signed-out pages (no shell): /signin and /signup, no storage state
+for (const path of ["/signin", "/signup"]) {
+    for (const theme of THEMES) {
+        for (const width of WIDTHS) {
+            await check(`${path} (signed out) ${theme} ${width}px`, async () => {
+                const { context, page } = await newPage(undefined, width, theme);
+                try {
+                    const problems = [];
+                    page.on("console", (m) => m.type() === "error" && problems.push(`console: ${m.text()}`));
+                    page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+                    const res = await page.goto(path, { waitUntil: "load" });
+                    await page.waitForLoadState("networkidle").catch(() => {});
+                    assert(res?.status() === 200, `HTTP ${res?.status()}`);
+                    assert(new URL(page.url()).pathname === path, `redirected to ${page.url()}`);
+                    assert(
+                        await page.evaluate((t) => document.documentElement.classList.contains(t), theme),
+                        `<html> lacks class ${theme}`,
+                    );
+                    await page.getByRole("heading", { name: path === "/signin" ? "Sign In" : "Sign Up" }).waitFor();
+                    await page.screenshot({ path: `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-signedout-${slug(path)}.png`, fullPage: true });
+                    const overflow = await page.evaluate(() => ({
+                        sw: document.documentElement.scrollWidth,
+                        iw: window.innerWidth,
+                    }));
+                    assert(overflow.sw <= overflow.iw, `horizontal overflow: scrollWidth ${overflow.sw} > innerWidth ${overflow.iw}`);
+                    assert(problems.length === 0, problems.join("\n     "));
+                } finally {
+                    await context.close();
+                }
+            });
+        }
+    }
+}
 
 // 1. Per page x theme x width, as admin
 for (const entry of pages) {
