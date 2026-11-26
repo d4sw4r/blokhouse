@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Labels, headings, buttons, table headers and empty states use sentence case, matching the navigation ("Create user", "Mark all as read", "Tag management").
+- The copy button is 32 px (44 px on phones) and shares its look and focus ring with the other icon buttons.
+- The tags page and the tags dialog on the items page share one tag form with the same validation.
+
+### Fixed
+- Closing a toast while the mobile navigation (or another sheet) is open no longer closes the sheet.
+- Badge borders have at least 3:1 contrast against the page in both themes.
+- Error toasts are announced assertively again; other toasts stay polite.
+
 ## [0.5.0] - 2026-11-26
 
 New interface: a dark console design with a light theme, grouped navigation that follows each
