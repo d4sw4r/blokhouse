@@ -25,7 +25,7 @@ async function errorText(res: Response, fallback: string) {
 
 export default function AdminUsersPage() {
     const { data: session } = useSession();
-    const currentEmail = session?.user?.email;
+    const currentId = (session?.user as { id?: string } | undefined)?.id;
     const [actionError, setActionError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -274,7 +274,7 @@ export default function AdminUsersPage() {
                                         </td>
                                         <td className="py-2 px-4 border flex gap-2">
                                             <Button onClick={() => startEditing(user)}>Edit</Button>
-                                            {user.email !== currentEmail && (
+                                            {currentId && user.id !== currentId && (
                                                 <Button
                                                     onClick={() => setDisabled(user.id, !user.disabledAt)}
                                                     variant="outline"
