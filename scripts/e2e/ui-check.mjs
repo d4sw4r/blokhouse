@@ -4,11 +4,12 @@
 //   BASE_URL=http://localhost:3000 ADMIN_EMAIL=... ADMIN_PASSWORD=... \
 //   READONLY_EMAIL=... READONLY_PASSWORD=... node scripts/e2e/ui-check.mjs [--empty]
 // For every page in ui-pages.json x theme (dark, light) x width (1280, 390), as ADMIN:
-// no console errors / page errors, no horizontal overflow, at 1280 px no overlapping
-// top-bar items, and a screenshot in ui-screenshots/. A path may contain ":first", which
+// no console errors / page errors, no horizontal overflow, at 1280 px (and once at 1024 px)
+// no overlapping top-bar items, and a screenshot in ui-screenshots/. A path may contain ":first", which
 // is replaced by the id of the first item from GET /api/configuration-items.
 // Signed out: /signin and /signup in both themes and widths (no errors, no overflow).
-// Extra checks: theme persistence, keyboard navigation, READONLY navigation links.
+// Extra checks: theme persistence (app JS blocked on reload), keyboard navigation, READONLY
+// navigation links (each answers 200 with no console/page errors).
 // --empty runs the signed-out and per-page passes only (on an install with no items,
 // before ui-seed.mjs).
 import { chromium } from "playwright";
@@ -105,6 +106,33 @@ const shellReady = (page) => page.locator('[aria-label="User menu"]').waitFor({ 
 
 const slug = (p) => p.replace(/^\/+|\/+$/g, "").replace(/[^a-zA-Z0-9]+/g, "-") || "root";
 
+// Console errors and page errors on a page, collected from now on.
+function collectProblems(page) {
+    const problems = [];
+    page.on("console", (m) => m.type() === "error" && problems.push(`console: ${m.text()}`));
+    page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+    return problems;
+}
+
+// No two visible top-bar items ([data-nav-item]) overlap.
+async function assertNavNoOverlap(page) {
+    const boxes = await page.$$eval("[data-nav-item]", (els) =>
+        els
+            .map((e) => ({ label: e.getAttribute("aria-label") || e.textContent.trim() || e.tagName, r: e.getBoundingClientRect() }))
+            .filter((b) => b.r.width > 0 && b.r.height > 0)
+            .map((b) => ({ label: b.label, x: b.r.x, y: b.r.y, w: b.r.width, h: b.r.height })),
+    );
+    assert(boxes.length > 0, "no visible [data-nav-item]");
+    for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+            const a = boxes[i], b = boxes[j];
+            const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+            const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+            assert(!(ox > 0.5 && oy > 0.5), `nav items overlap: "${a.label}" and "${b.label}"`);
+        }
+    }
+}
+
 // 0. Signed-out pages (no shell): /signin and /signup, no storage state
 for (const path of ["/signin", "/signup"]) {
     for (const theme of THEMES) {
@@ -112,9 +140,7 @@ for (const path of ["/signin", "/signup"]) {
             await check(`${path} (signed out) ${theme} ${width}px`, async () => {
                 const { context, page } = await newPage(undefined, width, theme);
                 try {
-                    const problems = [];
-                    page.on("console", (m) => m.type() === "error" && problems.push(`console: ${m.text()}`));
-                    page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+                    const problems = collectProblems(page);
                     const res = await page.goto(path, { waitUntil: "load" });
                     await page.waitForLoadState("networkidle").catch(() => {});
                     assert(res?.status() === 200, `HTTP ${res?.status()}`);
@@ -151,9 +177,7 @@ for (const entry of pages) {
             await check(`${path} ${theme} ${width}px`, async () => {
                 const { context, page } = await newPage(adminState, width, theme);
                 try {
-                    const problems = [];
-                    page.on("console", (m) => m.type() === "error" && problems.push(`console: ${m.text()}`));
-                    page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
+                    const problems = collectProblems(page);
                     const res = await page.goto(path, { waitUntil: "load" });
                     await page.waitForLoadState("networkidle").catch(() => {});
                     await shellReady(page);
@@ -169,23 +193,7 @@ for (const entry of pages) {
                         iw: window.innerWidth,
                     }));
                     assert(overflow.sw <= overflow.iw, `horizontal overflow: scrollWidth ${overflow.sw} > innerWidth ${overflow.iw}`);
-                    if (width === 1280) {
-                        const boxes = await page.$$eval("[data-nav-item]", (els) =>
-                            els
-                                .map((e) => ({ label: e.getAttribute("aria-label") || e.textContent.trim() || e.tagName, r: e.getBoundingClientRect() }))
-                                .filter((b) => b.r.width > 0 && b.r.height > 0)
-                                .map((b) => ({ label: b.label, x: b.r.x, y: b.r.y, w: b.r.width, h: b.r.height })),
-                        );
-                        assert(boxes.length > 0, "no visible [data-nav-item]");
-                        for (let i = 0; i < boxes.length; i++) {
-                            for (let j = i + 1; j < boxes.length; j++) {
-                                const a = boxes[i], b = boxes[j];
-                                const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-                                const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-                                assert(!(ox > 0.5 && oy > 0.5), `nav items overlap: "${a.label}" and "${b.label}"`);
-                            }
-                        }
-                    }
+                    if (width === 1280) await assertNavNoOverlap(page);
                     assert(problems.length === 0, problems.join("\n     "));
                 } finally {
                     await context.close();
@@ -216,8 +224,12 @@ await check("theme: Light picked in the user menu survives a reload without a fl
         await page.getByRole("button", { name: "User menu" }).click();
         await page.getByRole("menuitemradio", { name: "Light" }).click();
         await page.waitForFunction(() => document.documentElement.classList.contains("light"));
-        await page.reload({ waitUntil: "load" });
+        // Block the app bundles for the reload, so only the inline theme script can set the class.
+        const blockJs = (route) => route.abort();
+        await page.route("**/_next/static/**/*.js", blockJs);
+        await page.reload({ waitUntil: "domcontentloaded" });
         const cls = await page.evaluate(() => window.__htmlClassAtDCL);
+        await page.unroute("**/_next/static/**/*.js", blockJs);
         assert(/\blight\b/.test(cls) && !/\bdark\b/.test(cls), `<html> class at DOMContentLoaded was "${cls}"`);
         assert((await page.evaluate(() => localStorage.getItem("blokhouse-theme"))) === "light", "blokhouse-theme not 'light'");
     } finally {
@@ -266,11 +278,26 @@ await check("keyboard: nav group menu opens with Enter, ArrowDown moves, Escape 
     }
 });
 
+// 3b. Top bar at 1024 px (narrowest width with the full nav): no overlapping items
+await check("nav: no overlapping top-bar items at 1024px", async () => {
+    const { context, page } = await newPage(adminState, 1024);
+    try {
+        const problems = collectProblems(page);
+        await page.goto("/dashboard", { waitUntil: "load" });
+        await shellReady(page);
+        await assertNavNoOverlap(page);
+        assert(problems.length === 0, problems.join("\n     "));
+    } finally {
+        await context.close();
+    }
+});
+
 // 4. READONLY: every nav link answers 200 without redirect, none under /admin except /admin/api
 await check("READONLY: every nav link answers 200, none under /admin except /admin/api", async () => {
     const state = await login(READONLY_EMAIL, READONLY_PASSWORD);
     const { context, page } = await newPage(state, 1280);
     try {
+        const problems = collectProblems(page);
         await page.goto("/dashboard");
         await shellReady(page);
         const hrefs = new Set();
@@ -300,7 +327,10 @@ await check("READONLY: every nav link answers 200, none under /admin except /adm
             const final = new URL(page.url()).pathname;
             if (res?.status() !== 200) errors.push(`${h}: HTTP ${res?.status()}`);
             else if (final !== p) errors.push(`${h}: redirected to ${final}`);
+            // Console/page errors on this page (same listeners as the per-page pass).
+            errors.push(...problems.splice(0).map((m) => `${h}: ${m}`));
         }
+        errors.push(...problems.splice(0).map((m) => `dashboard: ${m}`));
         assert(errors.length === 0, errors.join("\n     "));
     } finally {
         await context.close();
