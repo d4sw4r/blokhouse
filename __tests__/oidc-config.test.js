@@ -4,8 +4,9 @@ vi.mock("@/lib/prisma", () => ({ default: {} }));
 vi.mock("next-auth/next", () => ({ getServerSession: vi.fn() }));
 vi.mock("@/lib/authOptions", () => ({ default: {} }));
 
+import { ROLES } from "@/lib/auth";
 import {
-    parseOidcConfig, passwordLoginEnabled, sessionMaxAge, validateAuthConfig, mapRole,
+    VALID_ROLES, parseOidcConfig, passwordLoginEnabled, sessionMaxAge, validateAuthConfig, mapRole,
 } from "@/lib/oidc";
 
 const base = { OIDC_ISSUER: "https://idp.example.com", OIDC_CLIENT_ID: "id", OIDC_CLIENT_SECRET: "sec" };
@@ -72,5 +73,11 @@ describe("password login / session / validate", () => {
         expect(() => validateAuthConfig({ PASSWORD_LOGIN: "false" })).toThrow(/PASSWORD_LOGIN/);
         expect(() => validateAuthConfig({ ...base, PASSWORD_LOGIN: "false" })).not.toThrow();
         expect(() => validateAuthConfig({})).not.toThrow();
+    });
+});
+
+describe("VALID_ROLES", () => {
+    it("matches lib/auth ROLES minus API", () => {
+        expect(VALID_ROLES).toEqual(ROLES.filter((r) => r !== "API"));
     });
 });
