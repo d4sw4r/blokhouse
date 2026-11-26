@@ -13,6 +13,7 @@ import { StatusDot } from "@/components/ui/StatusDot";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { cn } from "@/lib/utils";
+import { RELATION_TYPES } from "@/lib/ui/relationTypes";
 
 interface RelationTarget {
   id: string;
@@ -45,14 +46,15 @@ interface AvailableItem {
   itemType?: { name: string } | null;
 }
 
-const relationTypes: { value: string; label: string; icon: LucideIcon }[] = [
-  { value: "DEPENDS_ON", label: "Depends On", icon: Link2 },
-  { value: "RUNS_ON", label: "Runs On", icon: Server },
-  { value: "CONNECTED_TO", label: "Connected To", icon: Plug },
-  { value: "CONTAINS", label: "Contains", icon: Package },
-  { value: "PART_OF", label: "Part Of", icon: Puzzle },
-  { value: "MANAGES", label: "Manages", icon: Cog },
-];
+const relationIcons: Record<string, LucideIcon> = {
+  DEPENDS_ON: Link2,
+  RUNS_ON: Server,
+  CONNECTED_TO: Plug,
+  CONTAINS: Package,
+  PART_OF: Puzzle,
+  MANAGES: Cog,
+};
+const relationTypes = RELATION_TYPES.map((t) => ({ ...t, icon: relationIcons[t.value] ?? Link2 }));
 
 interface AssetRelationsProps {
   itemId: string;

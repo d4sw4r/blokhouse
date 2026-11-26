@@ -21,6 +21,7 @@ import CopyButton from "@/components/CopyButton";
 import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
 import FavoriteButton from "@/components/FavoriteButton";
+import { auditAction } from "@/lib/ui/auditActions";
 
 interface Tag {
     id: string;
@@ -70,12 +71,6 @@ interface CustomFieldWithValue extends CustomField {
     value: string | null;
     valueId: string | null;
 }
-
-const actionTones: Record<string, "accent" | "warning" | "danger"> = {
-    CREATE: "accent",
-    UPDATE: "warning",
-    DELETE: "danger",
-};
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -429,7 +424,7 @@ export default function AssetDetailPage() {
                             {history.map((entry) => (
                                 <li key={entry.id} className="border-l-2 border-border pl-4">
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                        <Badge tone={actionTones[entry.action] || "neutral"}>{entry.action}</Badge>
+                                        <Badge tone={auditAction(entry.action).tone}>{auditAction(entry.action).label}</Badge>
                                         <span className="text-xs text-muted">{formatTimeAgo(entry.createdAt)}</span>
                                         {entry.user && (
                                             <span className="text-xs break-all text-muted">

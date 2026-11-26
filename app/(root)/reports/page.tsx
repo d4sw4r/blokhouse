@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Callout } from "@/components/ui/Callout";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -14,6 +14,9 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { SkeletonCard, SkeletonActivity } from "@/components/Skeleton";
 import { statusTone } from "@/lib/ui/status";
+import { auditAction } from "@/lib/ui/auditActions";
+import { relationType } from "@/lib/ui/relationTypes";
+import { toneBgClass } from "@/lib/ui/tone";
 
 interface ReportsData {
     creationTrend: Record<string, number>;
@@ -57,27 +60,6 @@ interface ReportsData {
     };
     period: number;
 }
-
-const actionTones: Record<string, BadgeTone> = {
-    CREATE: "accent",
-    UPDATE: "warning",
-    DELETE: "danger",
-    LOGIN: "success",
-    LOGOUT: "neutral",
-};
-
-const relationTones: Record<string, BadgeTone> = {
-    DEPENDS_ON: "danger",
-    RUNS_ON: "accent",
-    CONNECTED_TO: "success",
-    CONTAINS: "neutral",
-};
-
-const statusFill: Record<string, string> = {
-    success: "bg-success",
-    warning: "bg-warning",
-    neutral: "bg-neutral",
-};
 
 const periodOptions = [
     { value: "7", label: "Last 7 days" },
@@ -231,7 +213,7 @@ export default function ReportsPage() {
                                             </div>
                                             <div className="h-3 w-full overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
                                                 <div
-                                                    className={`h-3 rounded-full ${statusFill[tone]}`}
+                                                    className={`h-3 rounded-full ${toneBgClass(tone)}`}
                                                     style={{ width: `${percentage}%` }}
                                                 />
                                             </div>
@@ -301,8 +283,8 @@ export default function ReportsPage() {
                                 <div className="space-y-3">
                                     {data.relationStats.map((rel) => (
                                         <div key={rel.type} className="flex items-center justify-between gap-3">
-                                            <Badge tone={relationTones[rel.type] || "neutral"}>
-                                                {rel.type.replace(/_/g, " ")}
+                                            <Badge tone={relationType(rel.type).tone}>
+                                                {relationType(rel.type).label}
                                             </Badge>
                                             <span className="font-mono text-sm font-medium">{rel.count}</span>
                                         </div>
@@ -319,8 +301,8 @@ export default function ReportsPage() {
                             <div className="space-y-2">
                                 {data.recentActivity.map((activity) => (
                                     <div key={activity.id} className="flex items-start gap-3 rounded-md bg-surface-2 p-3">
-                                        <Badge tone={actionTones[activity.action] || "neutral"} className="shrink-0">
-                                            {activity.action}
+                                        <Badge tone={auditAction(activity.action).tone} className="shrink-0">
+                                            {auditAction(activity.action).label}
                                         </Badge>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm break-words text-text">
@@ -425,8 +407,8 @@ export default function ReportsPage() {
                                 {data.activityByAction.map((activity) => (
                                     <div key={activity.action} className="rounded-md bg-surface-2 p-4 text-center">
                                         <p className="font-mono text-2xl font-semibold">{activity.count}</p>
-                                        <Badge tone={actionTones[activity.action] || "neutral"} className="mt-1">
-                                            {activity.action}
+                                        <Badge tone={auditAction(activity.action).tone} className="mt-1">
+                                            {auditAction(activity.action).label}
                                         </Badge>
                                     </div>
                                 ))}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Download, Lock, ScrollText, Search } from "lucide-react";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -15,6 +15,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { SkeletonTable } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
+import { AUDIT_ACTIONS, auditAction } from "@/lib/ui/auditActions";
 
 interface AuditLog {
     id: string;
@@ -41,26 +42,6 @@ interface PaginationData {
     totalPages: number;
 }
 
-const actionTones: Record<string, BadgeTone> = {
-    CREATE: "success",
-    UPDATE: "accent",
-    DELETE: "danger",
-    LOGIN: "neutral",
-    LOGOUT: "neutral",
-    API_TOKEN_CREATED: "success",
-    API_TOKEN_DELETED: "danger",
-};
-
-const actionLabels: Record<string, string> = {
-    CREATE: "Created",
-    UPDATE: "Updated",
-    DELETE: "Deleted",
-    LOGIN: "Login",
-    LOGOUT: "Logout",
-    API_TOKEN_CREATED: "API Token Created",
-    API_TOKEN_DELETED: "API Token Deleted",
-};
-
 const entityTypeLabels: Record<string, string> = {
     ConfigurationItem: "Asset",
     User: "User",
@@ -72,7 +53,8 @@ const entityTypeLabels: Record<string, string> = {
 };
 
 function ActionBadge({ action }: { action: string }) {
-    return <Badge tone={actionTones[action] || "neutral"}>{actionLabels[action] || action}</Badge>;
+    const { tone, label } = auditAction(action);
+    return <Badge tone={tone}>{label}</Badge>;
 }
 
 export default function AuditLogsPage() {
@@ -97,7 +79,7 @@ export default function AuditLogsPage() {
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
     // Available filter options
-    const actionTypes = ["CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT", "API_TOKEN_CREATED", "API_TOKEN_DELETED"];
+    const actionTypes = AUDIT_ACTIONS;
     const entityTypes = ["ConfigurationItem", "User", "ApiToken", "Tag", "ItemType", "CustomField", "AssetRelation"];
 
     useEffect(() => {
@@ -337,7 +319,7 @@ export default function AuditLogsPage() {
                             onValueChange={setActionFilter}
                             options={[
                                 { value: "", label: "All Actions" },
-                                ...actionTypes.map((a) => ({ value: a, label: actionLabels[a] || a })),
+                                ...actionTypes.map((a) => ({ value: a, label: auditAction(a).label })),
                             ]}
                         />
                     </Field>

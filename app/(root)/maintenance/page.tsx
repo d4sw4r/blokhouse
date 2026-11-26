@@ -17,6 +17,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { Textarea } from "@/components/ui/Textarea";
 import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
+import { PRIORITIES, priorityTone } from "@/lib/ui/priority";
 
 interface MaintenanceSchedule {
     id: string;
@@ -43,13 +44,6 @@ const statusTones: Record<string, BadgeTone> = {
     CANCELLED: "neutral",
 };
 
-const priorityTones: Record<string, BadgeTone> = {
-    LOW: "neutral",
-    MEDIUM: "accent",
-    HIGH: "warning",
-    CRITICAL: "danger",
-};
-
 const statusFilterOptions = [
     { value: "ALL", label: "All" },
     { value: "SCHEDULED", label: "Scheduled" },
@@ -58,12 +52,7 @@ const statusFilterOptions = [
     { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const priorityOptions = [
-    { value: "LOW", label: "Low" },
-    { value: "MEDIUM", label: "Medium" },
-    { value: "HIGH", label: "High" },
-    { value: "CRITICAL", label: "Critical" },
-];
+const priorityOptions = PRIORITIES.map(({ value, label }) => ({ value, label }));
 
 export default function MaintenancePage() {
     const { addToast } = useToast();
@@ -305,8 +294,8 @@ export default function MaintenancePage() {
                                         )}
                                     </TD>
                                     <TD>
-                                        <Badge tone={priorityTones[schedule.priority] ?? "neutral"}>
-                                            {schedule.priority}
+                                        <Badge tone={priorityTone(schedule.priority).tone}>
+                                            {priorityTone(schedule.priority).label}
                                         </Badge>
                                     </TD>
                                     <TD>

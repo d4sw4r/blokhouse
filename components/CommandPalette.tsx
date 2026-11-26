@@ -7,6 +7,7 @@ import { Box, ChevronRight, CornerDownLeft, FileText, Hash, Search, Tag } from "
 import { navForRole, isMenu } from "@/lib/ui/nav";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Kbd } from "@/components/ui/Kbd";
+import { StatusDot } from "@/components/ui/StatusDot";
 
 interface SearchResult {
     id: string;
@@ -130,8 +131,6 @@ export default function CommandPalette() {
     }, [handleOpenChange]);
 
     const icons = { item: Box, type: Tag, tag: Hash, page: FileText } as const;
-    const statusDot = (status?: string) =>
-        status === "ACTIVE" ? "bg-success" : status === "DEPRECATED" ? "bg-danger" : status === "MAINTENANCE" ? "bg-warning" : "bg-neutral";
 
     return (
         <DialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange}>
@@ -197,12 +196,7 @@ export default function CommandPalette() {
                                             <span className="min-w-0 flex-1">
                                                 <span className="flex items-center gap-2">
                                                     <span className="truncate text-sm font-medium text-text">{result.title}</span>
-                                                    {result.status && (
-                                                        <span className="flex items-center gap-1 text-xs text-muted">
-                                                            <span className={`size-2 rounded-full ${statusDot(result.status)}`} aria-hidden="true" />
-                                                            {result.status.toLowerCase()}
-                                                        </span>
-                                                    )}
+                                                    {result.status && <StatusDot status={result.status} size="xs" className="shrink-0" />}
                                                     {result.color && (
                                                         <span
                                                             className="size-3 rounded-full border border-border-strong"
