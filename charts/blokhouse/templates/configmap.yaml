@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blokhouse.fullname" . }}
+  labels:
+    {{- include "blokhouse.labels" . | nindent 4 }}
+data:
+  {{- $bh := .Values.blokhouse }}
+  NEXTAUTH_URL: {{ include "blokhouse.url" . | quote }}
+  ADMIN_EMAIL: {{ $bh.admin.email | quote }}
+  ALLOW_SIGNUP: {{ $bh.allowSignup | toString | quote }}
+  PASSWORD_LOGIN: {{ $bh.passwordLogin | toString | quote }}
+  WEBHOOK_WORKER: {{ $bh.webhookWorker | toString | quote }}
+  DISCOVERY_ENABLED: {{ $bh.discovery.enabled | toString | quote }}
+  {{- with $bh.discovery.subnet }}
+  NETWORK_SUBNET: {{ . | quote }}
+  {{- end }}
+  {{- $sessionMaxAge := include "blokhouse.envString" $bh.sessionMaxAge }}
+  {{- if ne $sessionMaxAge "" }}
+  SESSION_MAX_AGE: {{ $sessionMaxAge | quote }}
+  {{- end }}
+  {{- $oidc := dict
+      "OIDC_ISSUER" $bh.sso.issuer
+      "OIDC_CLIENT_ID" $bh.sso.clientId
+      "OIDC_NAME" $bh.sso.name
+      "OIDC_SCOPES" $bh.sso.scopes
+      "OIDC_ROLE_CLAIM" $bh.sso.roleClaim
+      "OIDC_ROLE_MAP" $bh.sso.roleMap
+      "OIDC_DEFAULT_ROLE" $bh.sso.defaultRole
+      "OIDC_TRUST_EMAIL" $bh.sso.trustEmail
+      "OIDC_TOKEN_MAX_DAYS" $bh.sso.tokenMaxDays }}
+  {{- range $key := keys $oidc | sortAlpha }}
+  {{- $value := include "blokhouse.envString" (get $oidc $key) }}
+  {{- if ne $value "" }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}

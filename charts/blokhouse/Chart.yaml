@@ -1,0 +1,14 @@
+apiVersion: v2
+name: blokhouse
+description: Blokhouse, a simple, automation-first open source CMDB
+type: application
+# version and appVersion equal the Blokhouse release (package.json version).
+version: 0.3.0
+appVersion: "0.3.0"
+home: https://github.com/d4sw4r/blokhouse
+sources:
+  - https://github.com/d4sw4r/blokhouse
+keywords:
+  - cmdb
+  - inventory
+  - infrastructure

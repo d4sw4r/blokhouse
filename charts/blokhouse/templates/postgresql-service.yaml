@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blokhouse.postgresql.fullname" . }}
+  labels:
+    {{- include "blokhouse.postgresql.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+      protocol: TCP
+  selector:
+    {{- include "blokhouse.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}
