@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Cog, Link2, Network, Package, Plug, Plus, Puzzle, Server, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
@@ -12,6 +13,7 @@ import { Select } from "@/components/ui/Select";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ToastProvider";
 import { cn } from "@/lib/utils";
 import { RELATION_TYPES } from "@/lib/ui/relationTypes";
 
@@ -71,6 +73,8 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
   const [selectedType, setSelectedType] = useState<string>("DEPENDS_ON");
   const [description, setDescription] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "outgoing" | "incoming">("all");
+  const [relationToDelete, setRelationToDelete] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchRelations();
@@ -138,17 +142,15 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
         fetchRelations();
       } else {
         const err = await res.json();
-        alert(`Error: ${err.error || "Failed to create relation"}`);
+        addToast({ type: "error", title: "Error", message: err.error || "Failed to create relation" });
       }
     } catch (error) {
       console.error("Error creating relation:", error);
-      alert("Network error while creating relation");
+      addToast({ type: "error", title: "Network error while creating relation" });
     }
   };
 
   const deleteRelation = async (relationId: string) => {
-    if (!confirm("Are you sure you want to delete this relation?")) return;
-
     try {
       const res = await fetch(
         `/api/configuration-items/${itemId}/relations/${relationId}`,
@@ -159,11 +161,11 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
         fetchRelations();
       } else {
         const err = await res.json();
-        alert(`Error: ${err.error || "Failed to delete relation"}`);
+        addToast({ type: "error", title: "Error", message: err.error || "Failed to delete relation" });
       }
     } catch (error) {
       console.error("Error deleting relation:", error);
-      alert("Network error while deleting relation");
+      addToast({ type: "error", title: "Network error while deleting relation" });
     }
   };
 
@@ -255,11 +257,11 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                       <span>{relation.target.itemType?.name || "No Type"}</span>
                       {relation.target.ip && <span className="font-mono break-all">{relation.target.ip}</span>}
-                      <StatusDot status={relation.target.status} className="text-xs text-muted" />
+                      <StatusDot status={relation.target.status} size="xs" />
                     </div>
                   </div>
                 </div>
-                <Button onClick={() => deleteRelation(relation.id)} variant="danger" size="sm">
+                <Button onClick={() => setRelationToDelete(relation.id)} variant="danger" size="sm">
                   Remove
                 </Button>
               </li>
@@ -363,6 +365,20 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={relationToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setRelationToDelete(null);
+        }}
+        title="Delete relation?"
+        description="Are you sure you want to delete this relation?"
+        confirmLabel="Delete relation"
+        tone="danger"
+        onConfirm={() => {
+          if (relationToDelete) deleteRelation(relationToDelete);
+        }}
+      />
     </div>
   );
 }

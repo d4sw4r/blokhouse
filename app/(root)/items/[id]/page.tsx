@@ -210,10 +210,10 @@ export default function AssetDetailPage() {
             if (res.ok) {
                 router.push("/items");
             } else {
-                alert("Failed to delete asset");
+                addToast({ type: "error", title: "Failed to delete asset" });
             }
         } catch {
-            alert("Network error");
+            addToast({ type: "error", title: "Network error" });
         }
     };
 
