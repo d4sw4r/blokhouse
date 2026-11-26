@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/ui/IconButton";
 
 interface CopyButtonProps {
     text: string;
@@ -26,21 +27,12 @@ export default function CopyButton({ text, className = "" }: CopyButtonProps) {
     if (!text) return null;
 
     return (
-        <button
+        <IconButton
+            size="sm"
+            icon={copied ? Check : Copy}
+            label={copied ? "Copied" : "Copy to clipboard"}
             onClick={handleCopy}
-            className={cn(
-                "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-2 hover:text-text max-sm:size-11",
-                className,
-            )}
-            title={copied ? "Copied" : "Copy to clipboard"}
-            aria-label={copied ? "Copied" : "Copy to clipboard"}
-            type="button"
-        >
-            {copied ? (
-                <Check className="size-4 text-text" aria-hidden="true" />
-            ) : (
-                <Copy className="size-4" aria-hidden="true" />
-            )}
-        </button>
+            className={cn("shrink-0", copied && "text-text", className)}
+        />
     );
 }
