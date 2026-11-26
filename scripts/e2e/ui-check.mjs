@@ -248,11 +248,19 @@ await check("keyboard: nav group menu opens with Enter, ArrowDown moves, Escape 
         );
         await page.keyboard.press("Escape");
         await page.getByRole("menu").waitFor({ state: "hidden" });
-        assert(
-            await page.evaluate(() => document.activeElement?.matches('[data-nav-item][aria-haspopup="menu"]') ?? false),
-            `focus did not return to the "${label}" trigger`,
-        );
-        assert((await page.evaluate(() => document.activeElement.textContent.trim())) === label, "focus returned to a different trigger");
+        // Radix restores focus to the trigger after the menu unmounts, so wait for it instead of reading once.
+        await page
+            .waitForFunction(
+                (l) => {
+                    const el = document.activeElement;
+                    return !!el && el.matches('[data-nav-item][aria-haspopup="menu"]') && el.textContent.trim() === l;
+                },
+                label,
+                { timeout: 2000 },
+            )
+            .catch(() => {
+                throw new Error(`focus did not return to the "${label}" trigger`);
+            });
     } finally {
         await context.close();
     }
