@@ -1,0 +1,20 @@
+{{- $fullname := include "blokhouse.fullname" . -}}
+Blokhouse is starting. The first start applies the database migrations and
+can take a few minutes:
+
+  kubectl --namespace {{ .Release.Namespace }} rollout status deployment/{{ $fullname }}
+
+Open it locally (NEXTAUTH_URL is {{ include "blokhouse.url" . }}):
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ $fullname }} 8080:{{ .Values.service.port }}
+
+Sign in as {{ .Values.blokhouse.admin.email }}. The initial administrator password:
+
+  kubectl --namespace {{ .Release.Namespace }} get secret {{ include "blokhouse.appSecretName" . }} -o jsonpath='{.data.ADMIN_PASSWORD}' | base64 -d
+
+This password only applies if the database had no administrator yet.
+{{- if .Values.postgresql.enabled }}
+
+The bundled PostgreSQL is a single instance without backups. Its data stays
+in the PersistentVolumeClaim after `helm uninstall`.
+{{- end }}

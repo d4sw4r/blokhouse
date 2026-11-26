@@ -74,6 +74,16 @@ The app will then be available at `http://localhost:3000`.
    - Wait patiently for feedback
    - Implement requested changes
 
+## Releasing
+
+1. Bump `version` in `package.json`.
+2. Set `version` and `appVersion` in `charts/blokhouse/Chart.yaml` to the same value.
+3. Move the `Unreleased` section of `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`.
+4. Merge the release PR, then tag the merge commit `vX.Y.Z` and push the tag.
+
+The publish workflow refuses a tag that does not match `package.json` and `Chart.yaml`.
+It then pushes the image, pushes the chart to `oci://ghcr.io/d4sw4r/charts`, and writes the GitHub release notes.
+
 ## Issue Labels
 
 | Label | Description |

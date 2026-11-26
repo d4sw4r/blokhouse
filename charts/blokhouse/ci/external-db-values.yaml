@@ -1,0 +1,5 @@
+# External PostgreSQL given as a URL.
+postgresql:
+  enabled: false
+externalDatabase:
+  url: postgresql://blokhouse:ci-password@db.example.com:5432/blokhouse

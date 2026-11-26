@@ -1,0 +1,168 @@
+# Default values for the Blokhouse chart.
+
+image:
+  repository: ghcr.io/d4sw4r/blokhouse
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1
+
+blokhouse:
+  # Public URL of Blokhouse (NEXTAUTH_URL). Empty: http://localhost:8080,
+  # matching the port-forward command printed after install.
+  url: ""
+  # Existing Secret with any of the keys NEXTAUTH_SECRET, ADMIN_PASSWORD and
+  # OIDC_CLIENT_SECRET. When set, the chart takes these keys from it and does
+  # not manage them; NEXTAUTH_SECRET must be present, the others are optional.
+  existingSecret: ""
+  # Empty: generated once and kept on upgrades.
+  nextauthSecret: ""
+  allowSignup: false
+  passwordLogin: true
+  # Session lifetime in seconds. Empty: the app default (30 days).
+  sessionMaxAge: ""
+  # Send webhooks from this release's pods.
+  webhookWorker: true
+  # Initial administrator, created only if the database has no admin yet.
+  admin:
+    email: admin@example.com
+    # Empty: generated once and kept on upgrades.
+    password: ""
+  # Network discovery (needs nmap and raw sockets, off by default).
+  discovery:
+    enabled: false
+    subnet: ""
+  # Single sign-on (OIDC). Each setting is passed as its OIDC_* variable only
+  # when set; see docs/configuration.md for the meaning and defaults.
+  sso:
+    issuer: ""
+    clientId: ""
+    clientSecret: ""
+    name: ""
+    scopes: ""
+    roleClaim: ""
+    roleMap: ""
+    defaultRole: ""
+    trustEmail: ""
+    tokenMaxDays: ""
+
+# Bundled single-instance PostgreSQL. Turn it off and set externalDatabase
+# for production databases.
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 16.16-alpine
+  auth:
+    database: blokhouse
+    username: blokhouse
+    # Empty: generated once and kept on upgrades.
+    password: ""
+    # Existing Secret with the key "password". The password must be URL-safe
+    # (letters, digits, "-", ".", "_", "~"): it is put into DATABASE_URL as is.
+    existingSecret: ""
+  persistence:
+    size: 8Gi
+    storageClass: ""
+    # Existing PersistentVolumeClaim; replaces the claim the chart creates.
+    existingClaim: ""
+  resources: {}
+
+# Used when postgresql.enabled=false: a full postgresql:// URL, either in the
+# values or in an existing Secret.
+externalDatabase:
+  url: ""
+  existingSecret: ""
+  existingSecretKey: DATABASE_URL
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Leave runAsUser, runAsGroup and fsGroup to OpenShift's restricted-v2 SCC:
+# they are dropped from the app and the bundled PostgreSQL pods.
+openshift: false
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: blokhouse.local
+      paths:
+        - path: /
+          pathType: Prefix
+  # e.g. [{secretName: blokhouse-tls, hosts: [cmdb.example.com]}]
+  tls: []
+
+# Gateway API route (needs the Gateway API CRDs and a Gateway).
+httpRoute:
+  enabled: false
+  # e.g. [{name: my-gateway, namespace: infra}]
+  parentRefs: []
+  # The first hostname becomes the default NEXTAUTH_URL, assumed to be https
+  # because the Gateway's TLS settings are not visible to the chart.
+  hostnames: []
+  annotations: {}
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# With autoscaling enabled, replicaCount is ignored.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+podAnnotations: {}
+
+podLabels: {}
+
+# Additional container env entries, e.g. [{name: TZ, value: Europe/Berlin}].
+extraEnv: []
+
+# Additional envFrom sources, e.g. [{secretRef: {name: more-settings}}].
+extraEnvFrom: []
+
+extraVolumes: []
+
+extraVolumeMounts: []
+
+serviceAccount:
+  create: true
+  # Empty: the release's full name (or "default" when create is false).
+  name: ""
+  annotations: {}

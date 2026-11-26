@@ -23,7 +23,7 @@
 - **Notifications** — stay informed
 - **CSV Import/Export** — bulk operations
 - **Dark Mode** — for the night owls
-- **Docker support** — run anywhere
+- **Docker and Kubernetes support** — run anywhere, with a Helm chart
 
 ## 🚀 Quick Start (Docker — recommended)
 
@@ -51,6 +51,15 @@ docker compose exec app cat /app/data/initial-admin-password
 
 Delete the file after your first login (`docker compose exec app rm /app/data/initial-admin-password`),
 or set `ADMIN_PASSWORD` in `.env` before the first start to choose the password yourself.
+
+## 🚀 Quick Start (Kubernetes / Helm)
+
+```bash
+helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <version> \
+  --namespace blokhouse --create-namespace
+```
+
+This starts Blokhouse with its own PostgreSQL (for trying out and small installations); for production, point it at your own database. The chart is published from the next release on; until then use `helm install blokhouse ./charts/blokhouse` from a git checkout. A checkout installs Blokhouse 0.3.0, which has no SSO yet (the SSO values need the next release); keep `replicaCount: 1` until then. See [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md).
 
 ## 🚀 Quick Start (Install Script)
 
@@ -154,7 +163,7 @@ Interactive docs at `/docs`, OpenAPI 3.1 at `/api/v1/openapi.json`, reference in
 - [Ansible Integration](docs/integrations/ansible.md)
 - [Puppet Integration](docs/integrations/puppet.md)
 - [Webhooks](docs/webhooks.md)
-- [Deployment Guide](docs/deployment/) — nginx, systemd, backups
+- [Deployment Guide](docs/deployment/) — Kubernetes (Helm), nginx, systemd, backups
 
 ## ❓ Troubleshooting
 

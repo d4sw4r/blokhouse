@@ -126,6 +126,10 @@ NEXTAUTH_SECRET=your-generated-secret-here
 DATABASE_URL=postgresql://blokhouse:secret@localhost:5432/blokhouse
 ```
 
+## Kubernetes (Helm)
+
+With the [Helm chart](deployment/kubernetes.md) you do not write these variables yourself: the values under `blokhouse.*` map to them one by one (for example `blokhouse.url` is `NEXTAUTH_URL` and `blokhouse.sso.*` are the `OIDC_*` variables), and the chart provides `DATABASE_URL`. See the [chart README](../charts/blokhouse/README.md) for the full list.
+
 ## Docker Deployment
 
 When running in Docker, pass these as environment variables:

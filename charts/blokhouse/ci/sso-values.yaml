@@ -1,0 +1,10 @@
+# Single sign-on (OIDC) with role mapping.
+blokhouse:
+  url: https://cmdb.example.com
+  sso:
+    issuer: https://sso.example.com/realms/blokhouse
+    clientId: blokhouse
+    clientSecret: ci-client-secret
+    name: Example SSO
+    roleClaim: groups
+    roleMap: cmdb-admins=ADMIN,cmdb-users=USER
