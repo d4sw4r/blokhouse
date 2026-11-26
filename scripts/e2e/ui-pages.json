@@ -5,5 +5,10 @@
   { "path": "/graph" },
   { "path": "/compare" },
   { "path": "/tags" },
-  { "path": "/maintenance" }
+  { "path": "/maintenance" },
+  { "path": "/types" },
+  { "path": "/discovery" },
+  { "path": "/notifications" },
+  { "path": "/reports" },
+  { "path": "/docs" }
 ]
