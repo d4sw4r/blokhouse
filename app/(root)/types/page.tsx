@@ -87,11 +87,11 @@ export default function TypesPage() {
     return (
         <div>
             <PageHeader
-                title="Configuration Item Types"
+                title="Configuration item types"
                 description="The categories that configuration items are grouped under."
             />
 
-            <Panel title="Add New Type" className="mb-6">
+            <Panel title="Add new type" className="mb-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
                     <Field label="Name" htmlFor="new-type-name">
                         <Input
@@ -111,11 +111,11 @@ export default function TypesPage() {
                             onChange={(e) => setNewType({ ...newType, description: e.target.value })}
                         />
                     </Field>
-                    <Button onClick={createType}>Add Type</Button>
+                    <Button onClick={createType}>Add type</Button>
                 </div>
             </Panel>
 
-            <Panel title="Existing Types" padded={false}>
+            <Panel title="Existing types" padded={false}>
                 {loading ? (
                     <div className="p-4"><SkeletonTable rows={3} /></div>
                 ) : types.length === 0 ? (

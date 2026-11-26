@@ -175,12 +175,12 @@ export default function ComparePage() {
     { key: 'name', label: 'Name', mono: true, getter: (item: ConfigItem) => item.name },
     { key: 'description', label: 'Description', getter: (item: ConfigItem) => item.description },
     { key: 'status', label: 'Status', getter: (item: ConfigItem) => item.status },
-    { key: 'ip', label: 'IP Address', mono: true, getter: (item: ConfigItem) => item.ip },
-    { key: 'mac', label: 'MAC Address', mono: true, getter: (item: ConfigItem) => item.mac },
+    { key: 'ip', label: 'IP address', mono: true, getter: (item: ConfigItem) => item.ip },
+    { key: 'mac', label: 'MAC address', mono: true, getter: (item: ConfigItem) => item.mac },
     { key: 'itemType', label: 'Type', getter: (item: ConfigItem) => item.itemType?.name || '-' },
     { key: 'tags', label: 'Tags', getter: (item: ConfigItem) => (item.tags || []).map(t => t.name) },
     { key: 'createdAt', label: 'Created', getter: (item: ConfigItem) => new Date(item.createdAt).toLocaleDateString() },
-    { key: 'updatedAt', label: 'Last Updated', getter: (item: ConfigItem) => new Date(item.updatedAt).toLocaleDateString() },
+    { key: 'updatedAt', label: 'Last updated', getter: (item: ConfigItem) => new Date(item.updatedAt).toLocaleDateString() },
   ];
 
   // Collect all custom fields from all items
@@ -229,12 +229,12 @@ export default function ComparePage() {
   return (
     <div>
       <PageHeader
-        title="Compare Assets"
+        title="Compare assets"
         description="Side-by-side comparison of configuration items"
         actions={
           selectedIds.length > 0 ? (
             <Button onClick={clearSelection} variant="secondary">
-              Clear Selection
+              Clear selection
             </Button>
           ) : undefined
         }
@@ -242,7 +242,7 @@ export default function ComparePage() {
 
       {/* Selection Section */}
       {selectedIds.length < 2 && (
-        <Panel title="Select Assets to Compare" className="mb-6">
+        <Panel title="Select assets to compare" className="mb-6">
           <p className="mb-4 text-sm text-muted">
             Choose 2-4 assets to compare their properties side-by-side.
           </p>
@@ -294,7 +294,7 @@ export default function ComparePage() {
                         <p className="truncate font-mono text-[13px] font-medium text-text" title={item.name}>
                           {item.name}
                         </p>
-                        <p className="truncate text-sm text-muted">{item.itemType?.name || 'No Type'}</p>
+                        <p className="truncate text-sm text-muted">{item.itemType?.name || 'No type'}</p>
                       </div>
                       <StatusDot status={item.status} className="shrink-0" />
                     </div>
@@ -334,7 +334,7 @@ export default function ComparePage() {
             <div className="flex min-w-0 flex-wrap items-center gap-2 md:ml-auto">
               {selectedItemsList.map(chip)}
               <Button onClick={clearSelection} variant="secondary" size="sm">
-                Change Selection
+                Change selection
               </Button>
             </div>
           </div>
@@ -438,11 +438,11 @@ export default function ComparePage() {
                 <div className="p-6">
                   <EmptyState
                     icon={Check}
-                    title="All Properties Match!"
+                    title="All properties match"
                     description="The selected assets have identical values for all comparable properties."
                     action={
                       <Button onClick={() => setShowDiffOnly(false)} variant="secondary">
-                        Show All Properties
+                        Show all properties
                       </Button>
                     }
                   />
@@ -451,9 +451,9 @@ export default function ComparePage() {
             </div>
           )}
 
-          {/* Relations Comparison */}
+          {/* Relations comparison */}
           {items.length > 0 && (
-            <Panel title="Relations Comparison" className="mt-6">
+            <Panel title="Relations comparison" className="mt-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {items.map(item => (
                   <div key={item.id} className="min-w-0 rounded-lg border border-border p-3">
@@ -512,7 +512,7 @@ export default function ComparePage() {
 
           {/* Maintenance Comparison */}
           {items.some(i => i.maintenanceSchedules.length > 0) && (
-            <Panel title="Maintenance Schedules" className="mt-6">
+            <Panel title="Maintenance schedules" className="mt-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {items.map(item => (
                   <div key={item.id} className="min-w-0 rounded-lg border border-border p-3">
@@ -555,7 +555,7 @@ export default function ComparePage() {
       {selectedIds.length === 0 && (
         <EmptyState
           icon={Columns3}
-          title="Compare Configuration Items"
+          title="Compare configuration items"
           description="Select 2-4 assets from your inventory to compare their properties, relations, and maintenance schedules side-by-side."
         />
       )}

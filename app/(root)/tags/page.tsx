@@ -244,7 +244,7 @@ export default function TagsPage() {
     if (loading) {
         return (
             <div>
-                <PageHeader title="Tags Management" />
+                <PageHeader title="Tag management" />
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <SkeletonCard />
                     <SkeletonCard />
@@ -260,21 +260,21 @@ export default function TagsPage() {
     return (
         <div>
             <PageHeader
-                title="Tags Management"
+                title="Tag management"
                 description="Organize and manage tags for your configuration items"
                 actions={
                     <Button onClick={openCreateModal}>
                         <Plus className="size-4" aria-hidden="true" />
-                        Create Tag
+                        Create tag
                     </Button>
                 }
             />
 
             {/* Statistics */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <StatTile label="Total Tags" value={totalTags} />
-                <StatTile label="Tagged Items" value={totalTaggedItems} />
-                <StatTile label="Unused Tags" value={unusedTags} tone={unusedTags > 0 ? "warning" : "neutral"} />
+                <StatTile label="Total tags" value={totalTags} />
+                <StatTile label="Tagged items" value={totalTaggedItems} />
+                <StatTile label="Unused tags" value={unusedTags} tone={unusedTags > 0 ? "warning" : "neutral"} />
             </div>
 
             {/* Search */}
@@ -292,7 +292,7 @@ export default function TagsPage() {
                 </div>
                 {searchQuery && (
                     <Button onClick={() => setSearchQuery("")} variant="secondary">
-                        Clear Search
+                        Clear search
                     </Button>
                 )}
             </div>
@@ -309,7 +309,7 @@ export default function TagsPage() {
                     }
                     action={
                         !searchQuery ? (
-                            <Button onClick={openCreateModal}>Create Your First Tag</Button>
+                            <Button onClick={openCreateModal}>Create your first tag</Button>
                         ) : undefined
                     }
                 />
@@ -346,7 +346,7 @@ export default function TagsPage() {
                                     href={`/items?tag=${tag.id}`}
                                     className="text-sm font-medium text-accent hover:underline max-sm:inline-flex max-sm:min-h-11 max-sm:items-center"
                                 >
-                                    View Items →
+                                    View items →
                                 </Link>
                             </div>
                         </div>
@@ -357,14 +357,14 @@ export default function TagsPage() {
             {/* Create Modal */}
             <Dialog open={showCreateModal} onOpenChange={(o) => { if (!submitting) setShowCreateModal(o); }}>
                 <DialogContent
-                    title="Create New Tag"
+                    title="Create new tag"
                     footer={
                         <>
                             <Button onClick={() => setShowCreateModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleCreate} loading={submitting}>
-                                Create Tag
+                                Create tag
                             </Button>
                         </>
                     }
@@ -376,14 +376,14 @@ export default function TagsPage() {
             {/* Edit Modal */}
             <Dialog open={showEditModal && !!selectedTag} onOpenChange={(o) => { if (!submitting) setShowEditModal(o); }}>
                 <DialogContent
-                    title="Edit Tag"
+                    title="Edit tag"
                     footer={
                         <>
                             <Button onClick={() => setShowEditModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleUpdate} loading={submitting}>
-                                Save Changes
+                                Save changes
                             </Button>
                         </>
                     }
@@ -395,14 +395,14 @@ export default function TagsPage() {
             {/* Delete Modal */}
             <Dialog open={showDeleteModal && !!selectedTag} onOpenChange={(o) => { if (!submitting) setShowDeleteModal(o); }}>
                 <DialogContent
-                    title="Delete Tag"
+                    title="Delete tag"
                     footer={
                         <>
                             <Button onClick={() => setShowDeleteModal(false)} variant="secondary" disabled={submitting}>
                                 Cancel
                             </Button>
                             <Button onClick={handleDelete} variant="danger" loading={submitting}>
-                                Delete Tag
+                                Delete tag
                             </Button>
                         </>
                     }

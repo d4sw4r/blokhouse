@@ -198,7 +198,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
         </p>
         <Button size="sm" onClick={() => setShowAddModal(true)}>
           <Plus className="size-4" aria-hidden="true" />
-          Add Relation
+          Add relation
         </Button>
       </div>
 
@@ -255,7 +255,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
                       <p className="mt-1 text-sm break-words text-muted">{relation.description}</p>
                     )}
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                      <span>{relation.target.itemType?.name || "No Type"}</span>
+                      <span>{relation.target.itemType?.name || "No type"}</span>
                       {relation.target.ip && <span className="font-mono break-all">{relation.target.ip}</span>}
                       <StatusDot status={relation.target.status} size="xs" />
                     </div>
@@ -277,21 +277,21 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
         }}
       >
         <DialogContent
-          title="Add New Relation"
+          title="Add new relation"
           footer={
             <>
               <Button variant="secondary" onClick={closeAddModal}>
                 Cancel
               </Button>
               <Button onClick={createRelation} disabled={!selectedTarget}>
-                Create Relation
+                Create relation
               </Button>
             </>
           }
         >
           <div className="space-y-4">
             <Field
-              label="Relation Type *"
+              label="Relation type *"
               htmlFor="relation-type"
               hint={
                 <>
@@ -311,7 +311,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
               />
             </Field>
 
-            <Field label="Target Asset *" htmlFor="relation-target-search">
+            <Field label="Target asset *" htmlFor="relation-target-search">
               <Input
                 id="relation-target-search"
                 type="text"
@@ -344,7 +344,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
                       )}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                      <span>{item.itemType?.name || "No Type"}</span>
+                      <span>{item.itemType?.name || "No type"}</span>
                       {item.ip && <span className="font-mono break-all">{item.ip}</span>}
                       <StatusDot status={item.status} className="text-xs text-muted" />
                     </div>

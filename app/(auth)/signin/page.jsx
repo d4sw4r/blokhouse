@@ -50,7 +50,7 @@ export default function SignInPage() {
         <Panel className="w-full">
             <div className="flex flex-col gap-4 p-2 sm:p-3">
                 <div>
-                    <h1 className="text-lg font-semibold text-text">Sign In</h1>
+                    <h1 className="text-lg font-semibold text-text">Sign in</h1>
                     <p className="mt-1 text-sm text-muted">Your infrastructure, block by block.</p>
                 </div>
                 {error && (
@@ -95,7 +95,7 @@ export default function SignInPage() {
                             />
                         </Field>
                         <Button type="submit" className="w-full">
-                            Sign In
+                            Sign in
                         </Button>
                     </form>
                 )}
@@ -103,7 +103,7 @@ export default function SignInPage() {
                     <p className="text-center text-sm text-muted">
                         Don&apos;t have an account?{" "}
                         <Link href="/signup" className="text-accent underline-offset-2 hover:underline">
-                            Sign Up
+                            Sign up
                         </Link>
                     </p>
                 )}

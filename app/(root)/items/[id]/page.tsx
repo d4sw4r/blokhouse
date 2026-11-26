@@ -236,7 +236,7 @@ export default function AssetDetailPage() {
                     <Link href="/items">
                         <Button variant="secondary">
                             <ArrowLeft className="size-4" aria-hidden="true" />
-                            Back to Items
+                            Back to items
                         </Button>
                     </Link>
                 }
@@ -267,7 +267,7 @@ export default function AssetDetailPage() {
                 className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-text max-sm:min-h-11"
             >
                 <ArrowLeft className="size-4" aria-hidden="true" />
-                Back to Items
+                Back to items
             </Link>
 
             {/* Header */}
@@ -301,8 +301,8 @@ export default function AssetDetailPage() {
             <div className="space-y-6">
                 <Panel title="Details">
                     <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {copyable("IP Address", item.ip)}
-                        {copyable("MAC Address", item.mac)}
+                        {copyable("IP address", item.ip)}
+                        {copyable("MAC address", item.mac)}
                         {copyable("ID", item.id)}
                         <div className="min-w-0">
                             <dt className="text-xs font-medium text-muted">Type</dt>
@@ -337,7 +337,7 @@ export default function AssetDetailPage() {
                     )}
                 </Panel>
 
-                <Panel title={`Custom Fields (${customFieldDefs.length})`}>
+                <Panel title={`Custom fields (${customFieldDefs.length})`}>
                     {customFieldDefs.length === 0 ? (
                         <div className="text-sm text-muted">
                             <p>No custom fields defined for this item type.</p>
@@ -416,7 +416,7 @@ export default function AssetDetailPage() {
                     <AssetRelations itemId={item.id} itemName={item.name} />
                 </Panel>
 
-                <Panel title={`Change History (${history.length})`}>
+                <Panel title={`Change history (${history.length})`}>
                     {history.length === 0 ? (
                         <p className="text-sm text-muted">No history available for this asset.</p>
                     ) : (

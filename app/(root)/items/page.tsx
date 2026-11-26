@@ -198,16 +198,16 @@ status: "ACTIVE" as AssetStatus,
 
     const createItem = async () => {
         if (!newItem.name.trim()) {
-            addToast({ type: "error", title: "Validation Error", message: "Name is required" });
+            addToast({ type: "error", title: "Validation error", message: "Name is required" });
             return;
         }
         // Validate IP and MAC before saving
         if (newItem.ip && !isValidIP(newItem.ip)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid IP address" });
             return;
         }
         if (newItem.mac && !isValidMAC(newItem.mac)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid MAC address" });
             return;
         }
         try {
@@ -269,11 +269,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     const updateItem = async (id: string) => {
         // Validate IP and MAC before saving
         if (editingItemData.ip && !isValidIP(editingItemData.ip)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid IP address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid IP address" });
             return;
         }
         if (editingItemData.mac && !isValidMAC(editingItemData.mac)) {
-            addToast({ type: "error", title: "Validation Error", message: "Please enter a valid MAC address" });
+            addToast({ type: "error", title: "Validation error", message: "Please enter a valid MAC address" });
             return;
         }
         try {

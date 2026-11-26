@@ -45,10 +45,10 @@ interface PaginationData {
 const entityTypeLabels: Record<string, string> = {
     ConfigurationItem: "Asset",
     User: "User",
-    ApiToken: "API Token",
+    ApiToken: "API token",
     Tag: "Tag",
     ItemType: "Type",
-    CustomField: "Custom Field",
+    CustomField: "Custom field",
     AssetRelation: "Relation",
 };
 
@@ -160,7 +160,7 @@ export default function AuditLogsPage() {
                 document.body.removeChild(a);
             } else {
                 // CSV export
-                const headers = ["Timestamp", "Action", "Entity Type", "Entity ID", "Description", "User", "IP Address"];
+                const headers = ["Timestamp", "Action", "Entity type", "Entity ID", "Description", "User", "IP address"];
                 const csvRows = logsToExport.map((log: AuditLog) => [
                     new Date(log.createdAt).toISOString(),
                     log.action,
@@ -253,7 +253,7 @@ export default function AuditLogsPage() {
         return (
             <div>
                 <PageHeader title="Audit log" />
-                <EmptyState icon={Lock} title="Access Denied" description={error} />
+                <EmptyState icon={Lock} title="Access denied" description={error} />
             </div>
         );
     }
@@ -318,7 +318,7 @@ export default function AuditLogsPage() {
                             value={actionFilter}
                             onValueChange={setActionFilter}
                             options={[
-                                { value: "", label: "All Actions" },
+                                { value: "", label: "All actions" },
                                 ...actionTypes.map((a) => ({ value: a, label: auditAction(a).label })),
                             ]}
                         />
@@ -329,7 +329,7 @@ export default function AuditLogsPage() {
                             value={entityTypeFilter}
                             onValueChange={setEntityTypeFilter}
                             options={[
-                                { value: "", label: "All Entities" },
+                                { value: "", label: "All entities" },
                                 ...entityTypes.map((t) => ({ value: t, label: entityTypeLabels[t] || t })),
                             ]}
                         />
@@ -345,7 +345,7 @@ export default function AuditLogsPage() {
                 </div>
                 <div className="mt-4">
                     <Button onClick={clearFilters} variant="secondary">
-                        Clear Filters
+                        Clear filters
                     </Button>
                 </div>
             </Panel>
@@ -406,7 +406,7 @@ export default function AuditLogsPage() {
                                     </TD>
                                     <TD className="whitespace-nowrap">
                                         <Button size="sm" variant="secondary" onClick={() => setSelectedLog(log)}>
-                                            View Details
+                                            View details
                                         </Button>
                                     </TD>
                                 </TR>
@@ -460,7 +460,7 @@ export default function AuditLogsPage() {
             <Dialog open={selectedLog !== null} onOpenChange={(open) => !open && setSelectedLog(null)}>
                 {selectedLog && (
                     <DialogContent
-                        title="Audit Log Details"
+                        title="Audit log details"
                         className="max-w-2xl"
                         footer={<Button variant="secondary" onClick={() => setSelectedLog(null)}>Close</Button>}
                     >
@@ -471,7 +471,7 @@ export default function AuditLogsPage() {
                                     <dd className="mt-1"><ActionBadge action={selectedLog.action} /></dd>
                                 </div>
                                 <div>
-                                    <dt className="text-xs font-medium text-muted">Entity Type</dt>
+                                    <dt className="text-xs font-medium text-muted">Entity type</dt>
                                     <dd className="mt-1">{entityTypeLabels[selectedLog.entityType] || selectedLog.entityType}</dd>
                                 </div>
                                 <div>
@@ -500,7 +500,7 @@ export default function AuditLogsPage() {
 
                             {selectedLog.oldValues && (
                                 <div>
-                                    <div className="text-xs font-medium text-muted">Old Values</div>
+                                    <div className="text-xs font-medium text-muted">Old values</div>
                                     <pre className="mt-1 overflow-x-auto rounded-md border border-danger/40 bg-danger/10 p-3 font-mono text-xs text-text">
                                         {selectedLog.oldValues}
                                     </pre>
@@ -509,7 +509,7 @@ export default function AuditLogsPage() {
 
                             {selectedLog.newValues && (
                                 <div>
-                                    <div className="text-xs font-medium text-muted">New Values</div>
+                                    <div className="text-xs font-medium text-muted">New values</div>
                                     <pre className="mt-1 overflow-x-auto rounded-md border border-success/40 bg-success/10 p-3 font-mono text-xs text-text">
                                         {selectedLog.newValues}
                                     </pre>
@@ -518,14 +518,14 @@ export default function AuditLogsPage() {
 
                             {selectedLog.ipAddress && (
                                 <div>
-                                    <div className="text-xs font-medium text-muted">IP Address</div>
+                                    <div className="text-xs font-medium text-muted">IP address</div>
                                     <p className="mt-1 font-mono text-sm break-all">{selectedLog.ipAddress}</p>
                                 </div>
                             )}
 
                             {selectedLog.userAgent && (
                                 <div>
-                                    <div className="text-xs font-medium text-muted">User Agent</div>
+                                    <div className="text-xs font-medium text-muted">User agent</div>
                                     <p className="mt-1 text-xs break-all text-muted">{selectedLog.userAgent}</p>
                                 </div>
                             )}

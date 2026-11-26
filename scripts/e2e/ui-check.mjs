@@ -149,7 +149,7 @@ for (const path of ["/signin", "/signup"]) {
                         await page.evaluate((t) => document.documentElement.classList.contains(t), theme),
                         `<html> lacks class ${theme}`,
                     );
-                    await page.getByRole("heading", { name: path === "/signin" ? "Sign In" : "Sign Up" }).waitFor();
+                    await page.getByRole("heading", { name: path === "/signin" ? "Sign in" : "Sign up" }).waitFor();
                     await page.screenshot({ path: `${SHOTS}${EMPTY ? "empty-" : ""}${theme}-${width}-signedout-${slug(path)}.png`, fullPage: true });
                     const overflow = await page.evaluate(() => ({
                         sw: document.documentElement.scrollWidth,

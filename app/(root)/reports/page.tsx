@@ -116,7 +116,7 @@ export default function ReportsPage() {
     if (loading || !data) {
         return (
             <div>
-                <PageHeader title="Reports & Analytics" />
+                <PageHeader title="Reports and analytics" />
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
                     {[...Array(4)].map((_, i) => (
                         <SkeletonCard key={i} />
@@ -134,7 +134,7 @@ export default function ReportsPage() {
     return (
         <div>
             <PageHeader
-                title="Reports & Analytics"
+                title="Reports and analytics"
                 description="Comprehensive insights into your CMDB data"
                 actions={
                     <>
@@ -156,7 +156,7 @@ export default function ReportsPage() {
 
             <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="min-w-0 rounded-lg border border-border bg-surface p-4">
-                    <div className="text-xs font-medium text-muted">Total Assets</div>
+                    <div className="text-xs font-medium text-muted">Total assets</div>
                     <div className="mt-1 font-mono text-2xl font-semibold tabular-nums">{data.totals.items}</div>
                     <div className="mt-2 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted">
                         <span><span className="font-mono">{data.totals.active}</span> active</span>
@@ -167,7 +167,7 @@ export default function ReportsPage() {
                     </div>
                 </div>
                 <div className="min-w-0 rounded-lg border border-border bg-surface p-4">
-                    <div className="text-xs font-medium text-muted">Asset Types</div>
+                    <div className="text-xs font-medium text-muted">Asset types</div>
                     <div className="mt-1 font-mono text-2xl font-semibold tabular-nums">{data.totals.types}</div>
                     <p className="mt-2 text-xs text-muted">
                         <span className="font-mono">{untyped}</span> untyped assets
@@ -192,13 +192,13 @@ export default function ReportsPage() {
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="orphaned">Data Quality</TabsTrigger>
+                    <TabsTrigger value="orphaned">Data quality</TabsTrigger>
                     <TabsTrigger value="users">Users</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6 pt-6">
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        <Panel title="Asset Status Distribution">
+                        <Panel title="Asset status distribution">
                             <div className="space-y-4">
                                 {data.itemsByStatus.map((status) => {
                                     const percentage = getPercentage(status.count, data.totals.items);
@@ -223,7 +223,7 @@ export default function ReportsPage() {
                             </div>
                         </Panel>
 
-                        <Panel title="Tag Usage">
+                        <Panel title="Tag usage">
                             {data.tagsDistribution.length === 0 ? (
                                 emptyText("No tags created yet.")
                             ) : (
@@ -254,7 +254,7 @@ export default function ReportsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        <Panel title="Assets by Type">
+                        <Panel title="Assets by type">
                             {data.itemsByType.length === 0 ? (
                                 emptyText("No types assigned.")
                             ) : (
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                             )}
                         </Panel>
 
-                        <Panel title="Relation Types">
+                        <Panel title="Relation types">
                             {data.relationStats.length === 0 ? (
                                 emptyText("No relations created yet.")
                             ) : (
@@ -294,7 +294,7 @@ export default function ReportsPage() {
                         </Panel>
                     </div>
 
-                    <Panel title="Recent Activity">
+                    <Panel title="Recent activity">
                         {data.recentActivity.length === 0 ? (
                             emptyText("No activity in the selected period.")
                         ) : (
@@ -320,7 +320,7 @@ export default function ReportsPage() {
                 </TabsContent>
 
                 <TabsContent value="orphaned" className="space-y-6 pt-6">
-                    <Callout tone="warning" title={<h3>Data Quality Issues</h3>}>
+                    <Callout tone="warning" title={<h3>Data quality issues</h3>}>
                         <p className="mt-1 text-muted">
                             Found <span className="font-mono">{data.orphanedAssets.length}</span> assets with incomplete data.
                             These assets are missing type assignments or tags.
@@ -328,14 +328,14 @@ export default function ReportsPage() {
                     </Callout>
 
                     {data.orphanedAssets.length === 0 ? (
-                        <Callout tone="success" title={<h3>All Clear!</h3>}>
+                        <Callout tone="success" title={<h3>All clear</h3>}>
                             <p className="mt-1 text-muted">All assets have proper type and tag assignments.</p>
                         </Callout>
                     ) : (
                         <Table>
                             <THead>
                                 <TR>
-                                    <TH>Asset Name</TH>
+                                    <TH>Asset name</TH>
                                     <TH>Status</TH>
                                     <TH>Missing</TH>
                                     <TH>Created</TH>
@@ -367,7 +367,7 @@ export default function ReportsPage() {
                 </TabsContent>
 
                 <TabsContent value="users" className="space-y-6 pt-6">
-                    <Panel title={`Top Contributors (${data.totals.users} total users)`}>
+                    <Panel title={`Top contributors (${data.totals.users} total users)`}>
                         {data.userStats.length === 0 ? (
                             emptyText("No user activity recorded.")
                         ) : (
@@ -399,7 +399,7 @@ export default function ReportsPage() {
                         )}
                     </Panel>
 
-                    <Panel title={`Activity Summary (Last ${period} Days)`}>
+                    <Panel title={`Activity summary (last ${period} days)`}>
                         {data.activityByAction.length === 0 ? (
                             emptyText("No activity recorded in this period.")
                         ) : (

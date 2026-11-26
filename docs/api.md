@@ -87,7 +87,7 @@ Missing authentication returns `401`, missing permission returns `403`.
 1. Log in to Blokhouse
 2. Go to **Automation** → **API tokens**
 3. Enter a name (e.g. `ansible-prod`), select scopes and an expiry
-4. Click **Generate API Token**
+4. Click **Generate API token**
 5. Copy the token immediately — only a SHA-256 hash is stored, it cannot be shown again
 
 Tokens can be revoked at any time on the same page. Tokens can only be created

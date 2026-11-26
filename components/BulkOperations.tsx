@@ -172,10 +172,10 @@ export default function BulkOperations({
                     {!isOpen && (
                         <>
                             <Button onClick={() => { setIsOpen(true); setOperation("status"); }} size="sm" variant="secondary">
-                                Change Status
+                                Change status
                             </Button>
                             <Button onClick={() => { setIsOpen(true); setOperation("addTags"); }} size="sm" variant="secondary">
-                                Add Tags
+                                Add tags
                             </Button>
                             <Button onClick={() => { setIsOpen(true); setOperation("delete"); }} size="sm" variant="danger">
                                 Delete
@@ -253,7 +253,7 @@ export default function BulkOperations({
                                     size="sm"
                                     loading={loading}
                                 >
-                                    {loading ? "Adding..." : `Add ${selectedTagIds.length} Tag(s)`}
+                                    {loading ? "Adding..." : `Add ${selectedTagIds.length} tag(s)`}
                                 </Button>
                                 <Button onClick={closePanel} size="sm" variant="secondary">
                                     Cancel
@@ -277,7 +277,7 @@ export default function BulkOperations({
                                     variant="danger"
                                     loading={loading}
                                 >
-                                    {loading ? "Deleting..." : "Confirm Delete"}
+                                    {loading ? "Deleting..." : "Confirm delete"}
                                 </Button>
                                 <Button onClick={closePanel} size="sm" variant="secondary">
                                     Cancel

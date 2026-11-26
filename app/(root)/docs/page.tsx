@@ -37,7 +37,7 @@ export default function ApiDocsPage() {
     return (
         <div>
             <PageHeader
-                title="Blokhouse API Documentation"
+                title="Blokhouse API documentation"
                 description={
                     <>
                         Authenticate with{" "}
