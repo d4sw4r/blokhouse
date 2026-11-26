@@ -8,7 +8,7 @@ const actions: Record<string, { tone: Tone; label: string }> = {
     LOGIN: { tone: "success", label: "Login" },
     LOGOUT: { tone: "neutral", label: "Logout" },
     API_TOKEN_CREATED: { tone: "success", label: "API Token Created" },
-    API_TOKEN_DELETED: { tone: "neutral", label: "API Token Deleted" },
+    API_TOKEN_DELETED: { tone: "danger", label: "API Token Deleted" },
 };
 
 export const AUDIT_ACTIONS = Object.keys(actions);

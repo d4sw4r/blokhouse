@@ -13,6 +13,7 @@ describe("auditAction", () => {
         expect(auditAction("LOGOUT").tone).toBe("neutral");
         expect(auditAction("API_TOKEN_CREATED").tone).toBe("success");
         expect(AUDIT_ACTIONS).toContain("API_TOKEN_DELETED");
+        expect(auditAction("API_TOKEN_DELETED").tone).toBe("danger");
     });
     it("falls back to neutral with a readable label", () => {
         expect(auditAction("PASSWORD_RESET")).toEqual({ tone: "neutral", label: "Password reset" });
