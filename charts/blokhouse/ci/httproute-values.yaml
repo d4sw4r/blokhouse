@@ -1,0 +1,8 @@
+# Gateway API HTTPRoute.
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: gateway
+      namespace: infra
+  hostnames:
+    - cmdb.example.com

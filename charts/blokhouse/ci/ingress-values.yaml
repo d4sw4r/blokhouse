@@ -1,0 +1,13 @@
+# Ingress with TLS: NEXTAUTH_URL becomes https://cmdb.example.com.
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: cmdb.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: blokhouse-tls
+      hosts:
+        - cmdb.example.com
