@@ -152,13 +152,13 @@ Where the app's DATABASE_URL comes from:
 {{/* DATABASE_URL of the bundled database with the given (already URL-safe) password. */}}
 {{- define "blokhouse.postgresql.url" -}}
 {{- $auth := .ctx.Values.postgresql.auth }}
-{{- printf "postgresql://%s:%s@%s:5432/%s" (urlquery $auth.username) .password (include "blokhouse.postgresql.fullname" .ctx) $auth.database }}
+{{- printf "postgresql://%s:%s@%s:5432/%s" (urlquery $auth.username | replace "+" "%20") .password (include "blokhouse.postgresql.fullname" .ctx) $auth.database }}
 {{- end }}
 
 {{/* DATABASE_URL stored in the chart Secret (source "chart"). */}}
 {{- define "blokhouse.databaseUrl" -}}
 {{- if .Values.postgresql.enabled }}
-{{- include "blokhouse.postgresql.url" (dict "ctx" . "password" (include "blokhouse.postgresql.password" . | urlquery)) }}
+{{- include "blokhouse.postgresql.url" (dict "ctx" . "password" (include "blokhouse.postgresql.password" . | urlquery | replace "+" "%20")) }}
 {{- else }}
 {{- .Values.externalDatabase.url }}
 {{- end }}

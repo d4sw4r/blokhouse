@@ -136,8 +136,9 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
-            httpGet:
-              path: /api/health
+            # TCP only: /api/health checks the database, and a database outage
+            # must not restart every app pod.
+            tcpSocket:
               port: http
             periodSeconds: 20
             timeoutSeconds: 5

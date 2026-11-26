@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "blokhouse.postgresql.labels" . | nindent 8 }}
+        {{- include "blokhouse.postgresql.selectorLabels" . | nindent 8 }}
     spec:
       automountServiceAccountToken: false
       enableServiceLinks: false

@@ -18,6 +18,8 @@ git clone https://github.com/d4sw4r/blokhouse.git
 helm install blokhouse ./blokhouse/charts/blokhouse --namespace blokhouse --create-namespace
 ```
 
+A git checkout installs the released Blokhouse 0.3.0 image (the chart `appVersion`), which has no SSO and no seed lock. Until the next release, `blokhouse.sso.*`, `blokhouse.passwordLogin` and `blokhouse.sessionMaxAge` are ignored, and you should keep `replicaCount: 1`.
+
 The notes printed after the install show the port-forward command and how to read the initial administrator password.
 
 ## Values
@@ -32,7 +34,7 @@ Pass values with `--set key=value` or `-f my-values.yaml`. Empty strings mean "n
 | `image.tag` | `""` | Image tag. Empty: the chart's `appVersion`. |
 | `image.pullPolicy` | `IfNotPresent` | Image pull policy. |
 | `imagePullSecrets` | `[]` | Secrets for pulling the image. |
-| `replicaCount` | `1` | Number of app pods. Several replicas are safe. Ignored when `autoscaling.enabled` is true. |
+| `replicaCount` | `1` | Number of app pods. Several replicas are safe once the next release is installed (see above). Ignored when `autoscaling.enabled` is true. |
 | `resources` | `{}` | Resource requests and limits of the app container. |
 | `nodeSelector`, `tolerations`, `affinity` | `{}`, `[]`, `{}` | Pod scheduling. |
 | `podAnnotations`, `podLabels` | `{}` | Extra annotations and labels of the app pods. |
@@ -110,8 +112,8 @@ With `postgresql.enabled=false`, rendering fails unless `externalDatabase.url` o
 | `httpRoute.hostnames` | `[]` | Hostnames. The first one becomes the default `NEXTAUTH_URL`, assumed to be `https`. |
 | `httpRoute.annotations` | `{}` | HTTPRoute annotations. |
 | `podDisruptionBudget.enabled` | `false` | Create a PodDisruptionBudget. |
-| `podDisruptionBudget.minAvailable` | `1` | Pods that must stay available. |
-| `autoscaling.enabled` | `false` | Create a HorizontalPodAutoscaler. |
+| `podDisruptionBudget.minAvailable` | `1` | Pods that must stay available. With one replica, `1` blocks node drains. |
+| `autoscaling.enabled` | `false` | Create a HorizontalPodAutoscaler. Needs `resources.requests.cpu`. |
 | `autoscaling.minReplicas` | `1` | Minimum replicas. |
 | `autoscaling.maxReplicas` | `3` | Maximum replicas. |
 | `autoscaling.targetCPUUtilizationPercentage` | `80` | CPU target. |

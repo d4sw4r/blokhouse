@@ -2,7 +2,7 @@
 
 The Helm chart in [`charts/blokhouse`](../../charts/blokhouse) runs Blokhouse in Kubernetes. Without any values it also starts its own PostgreSQL, so you can try Blokhouse with one command. For production, turn the bundled database off and use your own PostgreSQL. Every value is listed in the [chart README](../../charts/blokhouse/README.md).
 
-Requirements: a Kubernetes cluster (kind, k3s, EKS, AKS and OpenShift work) and Helm 3.
+Requirements: a Kubernetes cluster and Helm 3. The chart is tested on kind with the restricted Pod Security Standard and targets any conformant cluster. OpenShift is supported through `openshift: true` but is untested.
 
 ## Quick start
 
@@ -20,6 +20,8 @@ git clone https://github.com/d4sw4r/blokhouse.git
 cd blokhouse
 helm install blokhouse ./charts/blokhouse --namespace blokhouse --create-namespace
 ```
+
+**Note:** a git checkout installs the released Blokhouse 0.3.0 image (the chart `appVersion`), which has no SSO and no seed lock. Until the next release, the `blokhouse.sso.*`, `blokhouse.passwordLogin` and `blokhouse.sessionMaxAge` values are ignored, and you should keep `replicaCount: 1`. The SSO values need the next release.
 
 The first start applies the database migrations and can take a few minutes. Then open Blokhouse through a port-forward:
 
@@ -57,6 +59,8 @@ kubectl --namespace blokhouse exec -i blokhouse-postgresql-0 -- \
   pg_restore -U blokhouse --clean --if-exists -d blokhouse < blokhouse-20260101-020000.dump
 kubectl --namespace blokhouse scale deployment/blokhouse --replicas=1
 ```
+
+Afterwards scale back to your `replicaCount` (or let the HorizontalPodAutoscaler do it).
 
 The database password is generated once and kept. Changing `postgresql.auth.password` after the first install does **not** change the password inside the database: PostgreSQL only sets it when it initialises the data directory, so Blokhouse could no longer connect. To change it, run `ALTER USER` in the database first, then update the value or Secret.
 
@@ -207,12 +211,18 @@ All writable paths are `emptyDir` volumes or the data volume, so an arbitrary UI
 
 ```bash
 helm upgrade blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <new version> \
-  --namespace blokhouse --reuse-values
+  --namespace blokhouse -f values.yaml
 ```
 
 Or from a checkout: `helm upgrade blokhouse ./charts/blokhouse --namespace blokhouse -f values.yaml`. The chart version equals the Blokhouse version, and the image tag defaults to it. Read the release notes in [CHANGELOG.md](../../CHANGELOG.md) and [docs/upgrading.md](../upgrading.md) first. Database migrations run when the new pods start. Generated secrets are kept. Take a backup before every upgrade.
 
-When you pass `-f values.yaml` instead of `--reuse-values`, repeat all your values. The bundled PostgreSQL's major version is not upgraded by the chart; do not change `postgresql.image.tag` to another major version.
+Always pass your values file with `-f values.yaml`. Plain `--reuse-values` keeps the values of the old release and drops defaults that a newer chart adds, which breaks the render. If you do not keep a values file, use `--reset-then-reuse-values` (Helm 3.14 or later), which applies the new chart defaults and then your previous overrides. The bundled PostgreSQL's major version is not upgraded by the chart; do not change `postgresql.image.tag` to another major version.
+
+## Autoscaling and disruption budgets
+
+- `autoscaling.enabled` needs `resources.requests.cpu`: the HorizontalPodAutoscaler scales on CPU utilisation, which is measured against the request. Without it the HPA cannot compute a value.
+- `podDisruptionBudget.minAvailable: 1` with a single replica blocks node drains, because the only pod may never be evicted. Use it with at least two replicas, or lower `podDisruptionBudget.minAvailable` to `0`.
+- The liveness probe only checks that the port is open; `/api/health` (which checks the database) is used for the startup and readiness probes. A database outage therefore takes pods out of service but does not restart them.
 
 ## Uninstall
 

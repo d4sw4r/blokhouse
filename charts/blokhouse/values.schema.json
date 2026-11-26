@@ -71,7 +71,11 @@
               "type": "string"
             },
             "password": {
-              "type": "string"
+              "type": "string",
+              "anyOf": [
+                { "maxLength": 0 },
+                { "minLength": 8 }
+              ]
             }
           }
         },

@@ -59,7 +59,7 @@ helm install blokhouse oci://ghcr.io/d4sw4r/charts/blokhouse --version <version>
   --namespace blokhouse --create-namespace
 ```
 
-This starts Blokhouse with its own PostgreSQL (for trying out and small installations); for production, point it at your own database. The chart is published from the next release on; until then use `helm install blokhouse ./charts/blokhouse` from a git checkout. See [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md).
+This starts Blokhouse with its own PostgreSQL (for trying out and small installations); for production, point it at your own database. The chart is published from the next release on; until then use `helm install blokhouse ./charts/blokhouse` from a git checkout. A checkout installs Blokhouse 0.3.0, which has no SSO yet (the SSO values need the next release); keep `replicaCount: 1` until then. See [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md).
 
 ## 🚀 Quick Start (Install Script)
 

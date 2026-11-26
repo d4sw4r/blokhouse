@@ -96,9 +96,12 @@ describe("helm chart", () => {
     it("probes", () => {
         const app = appContainer(renderChart({}));
         expect(app.ports).toContainEqual(expect.objectContaining({ name: "http", containerPort: 3000 }));
-        for (const probe of ["startupProbe", "readinessProbe", "livenessProbe"]) {
+        for (const probe of ["startupProbe", "readinessProbe"]) {
             expect(app[probe]?.httpGet, probe).toMatchObject({ path: "/api/health", port: "http" });
         }
+        // Liveness must not depend on the database, or an outage restarts every pod.
+        expect(app.livenessProbe.tcpSocket).toMatchObject({ port: "http" });
+        expect(app.livenessProbe.httpGet).toBeUndefined();
         const startup = app.startupProbe;
         expect((startup.initialDelaySeconds ?? 0) + startup.periodSeconds * startup.failureThreshold)
             .toBeGreaterThanOrEqual(300);
@@ -109,6 +112,26 @@ describe("helm chart", () => {
         const url = decode(find(docs, "Secret", "bh-blokhouse")!, "DATABASE_URL");
         expect(url).toContain("p%40ss%2Fw%3Ard%25");
         expect(decode(find(docs, "Secret", "bh-blokhouse-postgresql")!, "password")).toBe("p@ss/w:rd%");
+    });
+
+    it("encodes spaces in the bundled database credentials as %20", () => {
+        const docs = renderChart({ postgresql: { auth: { username: "u s", password: "p w+" } } });
+        const url = decode(find(docs, "Secret", "bh-blokhouse")!, "DATABASE_URL");
+        expect(url).toContain("postgresql://u%20s:p%20w%2B@");
+    });
+
+    it("postgresql pod template labels carry no chart version", () => {
+        const sts = find(renderChart({}), "StatefulSet", "bh-blokhouse-postgresql")!;
+        const labels = sts.spec.template.metadata.labels;
+        expect(labels["helm.sh/chart"]).toBeUndefined();
+        expect(labels).toMatchObject(sts.spec.selector.matchLabels);
+        expect(sts.metadata.labels["helm.sh/chart"]).toBeDefined();
+    });
+
+    it("rejects a too short admin password", () => {
+        expect(renderError({ blokhouse: { admin: { password: "short" } } })).toMatch(/admin|password|minLength/);
+        expect(() => renderChart({ blokhouse: { admin: { password: "longenough" } } })).not.toThrow();
+        expect(() => renderChart({ blokhouse: { admin: { password: "" } } })).not.toThrow();
     });
 
     it("existing bundled database password secret", () => {
