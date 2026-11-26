@@ -8,6 +8,7 @@ import { navForRole, isMenu } from "@/lib/ui/nav";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Kbd } from "@/components/ui/Kbd";
 import { StatusDot } from "@/components/ui/StatusDot";
+import { OPEN_PALETTE_EVENT } from "@/components/shell/TopBar";
 
 interface SearchResult {
     id: string;
@@ -46,9 +47,13 @@ export default function CommandPalette() {
     const all = useMemo(() => [...matchedPages, ...results], [matchedPages, results]);
 
     const lastFocus = useRef<HTMLElement | null>(null);
+    const isOpenRef = useRef(false);
 
     const handleOpenChange = useCallback((open: boolean) => {
-        if (open) lastFocus.current = document.activeElement as HTMLElement | null;
+        // Re-opening while open (Ctrl+K inside the palette) must not replace the element
+        // focus returns to with the palette's own input.
+        if (open && !isOpenRef.current) lastFocus.current = document.activeElement as HTMLElement | null;
+        isOpenRef.current = open;
         setIsOpen(open);
         if (!open) {
             setQuery("");
@@ -126,8 +131,8 @@ export default function CommandPalette() {
     // Listen for custom open event from the top bar search trigger
     useEffect(() => {
         const handleOpen = () => handleOpenChange(true);
-        document.addEventListener("openCommandPalette", handleOpen);
-        return () => document.removeEventListener("openCommandPalette", handleOpen);
+        document.addEventListener(OPEN_PALETTE_EVENT, handleOpen);
+        return () => document.removeEventListener(OPEN_PALETTE_EVENT, handleOpen);
     }, [handleOpenChange]);
 
     const icons = { item: Box, type: Tag, tag: Hash, page: FileText } as const;
@@ -162,59 +167,59 @@ export default function CommandPalette() {
                         aria-activedescendant={all[selectedIndex] ? `palette-opt-${selectedIndex}` : undefined}
                         className="min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-muted"
                     />
-                    {loading && <div className="size-4 animate-spin rounded-full border-2 border-border-strong border-t-accent motion-reduce:animate-none" />}
+                    {loading && <div role="status" aria-label="Searching" className="size-4 shrink-0 animate-spin rounded-full border-2 border-border-strong border-t-accent motion-reduce:animate-none" />}
                     <Kbd className="hidden sm:inline-flex">ESC</Kbd>
                 </div>
 
                 <div className="max-h-[50vh] overflow-y-auto">
-                    {all.length === 0 && !loading ? (
+                    {all.length === 0 && !loading && (
                         <div className="p-8 text-center text-muted">
                             <p className="mb-1 text-base font-medium text-text">No results found</p>
                             <p className="text-sm">Try a different search term</p>
                         </div>
-                    ) : (
-                        <ul id="palette-listbox" role="listbox" aria-label="Results" className="py-1">
-                            {all.map((result, index) => {
-                                const Icon = icons[result.type];
-                                return (
-                                    <li key={`${result.type}-${result.id}`} role="presentation">
-                                        <button
-                                            type="button"
-                                            role="option"
-                                            id={`palette-opt-${index}`}
-                                            aria-selected={index === selectedIndex}
-                                            tabIndex={-1}
-                                            onClick={() => handleSelect(result)}
-                                            onMouseMove={() => setSelectedIndex(index)}
-                                            className={`flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 motion-reduce:transition-none ${
-                                                index === selectedIndex ? "bg-surface-2 outline-2 -outline-offset-2 outline-accent" : ""
-                                            }`}
-                                        >
-                                            <span className="rounded-md bg-surface-2 p-1.5 text-muted">
-                                                <Icon className="size-4" aria-hidden="true" />
-                                            </span>
-                                            <span className="min-w-0 flex-1">
-                                                <span className="flex items-center gap-2">
-                                                    <span className="truncate text-sm font-medium text-text">{result.title}</span>
-                                                    {result.status && <StatusDot status={result.status} size="xs" className="shrink-0" />}
-                                                    {result.color && (
-                                                        <span
-                                                            className="size-3 rounded-full border border-border-strong"
-                                                            style={{ backgroundColor: result.color }}
-                                                            aria-hidden="true"
-                                                        />
-                                                    )}
-                                                </span>
-                                                <span className="block truncate text-xs text-muted">{result.subtitle}</span>
-                                            </span>
-                                            <span className="text-xs capitalize text-muted">{result.type}</span>
-                                            {index === selectedIndex && <ChevronRight className="size-4 text-muted" aria-hidden="true" />}
-                                        </button>
-                                    </li>
-                                );
-                            })}
-                        </ul>
                     )}
+                    {/* Always rendered so the input's aria-controls resolves, also with no results. */}
+                    <ul id="palette-listbox" role="listbox" aria-label="Results" className={all.length > 0 ? "py-1" : undefined}>
+                        {all.map((result, index) => {
+                            const Icon = icons[result.type];
+                            return (
+                                <li key={`${result.type}-${result.id}`} role="presentation">
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        id={`palette-opt-${index}`}
+                                        aria-selected={index === selectedIndex}
+                                        tabIndex={-1}
+                                        onClick={() => handleSelect(result)}
+                                        onMouseMove={() => setSelectedIndex(index)}
+                                        className={`flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 motion-reduce:transition-none ${
+                                            index === selectedIndex ? "bg-surface-2 outline-2 -outline-offset-2 outline-accent" : ""
+                                        }`}
+                                    >
+                                        <span className="rounded-md bg-surface-2 p-1.5 text-muted">
+                                            <Icon className="size-4" aria-hidden="true" />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="flex items-center gap-2">
+                                                <span className="truncate text-sm font-medium text-text">{result.title}</span>
+                                                {result.status && <StatusDot status={result.status} size="xs" className="shrink-0" />}
+                                                {result.color && (
+                                                    <span
+                                                        className="size-3 rounded-full border border-border-strong"
+                                                        style={{ backgroundColor: result.color }}
+                                                        aria-hidden="true"
+                                                    />
+                                                )}
+                                            </span>
+                                            <span className="block truncate text-xs text-muted">{result.subtitle}</span>
+                                        </span>
+                                        <span className="text-xs capitalize text-muted">{result.type}</span>
+                                        {index === selectedIndex && <ChevronRight className="size-4 text-muted" aria-hidden="true" />}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border bg-bg px-4 py-2 text-xs text-muted">

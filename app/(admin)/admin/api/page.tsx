@@ -187,8 +187,8 @@ export default function AdminAPIPage() {
             </Panel>
 
             {newSecret && (
-                <Callout tone="warning" role="status">
-                    <p className="font-semibold">
+                <Callout tone="warning">
+                    <p role="status" className="font-semibold">
                         Copy your new token now — it will not be shown again.
                     </p>
                     <div className="mt-2 flex items-center gap-2">

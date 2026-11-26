@@ -256,8 +256,8 @@ export default function WebhooksPage() {
             )}
 
             {secret && (
-                <Callout tone="warning" role="status">
-                    <p className="font-semibold">
+                <Callout tone="warning">
+                    <p role="status" className="font-semibold">
                         Signing secret for &quot;{secret.name}&quot;. Copy it now; it will not be shown again.
                     </p>
                     <div className="mt-2 flex items-center gap-2">
