@@ -5,7 +5,8 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { controlClass } from "./Input";
 
-// Radix forbids empty-string item values; map "" to a sentinel internally.
+// Radix forbids empty-string item values, so an option whose value is "" is mapped to
+// this sentinel internally and back to "" for callers.
 const EMPTY = "__empty__";
 const toInner = (v: string) => (v === "" ? EMPTY : v);
 const toOuter = (v: string) => (v === EMPTY ? "" : v);
@@ -24,7 +25,8 @@ export interface SelectProps {
 export function Select({ value, onValueChange, options, placeholder, id, disabled, className, ...rest }: SelectProps) {
     const hasEmpty = options.some((o) => o.value === "");
     // "" with no matching "none" option means "nothing selected" -> show placeholder.
-    const inner = value === undefined || (value === "" && !hasEmpty) ? undefined : toInner(value);
+    // Always a string so Radix stays controlled; "" (no matching option) shows the placeholder.
+    const inner = value === undefined || (value === "" && !hasEmpty) ? "" : toInner(value);
     return (
         <SelectPrimitive.Root
             value={inner}

@@ -36,9 +36,7 @@ export function ConfirmDialog({ open, onOpenChange, title, description, confirmL
                         </Button>
                     </>
                 }
-            >
-                {null}
-            </DialogContent>
+            />
         </Dialog>
     );
 }

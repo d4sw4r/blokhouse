@@ -44,7 +44,7 @@ export const DialogContent = React.forwardRef<
                     <IconButton label="Close" icon={X} className="-mt-1 -mr-2" />
                 </DialogPrimitive.Close>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+            {children ? <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div> : null}
             {footer ? (
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-5 py-3">
                     {footer}
