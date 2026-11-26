@@ -82,7 +82,9 @@ export default function WebhooksPage() {
     const [openId, setOpenId] = useState<string | null>(null);
     const [deliveries, setDeliveries] = useState<Delivery[]>([]);
     const [hookToRotate, setHookToRotate] = useState<Webhook | null>(null);
+    const [hookToRotateOpen, setHookToRotateOpen] = useState(false);
     const [hookToDelete, setHookToDelete] = useState<Webhook | null>(null);
+    const [hookToDeleteOpen, setHookToDeleteOpen] = useState(false);
 
     const load = async () => {
         try {
@@ -289,7 +291,7 @@ export default function WebhooksPage() {
                                 <TR className={hook.active ? "" : "opacity-70"}>
                                     <TD>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            {hook.name}
+                                            <span className="font-mono text-[13px]">{hook.name}</span>
                                             {!hook.active && <Badge>disabled</Badge>}
                                         </div>
                                     </TD>
@@ -317,8 +319,8 @@ export default function WebhooksPage() {
                                             <Button size="sm" variant="secondary" onClick={() => toggleActive(hook)}>
                                                 {hook.active ? "Disable" : "Enable"}
                                             </Button>
-                                            <Button size="sm" variant="secondary" onClick={() => setHookToRotate(hook)}>New secret</Button>
-                                            <Button size="sm" variant="danger" onClick={() => setHookToDelete(hook)}>Delete</Button>
+                                            <Button size="sm" variant="secondary" onClick={() => { setHookToRotate(hook); setHookToRotateOpen(true); }}>New secret</Button>
+                                            <Button size="sm" variant="danger" onClick={() => { setHookToDelete(hook); setHookToDeleteOpen(true); }}>Delete</Button>
                                         </div>
                                     </TD>
                                 </TR>
@@ -382,16 +384,16 @@ export default function WebhooksPage() {
             )}
 
             <ConfirmDialog
-                open={hookToRotate !== null}
-                onOpenChange={(open) => !open && setHookToRotate(null)}
+                open={hookToRotateOpen}
+                onOpenChange={setHookToRotateOpen}
                 title="Generate a new secret"
                 description={`Generate a new secret for "${hookToRotate?.name ?? ""}"? The receiver must be updated, or it will reject events.`}
                 confirmLabel="Generate"
                 onConfirm={() => hookToRotate && rotate(hookToRotate)}
             />
             <ConfirmDialog
-                open={hookToDelete !== null}
-                onOpenChange={(open) => !open && setHookToDelete(null)}
+                open={hookToDeleteOpen}
+                onOpenChange={setHookToDeleteOpen}
                 title="Delete webhook"
                 description={`Delete webhook "${hookToDelete?.name ?? ""}" and its delivery log?`}
                 confirmLabel="Delete"

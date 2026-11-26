@@ -60,6 +60,7 @@ export default function CustomFieldsAdminPage() {
     const [form, setForm]           = useState(empty);
     const [filterType, setFilterType] = useState<string>("");
     const [fieldToDelete, setFieldToDelete] = useState<CustomField | null>(null);
+    const [fieldToDeleteOpen, setFieldToDeleteOpen] = useState(false);
     const [msg, setMsg]             = useState<{ ok: boolean; text: string } | null>(null);
 
     async function fetchData() {
@@ -307,7 +308,7 @@ export default function CustomFieldsAdminPage() {
                                             variant="danger"
                                             size="sm"
                                             disabled={deleting === field.id}
-                                            onClick={() => setFieldToDelete(field)}
+                                            onClick={() => { setFieldToDelete(field); setFieldToDeleteOpen(true); }}
                                         >
                                             {deleting === field.id ? "…" : "Delete"}
                                         </Button>
@@ -320,8 +321,8 @@ export default function CustomFieldsAdminPage() {
             )}
 
             <ConfirmDialog
-                open={fieldToDelete !== null}
-                onOpenChange={(open) => !open && setFieldToDelete(null)}
+                open={fieldToDeleteOpen}
+                onOpenChange={setFieldToDeleteOpen}
                 title="Delete custom field"
                 description={`Delete custom field "${fieldToDelete?.label ?? ""}"? All stored values will be lost!`}
                 confirmLabel="Delete"

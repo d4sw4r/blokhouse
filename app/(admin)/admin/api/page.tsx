@@ -42,6 +42,7 @@ export default function AdminAPIPage() {
     const [newSecret, setNewSecret] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [tokenToRevoke, setTokenToRevoke] = useState<ApiToken | null>(null);
+    const [tokenToRevokeOpen, setTokenToRevokeOpen] = useState(false);
     const { data: session } = useSession();
     const [maxDays, setMaxDays] = useState<number | null>(null);
     const limited = Boolean((session?.user as { sso?: boolean } | undefined)?.sso) && maxDays !== null;
@@ -219,7 +220,7 @@ export default function AdminAPIPage() {
                     <TBody>
                         {tokens.map((token) => (
                             <TR key={token.id}>
-                                <TD>{token.name}</TD>
+                                <TD mono>{token.name}</TD>
                                 <TD mono>{token.prefix}…</TD>
                                 <TD mono>{token.scopes.join(", ")}</TD>
                                 <TD className="whitespace-nowrap">
@@ -230,7 +231,7 @@ export default function AdminAPIPage() {
                                 </TD>
                                 <TD>
                                     <div className="flex justify-end">
-                                        <Button size="sm" variant="danger" onClick={() => setTokenToRevoke(token)}>Revoke</Button>
+                                        <Button size="sm" variant="danger" onClick={() => { setTokenToRevoke(token); setTokenToRevokeOpen(true); }}>Revoke</Button>
                                     </div>
                                 </TD>
                             </TR>
@@ -240,8 +241,8 @@ export default function AdminAPIPage() {
             )}
 
             <ConfirmDialog
-                open={tokenToRevoke !== null}
-                onOpenChange={(open) => !open && setTokenToRevoke(null)}
+                open={tokenToRevokeOpen}
+                onOpenChange={setTokenToRevokeOpen}
                 title="Revoke token"
                 description="Revoke this token? Integrations using it will stop working."
                 confirmLabel="Revoke"

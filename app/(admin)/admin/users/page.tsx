@@ -44,7 +44,9 @@ export default function AdminUsersPage() {
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editingUserData, setEditingUserData] = useState({ name: "", email: "", role: "" });
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [userToDeleteOpen, setUserToDeleteOpen] = useState(false);
     const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null);
+    const [userToDeactivateOpen, setUserToDeactivateOpen] = useState(false);
 
     const fetchUsers = async () => {
         try {
@@ -284,13 +286,13 @@ export default function AdminUsersPage() {
                                                 size="sm"
                                                 variant="secondary"
                                                 onClick={() =>
-                                                    user.disabledAt ? setDisabled(user.id, false) : setUserToDeactivate(user)
+                                                    user.disabledAt ? setDisabled(user.id, false) : (setUserToDeactivate(user), setUserToDeactivateOpen(true))
                                                 }
                                             >
                                                 {user.disabledAt ? "Activate" : "Deactivate"}
                                             </Button>
                                         )}
-                                        <Button size="sm" variant="danger" onClick={() => setUserToDelete(user)}>Delete</Button>
+                                        <Button size="sm" variant="danger" onClick={() => { setUserToDelete(user); setUserToDeleteOpen(true); }}>Delete</Button>
                                     </div>
                                 </TD>
                             </TR>
@@ -300,8 +302,8 @@ export default function AdminUsersPage() {
             </Table>
 
             <ConfirmDialog
-                open={userToDeactivate !== null}
-                onOpenChange={(open) => !open && setUserToDeactivate(null)}
+                open={userToDeactivateOpen}
+                onOpenChange={setUserToDeactivateOpen}
                 title="Deactivate user"
                 description={`${userToDeactivate?.name ?? "This user"} will no longer be able to sign in. You can activate the account again later.`}
                 confirmLabel="Deactivate"
@@ -309,8 +311,8 @@ export default function AdminUsersPage() {
                 onConfirm={() => userToDeactivate && setDisabled(userToDeactivate.id, true)}
             />
             <ConfirmDialog
-                open={userToDelete !== null}
-                onOpenChange={(open) => !open && setUserToDelete(null)}
+                open={userToDeleteOpen}
+                onOpenChange={setUserToDeleteOpen}
                 title="Delete user"
                 description={`Delete ${userToDelete?.name ?? "this user"} (${userToDelete?.email ?? ""})? This cannot be undone.`}
                 confirmLabel="Delete"

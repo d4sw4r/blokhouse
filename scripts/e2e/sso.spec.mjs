@@ -130,7 +130,12 @@ await check("anna sees rolf on the users page with SSO badge and locked role", a
         await select.waitFor();
         assert((await editRow.getByRole("textbox", { name: "Email" }).inputValue()) === "rolf@example.com", "edit row is not rolf's");
         assert(await select.isDisabled(), "role select for rolf must be disabled");
-        const role = ((await select.textContent()) || "").trim();
+        // The select renders its value after hydration, so poll rather than read once.
+        let role = "";
+        for (let i = 0; i < 30 && role !== "READONLY"; i++) {
+            role = ((await select.textContent()) || "").trim();
+            if (role !== "READONLY") await page.waitForTimeout(500);
+        }
         assert(role === "READONLY", `rolf role select: ${role}`);
         await editRow.getByText("Role is managed by SSO.").waitFor();
     } finally {
