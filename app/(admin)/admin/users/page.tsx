@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { Select } from "@/components/ui/Select";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
+import { SkeletonTable } from "@/components/Skeleton";
 
 interface User {
     id: string;
@@ -13,6 +22,8 @@ interface User {
     roleManagedBySso?: boolean;
     disabledAt?: string | null;
 }
+
+const ROLE_OPTIONS = ["ADMIN", "USER", "API", "AUDIT", "READONLY"].map((r) => ({ value: r, label: r }));
 
 async function errorText(res: Response, fallback: string) {
     try {
@@ -32,6 +43,8 @@ export default function AdminUsersPage() {
     const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "USER" });
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editingUserData, setEditingUserData] = useState({ name: "", email: "", role: "" });
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null);
 
     const fetchUsers = async () => {
         try {
@@ -136,163 +149,174 @@ export default function AdminUsersPage() {
         }
     };
 
-    if (loading) return <p className="text-lg text-brand-text">Loading users...</p>;
+    if (loading) return <SkeletonTable rows={6} />;
 
     return (
-        <div className="min-h-screen bg-brand-background">
-            <main className="max-w-7xl mx-auto p-8 space-y-8">
-                <h1 className="text-4xl font-bold text-brand-text">Manage Users</h1>
+        <div className="space-y-6">
+            <PageHeader title="Users" description="Create accounts, change roles and deactivate or delete users." />
 
-                {actionError && (
-                    <p role="alert" className="bg-red-50 border border-red-300 text-red-700 rounded-sm p-3">
-                        {actionError}
-                    </p>
-                )}
+            {actionError && (
+                <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+                    {actionError}
+                </p>
+            )}
 
-                {/* New User Form */}
-                <div className="bg-white p-6 rounded-sm shadow-sm">
-                    <h2 className="text-2xl font-semibold text-brand-text mb-4">Add New User</h2>
-                    <div className="space-y-4">
-                        <input
+            <Panel title="Add new user">
+                <form
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        createUser();
+                    }}
+                >
+                    <Field label="Name" htmlFor="new-user-name">
+                        <Input
+                            id="new-user-name"
                             type="text"
                             placeholder="Name"
                             value={newUser.name}
                             onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                            className="w-full border rounded-sm p-2"
                         />
-                        <input
+                    </Field>
+                    <Field label="Email" htmlFor="new-user-email">
+                        <Input
+                            id="new-user-email"
                             type="email"
                             placeholder="Email"
                             value={newUser.email}
                             onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                            className="w-full border rounded-sm p-2"
                         />
-                        <input
+                    </Field>
+                    <Field label="Password" htmlFor="new-user-password">
+                        <Input
+                            id="new-user-password"
                             type="password"
                             placeholder="Password"
                             value={newUser.password}
                             onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                            className="w-full border rounded-sm p-2"
                         />
-                        <select
+                    </Field>
+                    <Field label="Role" htmlFor="new-user-role">
+                        <Select
+                            id="new-user-role"
                             value={newUser.role}
-                            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                            className="w-full border rounded-sm p-2"
-                        >
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="USER">USER</option>
-                            <option value="API">API</option>
-                            <option value="AUDIT">AUDIT</option>
-                            <option value="READONLY">READONLY</option>
-                        </select>
-                        <Button onClick={createUser}>Create User</Button>
+                            onValueChange={(role) => setNewUser({ ...newUser, role })}
+                            options={ROLE_OPTIONS}
+                        />
+                    </Field>
+                    <div className="sm:col-span-2 lg:col-span-4">
+                        <Button type="submit">Create User</Button>
                     </div>
-                </div>
+                </form>
+            </Panel>
 
-                {/* Users Table */}
-                <div className="bg-white shadow-sm rounded-sm overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-brand-primary/10">
-                            <tr>
-                                <th className="py-3 px-4 border">Name</th>
-                                <th className="py-3 px-4 border">Email</th>
-                                <th className="py-3 px-4 border">Role</th>
-                                <th className="py-3 px-4 border">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((user) =>
-                                editingUserId === user.id ? (
-                                    <tr key={user.id}>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="text"
-                                                value={editingUserData.name}
-                                                onChange={(e) =>
-                                                    setEditingUserData({ ...editingUserData, name: e.target.value })
+            <Table>
+                <THead>
+                    <tr>
+                        <TH>Name</TH>
+                        <TH>Email</TH>
+                        <TH>Role</TH>
+                        <TH className="relative">
+                            <span className="sr-only">Actions</span>
+                        </TH>
+                    </tr>
+                </THead>
+                <TBody>
+                    {users.map((user) =>
+                        editingUserId === user.id ? (
+                            <TR key={user.id}>
+                                <TD className="min-w-40">
+                                    <Input
+                                        type="text"
+                                        aria-label="Name"
+                                        value={editingUserData.name}
+                                        onChange={(e) => setEditingUserData({ ...editingUserData, name: e.target.value })}
+                                    />
+                                </TD>
+                                <TD className="min-w-52">
+                                    <Input
+                                        type="email"
+                                        aria-label="Email"
+                                        value={editingUserData.email}
+                                        onChange={(e) => setEditingUserData({ ...editingUserData, email: e.target.value })}
+                                    />
+                                </TD>
+                                <TD className="min-w-40">
+                                    <Select
+                                        aria-label="Role"
+                                        value={editingUserData.role}
+                                        onValueChange={(role) => setEditingUserData({ ...editingUserData, role })}
+                                        disabled={user.roleManagedBySso}
+                                        options={ROLE_OPTIONS}
+                                    />
+                                    {user.roleManagedBySso && (
+                                        <p className="mt-1 text-xs text-muted">Role is managed by SSO.</p>
+                                    )}
+                                </TD>
+                                <TD>
+                                    <div className="flex justify-end gap-2">
+                                        <Button size="sm" onClick={() => updateUser(user.id)}>Save</Button>
+                                        <Button size="sm" variant="secondary" onClick={cancelEditing}>Cancel</Button>
+                                    </div>
+                                </TD>
+                            </TR>
+                        ) : (
+                            <TR key={user.id}>
+                                <TD>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className={user.disabledAt ? "text-muted line-through" : ""}>{user.name}</span>
+                                        {user.sso && <Badge tone="accent">SSO</Badge>}
+                                        {user.disabledAt && <Badge>Deactivated</Badge>}
+                                    </div>
+                                </TD>
+                                <TD mono className="break-all">{user.email}</TD>
+                                <TD>
+                                    <span className="font-mono text-[13px]">{user.role}</span>
+                                    {user.roleManagedBySso && (
+                                        <span className="block text-xs text-muted">Managed by SSO</span>
+                                    )}
+                                </TD>
+                                <TD>
+                                    <div className="flex justify-end gap-2">
+                                        <Button size="sm" variant="secondary" onClick={() => startEditing(user)}>Edit</Button>
+                                        {currentId && user.id !== currentId && (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() =>
+                                                    user.disabledAt ? setDisabled(user.id, false) : setUserToDeactivate(user)
                                                 }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <input
-                                                type="email"
-                                                value={editingUserData.email}
-                                                onChange={(e) =>
-                                                    setEditingUserData({ ...editingUserData, email: e.target.value })
-                                                }
-                                                className="w-full border rounded-sm p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <select
-                                                value={editingUserData.role}
-                                                onChange={(e) =>
-                                                    setEditingUserData({ ...editingUserData, role: e.target.value })
-                                                }
-                                                disabled={user.roleManagedBySso}
-                                                className="w-full border rounded-sm p-1 disabled:bg-gray-100 disabled:text-gray-500"
                                             >
-                                                <option value="ADMIN">ADMIN</option>
-                                                <option value="USER">USER</option>
-                                                <option value="API">API</option>
-                                                <option value="AUDIT">AUDIT</option>
-                            <option value="READONLY">READONLY</option>
-                                            </select>
-                                            {user.roleManagedBySso && (
-                                                <p className="text-xs text-gray-500 mt-1">Role is managed by SSO.</p>
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4 border flex gap-2">
-                                            <Button onClick={() => updateUser(user.id)}>Save</Button>
-                                            <Button onClick={cancelEditing} variant="outline">
-                                                Cancel
+                                                {user.disabledAt ? "Activate" : "Deactivate"}
                                             </Button>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    <tr key={user.id}>
-                                        <td className="py-2 px-4 border">
-                                            <span className={user.disabledAt ? "text-gray-400 line-through" : ""}>{user.name}</span>
-                                            {user.sso && (
-                                                <span className="ml-2 text-xs font-semibold bg-brand-primary/10 text-brand-primary rounded-sm px-2 py-0.5">
-                                                    SSO
-                                                </span>
-                                            )}
-                                            {user.disabledAt && (
-                                                <span className="ml-2 text-xs font-semibold bg-gray-200 text-gray-700 rounded-sm px-2 py-0.5">
-                                                    Deactivated
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4 border">{user.email}</td>
-                                        <td className="py-2 px-4 border">
-                                            {user.role}
-                                            {user.roleManagedBySso && (
-                                                <span className="block text-xs text-gray-500">Managed by SSO</span>
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4 border flex gap-2">
-                                            <Button onClick={() => startEditing(user)}>Edit</Button>
-                                            {currentId && user.id !== currentId && (
-                                                <Button
-                                                    onClick={() => setDisabled(user.id, !user.disabledAt)}
-                                                    variant="outline"
-                                                >
-                                                    {user.disabledAt ? "Activate" : "Deactivate"}
-                                                </Button>
-                                            )}
-                                            <Button onClick={() => deleteUser(user.id)} variant="destructive">
-                                                Delete
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                )
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </main>
+                                        )}
+                                        <Button size="sm" variant="danger" onClick={() => setUserToDelete(user)}>Delete</Button>
+                                    </div>
+                                </TD>
+                            </TR>
+                        )
+                    )}
+                </TBody>
+            </Table>
+
+            <ConfirmDialog
+                open={userToDeactivate !== null}
+                onOpenChange={(open) => !open && setUserToDeactivate(null)}
+                title="Deactivate user"
+                description={`${userToDeactivate?.name ?? "This user"} will no longer be able to sign in. You can activate the account again later.`}
+                confirmLabel="Deactivate"
+                tone="danger"
+                onConfirm={() => userToDeactivate && setDisabled(userToDeactivate.id, true)}
+            />
+            <ConfirmDialog
+                open={userToDelete !== null}
+                onOpenChange={(open) => !open && setUserToDelete(null)}
+                title="Delete user"
+                description={`Delete ${userToDelete?.name ?? "this user"} (${userToDelete?.email ?? ""})? This cannot be undone.`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => userToDelete && deleteUser(userToDelete.id)}
+            />
         </div>
     );
 }

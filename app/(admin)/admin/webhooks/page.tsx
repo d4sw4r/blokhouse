@@ -1,7 +1,19 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
+import { Webhook as WebhookIcon } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
+import { SkeletonTable } from "@/components/Skeleton";
 import CopyButton from "@/components/CopyButton";
 
 interface Webhook {
@@ -49,17 +61,12 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function StatusBadge({ status, code }: { status: string; code?: number | null }) {
-    const color =
-        status === "success"
-            ? "bg-green-100 text-green-800"
-            : status === "failed"
-              ? "bg-red-100 text-red-800"
-              : "bg-yellow-100 text-yellow-800";
+    const tone = status === "success" ? "success" : status === "failed" ? "danger" : "warning";
     return (
-        <span className={`px-2 py-0.5 rounded-sm text-xs font-medium ${color}`}>
+        <Badge tone={tone}>
             {status}
             {code ? ` (${code})` : ""}
-        </span>
+        </Badge>
     );
 }
 
@@ -74,6 +81,8 @@ export default function WebhooksPage() {
     const [message, setMessage] = useState<string | null>(null);
     const [openId, setOpenId] = useState<string | null>(null);
     const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+    const [hookToRotate, setHookToRotate] = useState<Webhook | null>(null);
+    const [hookToDelete, setHookToDelete] = useState<Webhook | null>(null);
 
     const load = async () => {
         try {
@@ -148,7 +157,6 @@ export default function WebhooksPage() {
         });
 
     const rotate = (hook: Webhook) => {
-        if (!confirm(`Generate a new secret for "${hook.name}"? The receiver must be updated, or it will reject events.`)) return;
         run(async () => {
             const updated = await api<Webhook & { secret: string }>(`/${hook.id}`, {
                 method: "PATCH",
@@ -159,7 +167,6 @@ export default function WebhooksPage() {
     };
 
     const remove = (hook: Webhook) => {
-        if (!confirm(`Delete webhook "${hook.name}" and its delivery log?`)) return;
         run(async () => {
             await api(`/${hook.id}`, { method: "DELETE" });
             if (openId === hook.id) setOpenId(null);
@@ -174,171 +181,188 @@ export default function WebhooksPage() {
             await load();
         });
 
-    if (loading) return <p className="text-lg">Loading webhooks...</p>;
+    if (loading) return <SkeletonTable rows={4} />;
 
     return (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-brand-text">Webhooks</h1>
-            <p className="text-lg text-brand-secondary">
-                Blokhouse sends a signed <code className="font-mono">POST</code> to these URLs when configuration
-                items are created, changed or deleted, from the UI, the API or automation. Failed deliveries are
-                retried for about 7 hours. See <a className="underline" href="/docs">API docs</a> → Webhooks for
-                the payload and how to verify the signature.
-            </p>
+            <PageHeader
+                title="Webhooks"
+                description={
+                    <>
+                        Blokhouse sends a signed <code className="font-mono">POST</code> to these URLs when
+                        configuration items are created, changed or deleted, from the UI, the API or automation.
+                        Failed deliveries are retried for about 7 hours. See{" "}
+                        <Link className="text-accent underline" href="/docs">API docs</Link> → Webhooks for the
+                        payload and how to verify the signature.
+                    </>
+                }
+            />
 
-            <form onSubmit={create} className="space-y-4 p-4 border rounded-sm bg-white dark:bg-gray-800">
-                <div className="flex flex-wrap gap-4">
-                    <div>
-                        <label className="block text-sm font-medium mb-1" htmlFor="hook-name">Name</label>
-                        <input
-                            id="hook-name"
-                            className="border rounded-sm px-3 py-2 w-64"
-                            placeholder="e.g. AWX inventory sync"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            maxLength={100}
-                            required
-                        />
+            <Panel title="Add webhook">
+                <form onSubmit={create} className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[16rem_1fr]">
+                        <Field label="Name" htmlFor="hook-name">
+                            <Input
+                                id="hook-name"
+                                placeholder="e.g. AWX inventory sync"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                maxLength={100}
+                                required
+                            />
+                        </Field>
+                        <Field label="URL" htmlFor="hook-url">
+                            <Input
+                                id="hook-url"
+                                type="url"
+                                placeholder="https://automation.example.com/hooks/blokhouse"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                required
+                            />
+                        </Field>
                     </div>
-                    <div className="grow">
-                        <label className="block text-sm font-medium mb-1" htmlFor="hook-url">URL</label>
-                        <input
-                            id="hook-url"
-                            type="url"
-                            className="border rounded-sm px-3 py-2 w-full max-w-xl"
-                            placeholder="https://automation.example.com/hooks/blokhouse"
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
-                            required
-                        />
-                    </div>
-                </div>
-                <fieldset>
-                    <legend className="block text-sm font-medium mb-1">Events</legend>
-                    <div className="flex flex-wrap gap-4">
-                        <label className="flex items-center gap-2">
-                            <input type="checkbox" checked={events.includes("*")} onChange={() => toggleEvent("*")} />
-                            <span>All events</span>
-                        </label>
-                        {EVENTS.map((ev) => (
-                            <label key={ev.id} className="flex items-center gap-2" title={ev.hint}>
-                                <input type="checkbox" checked={events.includes(ev.id)} onChange={() => toggleEvent(ev.id)} />
-                                <span className="font-mono">{ev.id}</span>
+                    <fieldset>
+                        <legend className="mb-1.5 text-sm font-medium text-text">Events</legend>
+                        <div className="flex flex-wrap gap-x-6 gap-y-2">
+                            <label className="flex min-h-9 items-center gap-2 text-sm max-sm:min-h-11">
+                                <Checkbox checked={events.includes("*")} onCheckedChange={() => toggleEvent("*")} />
+                                <span>All events</span>
                             </label>
-                        ))}
-                    </div>
-                </fieldset>
-                <Button type="submit">Add webhook</Button>
-            </form>
+                            {EVENTS.map((ev) => (
+                                <label key={ev.id} className="flex min-h-9 items-center gap-2 text-sm max-sm:min-h-11" title={ev.hint}>
+                                    <Checkbox checked={events.includes(ev.id)} onCheckedChange={() => toggleEvent(ev.id)} />
+                                    <span className="font-mono">{ev.id}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </fieldset>
+                    <Button type="submit">Add webhook</Button>
+                </form>
+            </Panel>
 
-            {error && <p className="text-red-600" role="alert">{error}</p>}
-            {message && <p className="text-brand-text" role="status">{message}</p>}
+            {error && (
+                <p className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger" role="alert">
+                    {error}
+                </p>
+            )}
+            {message && (
+                <p className="rounded-md border border-border bg-surface p-3 text-sm text-text" role="status">
+                    {message}
+                </p>
+            )}
 
             {secret && (
-                <div className="p-4 border-2 border-yellow-500 rounded-sm bg-yellow-50 dark:bg-yellow-900/30 space-y-2">
-                    <p className="font-semibold">
+                <div role="status" className="space-y-2 rounded-lg border-2 border-warning bg-warning/10 p-4">
+                    <p className="text-sm font-semibold text-text">
                         Signing secret for &quot;{secret.name}&quot;. Copy it now; it will not be shown again.
                     </p>
                     <div className="flex items-center gap-2">
-                        <code className="font-mono break-all">{secret.value}</code>
+                        <code className="min-w-0 font-mono text-[13px] break-all text-text">{secret.value}</code>
                         <CopyButton text={secret.value} />
                     </div>
                 </div>
             )}
 
-            <div className="overflow-x-auto">
-                {hooks.length === 0 ? (
-                    <p className="text-brand-secondary">No webhooks yet.</p>
-                ) : (
-                    <table className="min-w-full bg-white dark:bg-gray-800 shadow-sm rounded-sm">
-                        <thead className="bg-brand-primary/10">
-                            <tr>
-                                <th className="py-2 px-4 border text-left">Name</th>
-                                <th className="py-2 px-4 border text-left">URL</th>
-                                <th className="py-2 px-4 border text-left">Events</th>
-                                <th className="py-2 px-4 border text-left">Last delivery</th>
-                                <th className="py-2 px-4 border text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {hooks.map((hook) => (
-                                <Fragment key={hook.id}>
-                                    <tr className={hook.active ? "" : "opacity-60"}>
-                                        <td className="py-2 px-4 border">
+            {hooks.length === 0 ? (
+                <EmptyState
+                    icon={WebhookIcon}
+                    title="No webhooks yet."
+                    description="Add a webhook above to notify other systems when items change."
+                />
+            ) : (
+                <Table>
+                    <THead>
+                        <tr>
+                            <TH>Name</TH>
+                            <TH>URL</TH>
+                            <TH>Events</TH>
+                            <TH>Last delivery</TH>
+                            <TH className="relative">
+                                <span className="sr-only">Actions</span>
+                            </TH>
+                        </tr>
+                    </THead>
+                    <TBody>
+                        {hooks.map((hook) => (
+                            <Fragment key={hook.id}>
+                                <TR className={hook.active ? "" : "opacity-70"}>
+                                    <TD>
+                                        <div className="flex flex-wrap items-center gap-2">
                                             {hook.name}
-                                            {!hook.active && <span className="ml-2 text-xs">(disabled)</span>}
-                                        </td>
-                                        <td className="py-2 px-4 border font-mono text-sm break-all">{hook.url}</td>
-                                        <td className="py-2 px-4 border font-mono text-sm">
-                                            {hook.events.includes("*") ? "all" : hook.events.join(", ")}
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            {hook.lastDelivery ? (
-                                                <span title={new Date(hook.lastDelivery.createdAt).toLocaleString()}>
-                                                    <StatusBadge status={hook.lastDelivery.status} code={hook.lastDelivery.responseStatus} />
-                                                </span>
+                                            {!hook.active && <Badge>disabled</Badge>}
+                                        </div>
+                                    </TD>
+                                    <TD mono className="max-w-xs break-all">{hook.url}</TD>
+                                    <TD mono>{hook.events.includes("*") ? "all" : hook.events.join(", ")}</TD>
+                                    <TD>
+                                        {hook.lastDelivery ? (
+                                            <span title={new Date(hook.lastDelivery.createdAt).toLocaleString()}>
+                                                <StatusBadge status={hook.lastDelivery.status} code={hook.lastDelivery.responseStatus} />
+                                            </span>
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </TD>
+                                    <TD>
+                                        <div className="flex flex-wrap justify-end gap-2">
+                                            <Button size="sm" variant="secondary" onClick={() => ping(hook)}>Send test</Button>
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={() => (openId === hook.id ? setOpenId(null) : showDeliveries(hook.id))}
+                                            >
+                                                {openId === hook.id ? "Hide log" : "Deliveries"}
+                                            </Button>
+                                            <Button size="sm" variant="secondary" onClick={() => toggleActive(hook)}>
+                                                {hook.active ? "Disable" : "Enable"}
+                                            </Button>
+                                            <Button size="sm" variant="secondary" onClick={() => setHookToRotate(hook)}>New secret</Button>
+                                            <Button size="sm" variant="danger" onClick={() => setHookToDelete(hook)}>Delete</Button>
+                                        </div>
+                                    </TD>
+                                </TR>
+                                {openId === hook.id && (
+                                    <tr>
+                                        <td colSpan={5} className="bg-surface-2 p-4">
+                                            {deliveries.length === 0 ? (
+                                                <p className="text-sm text-muted">No deliveries yet.</p>
                                             ) : (
-                                                "—"
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4 border">
-                                            <div className="flex flex-wrap gap-2">
-                                                <Button size="sm" onClick={() => ping(hook)}>Send test</Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => (openId === hook.id ? setOpenId(null) : showDeliveries(hook.id))}
-                                                >
-                                                    {openId === hook.id ? "Hide log" : "Deliveries"}
-                                                </Button>
-                                                <Button size="sm" variant="outline" onClick={() => toggleActive(hook)}>
-                                                    {hook.active ? "Disable" : "Enable"}
-                                                </Button>
-                                                <Button size="sm" variant="outline" onClick={() => rotate(hook)}>New secret</Button>
-                                                <Button size="sm" variant="destructive" onClick={() => remove(hook)}>Delete</Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {openId === hook.id && (
-                                        <tr>
-                                            <td colSpan={5} className="p-4 border bg-brand-background">
-                                                {deliveries.length === 0 ? (
-                                                    <p className="text-brand-secondary">No deliveries yet.</p>
-                                                ) : (
+                                                <div className="overflow-x-auto">
                                                     <table className="min-w-full text-sm">
                                                         <thead>
-                                                            <tr className="text-left">
-                                                                <th className="py-1 pr-4">Time</th>
-                                                                <th className="py-1 pr-4">Event</th>
-                                                                <th className="py-1 pr-4">Status</th>
-                                                                <th className="py-1 pr-4">Attempts</th>
-                                                                <th className="py-1 pr-4">Error / next attempt</th>
-                                                                <th className="py-1 pr-4"></th>
+                                                            <tr className="text-left text-xs text-muted">
+                                                                <th className="py-1 pr-4 font-medium">Time</th>
+                                                                <th className="py-1 pr-4 font-medium">Event</th>
+                                                                <th className="py-1 pr-4 font-medium">Status</th>
+                                                                <th className="py-1 pr-4 font-medium">Attempts</th>
+                                                                <th className="py-1 pr-4 font-medium">Error / next attempt</th>
+                                                                <th className="py-1 pr-4"><span className="sr-only">Actions</span></th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody>
+                                                        <tbody className="divide-y divide-border">
                                                             {deliveries.map((d) => (
-                                                                <tr key={d.id} className="align-top border-t">
-                                                                    <td className="py-1 pr-4 whitespace-nowrap">{new Date(d.createdAt).toLocaleString()}</td>
-                                                                    <td className="py-1 pr-4 font-mono">{d.event}</td>
-                                                                    <td className="py-1 pr-4"><StatusBadge status={d.status} code={d.responseStatus} /></td>
-                                                                    <td className="py-1 pr-4">{d.attempts}</td>
-                                                                    <td className="py-1 pr-4">
+                                                                <tr key={d.id} className="align-top">
+                                                                    <td className="py-2 pr-4 whitespace-nowrap">{new Date(d.createdAt).toLocaleString()}</td>
+                                                                    <td className="py-2 pr-4 font-mono">{d.event}</td>
+                                                                    <td className="py-2 pr-4"><StatusBadge status={d.status} code={d.responseStatus} /></td>
+                                                                    <td className="py-2 pr-4 font-mono">{d.attempts}</td>
+                                                                    <td className="py-2 pr-4">
                                                                         {d.error}
                                                                         {d.nextAttemptAt && (
-                                                                            <span className="block text-xs text-brand-secondary">
+                                                                            <span className="block text-xs text-muted">
                                                                                 next: {new Date(d.nextAttemptAt).toLocaleString()}
                                                                             </span>
                                                                         )}
                                                                         <details>
-                                                                            <summary className="cursor-pointer text-xs">Payload</summary>
-                                                                            <pre className="text-xs overflow-x-auto max-w-2xl">
+                                                                            <summary className="cursor-pointer text-xs text-accent">Payload</summary>
+                                                                            <pre className="max-w-2xl overflow-x-auto font-mono text-xs">
                                                                                 {JSON.stringify(d.payload, null, 2)}
                                                                             </pre>
                                                                         </details>
                                                                     </td>
-                                                                    <td className="py-1 pr-4">
-                                                                        <Button size="sm" variant="outline" onClick={() => redeliver(hook.id, d.id)}>
+                                                                    <td className="py-2 pr-4">
+                                                                        <Button size="sm" variant="secondary" onClick={() => redeliver(hook.id, d.id)}>
                                                                             Redeliver
                                                                         </Button>
                                                                     </td>
@@ -346,16 +370,34 @@ export default function WebhooksPage() {
                                                             ))}
                                                         </tbody>
                                                     </table>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )}
-                                </Fragment>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )}
+                            </Fragment>
+                        ))}
+                    </TBody>
+                </Table>
+            )}
+
+            <ConfirmDialog
+                open={hookToRotate !== null}
+                onOpenChange={(open) => !open && setHookToRotate(null)}
+                title="Generate a new secret"
+                description={`Generate a new secret for "${hookToRotate?.name ?? ""}"? The receiver must be updated, or it will reject events.`}
+                confirmLabel="Generate"
+                onConfirm={() => hookToRotate && rotate(hookToRotate)}
+            />
+            <ConfirmDialog
+                open={hookToDelete !== null}
+                onOpenChange={(open) => !open && setHookToDelete(null)}
+                title="Delete webhook"
+                description={`Delete webhook "${hookToDelete?.name ?? ""}" and its delivery log?`}
+                confirmLabel="Delete"
+                tone="danger"
+                onConfirm={() => hookToDelete && remove(hookToDelete)}
+            />
         </div>
     );
 }

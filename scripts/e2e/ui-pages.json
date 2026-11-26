@@ -10,5 +10,12 @@
   { "path": "/discovery" },
   { "path": "/notifications" },
   { "path": "/reports" },
-  { "path": "/docs" }
+  { "path": "/docs" },
+  { "path": "/admin" },
+  { "path": "/admin/users" },
+  { "path": "/admin/api" },
+  { "path": "/admin/webhooks" },
+  { "path": "/admin/custom-fields" },
+  { "path": "/admin/audit-logs" },
+  { "path": "/admin/settings" }
 ]
