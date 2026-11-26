@@ -8,9 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- New interface: dark console design with a light theme, grouped navigation and accessible menus and dialogs (dark is the default; switch in the user menu).
+- New interface: dark console design with a light theme, grouped navigation and accessible menus and dialogs (dark is the default; switch in the user menu). All pages are rebuilt on the new design.
+
+### Removed
+- The Three.js dependency, and the old navigation and theme toggle (internal).
 
 ### Fixed
+- Editing and deleting item types returned a 500 error.
+- The API docs page logged a console error under the new bundler.
+- Deleting a notification in the bell also navigated to the notification's link.
 - Bulk tagging on the items page, editing items without a type, and saving custom field values on the item page.
 
 ## [0.4.0] - 2026-11-26

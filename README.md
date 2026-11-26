@@ -25,6 +25,14 @@
 - **Dark Mode** — for the night owls
 - **Docker and Kubernetes support** — run anywhere, with a Helm chart
 
+## 📸 Screenshots
+
+![Dashboard in the dark theme](docs/images/dashboard-dark.png)
+
+![Items list in the dark theme](docs/images/items-dark.png)
+
+A light theme is included as well; switch themes in the user menu.
+
 ## 🚀 Quick Start (Docker — recommended)
 
 ```bash

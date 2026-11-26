@@ -122,7 +122,7 @@ export default function CommandPalette() {
         }
     }, [all, selectedIndex, handleSelect]);
 
-    // Listen for custom open event from Navbar
+    // Listen for custom open event from the top bar search trigger
     useEffect(() => {
         const handleOpen = () => handleOpenChange(true);
         document.addEventListener("openCommandPalette", handleOpen);
