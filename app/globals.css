@@ -52,13 +52,6 @@
     --color-danger: var(--danger);
     --color-neutral: var(--neutral);
 
-    /* Legacy aliases, removed once all pages use the semantic tokens. */
-    --color-brand-primary: var(--accent);
-    --color-brand-background: var(--bg);
-    --color-brand-text: var(--text);
-    --color-brand-secondary: var(--text-muted);
-    --color-brand-accent: var(--accent);
-
     --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }

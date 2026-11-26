@@ -556,7 +556,7 @@ export default function RelationshipGraphPage() {
     if (loading) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <LoadingSpinner size="lg" />
+                <LoadingSpinner size="xl" />
             </div>
         );
     }

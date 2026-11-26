@@ -288,7 +288,7 @@ export default function AssetDetailPage() {
                     )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <FavoriteButton itemId={item.id} itemName={item.name} size="lg" />
+                    <FavoriteButton itemId={item.id} itemName={item.name} />
                     <Link
                         href={`/items?id=${item.id}`}
                         className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium whitespace-nowrap text-text transition-colors duration-150 hover:bg-surface-2 motion-reduce:transition-none max-sm:min-h-11"

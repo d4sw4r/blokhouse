@@ -65,8 +65,8 @@ export function normalizeMAC(mac: string): string {
  * Gets validation status color class
  */
 export function getValidationColor(isValid: boolean, hasValue: boolean): string {
-    if (!hasValue) return "border-gray-300";
-    return isValid ? "border-green-500 focus:border-green-500 focus:ring-green-500" : "border-red-500 focus:border-red-500 focus:ring-red-500";
+    if (!hasValue) return "border-border-strong";
+    return isValid ? "border-success" : "border-danger";
 }
 
 /**

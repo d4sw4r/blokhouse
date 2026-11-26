@@ -478,7 +478,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     if (status === "loading") {
         return (
             <div>
-                <LoadingSpinner size="lg" />
+                <LoadingSpinner size="xl" />
                 <div className="mt-8">
                     <SkeletonTable rows={5} />
                 </div>

@@ -74,11 +74,11 @@ export function SkeletonStats() {
     );
 }
 
-export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "xl" }) {
     const sizeClasses = {
         sm: "w-4 h-4",
         md: "w-8 h-8",
-        lg: "w-12 h-12",
+        xl: "w-12 h-12",
     };
 
     return (
@@ -110,7 +110,7 @@ export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
 export function LoadingOverlay() {
     return (
         <div className="absolute inset-0 bg-bg/80 flex items-center justify-center z-10">
-            <LoadingSpinner size="lg" />
+            <LoadingSpinner size="xl" />
         </div>
     );
 }
