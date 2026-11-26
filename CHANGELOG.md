@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- New interface: dark console design with a light theme, grouped navigation and accessible menus and dialogs (dark is the default; switch in the user menu).
+
+### Fixed
+- Bulk tagging on the items page, editing items without a type, and saving custom field values on the item page.
+
 ## [0.4.0] - 2026-11-26
 
 Company release: single sign-on with OpenID Connect (Keycloak, Entra ID), deactivating users,

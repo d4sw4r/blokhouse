@@ -7,8 +7,10 @@
 // no console errors / page errors, no horizontal overflow, at 1280 px no overlapping
 // top-bar items, and a screenshot in ui-screenshots/. A path may contain ":first", which
 // is replaced by the id of the first item from GET /api/configuration-items.
+// Signed out: /signin and /signup in both themes and widths (no errors, no overflow).
 // Extra checks: theme persistence, keyboard navigation, READONLY navigation links.
-// --empty runs only the per-page pass (on an install with no items, before ui-seed.mjs).
+// --empty runs the signed-out and per-page passes only (on an install with no items,
+// before ui-seed.mjs).
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync } from "node:fs";
 
