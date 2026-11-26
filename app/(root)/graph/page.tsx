@@ -46,14 +46,6 @@ interface Relation {
     };
 }
 
-interface ApiConfigItem {
-    id: string;
-    name: string;
-    status: string;
-    itemType?: { name: string } | null;
-    relationsFrom?: Array<Omit<Relation, "source">>;
-}
-
 const statusColors: Record<string, string> = {
     ACTIVE: "#22c55e",
     DEPRECATED: "#ef4444",
@@ -94,22 +86,9 @@ export default function RelationshipGraphPage() {
         const fetchRelations = async () => {
             try {
                 setLoading(true);
-                const res = await fetch("/api/configuration-items/available-for-relations");
+                const res = await fetch("/api/relations");
                 if (res.ok) {
-                    const data = await res.json();
-                    // Extract unique relations from items
-                    const allRelations: Relation[] = [];
-                    data.forEach((item: ApiConfigItem) => {
-                        if (item.relationsFrom) {
-                            item.relationsFrom.forEach((rel: Omit<Relation, "source">) => {
-                                allRelations.push({
-                                    ...rel,
-                                    source: item,
-                                    target: rel.target,
-                                });
-                            });
-                        }
-                    });
+                    const allRelations: Relation[] = await res.json();
                     setRelations(allRelations);
                     initializeGraph(allRelations);
                 }
