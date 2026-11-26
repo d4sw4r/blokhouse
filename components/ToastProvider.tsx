@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { createPortal } from "react-dom";
 import { CheckCircle2, Info, TriangleAlert, X, XCircle } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
+import { TOAST_VIEWPORT_ATTR, rememberToastPointerTarget } from "@/components/ui/toastViewport";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -22,19 +23,6 @@ interface ToastContextType {
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-const VIEWPORT_ATTR = "data-toast-viewport";
-
-// Radix defers "pointer down outside" to the click, when a toast's close button may already
-// have removed the toast from the DOM; remember the pointerdown target so it is still known.
-let lastToastPointerTarget: EventTarget | null = null;
-
-/** True when an event target lies inside the toast viewport. Dialogs use it so that clicking
- *  a toast (e.g. its close button) does not count as an outside click that dismisses them. */
-export function isInToastViewport(target: EventTarget | null): boolean {
-    if (target !== null && target === lastToastPointerTarget) return true;
-    return typeof Element !== "undefined" && target instanceof Element && !!target.closest(`[${VIEWPORT_ATTR}]`);
-}
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
@@ -85,23 +73,30 @@ function ToastContainer({
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
 
-    // Always mounted, portalled to <body> and marked aria-live: Radix Dialog's aria-hidden pass
-    // (aria-hidden's hideOthers) skips [aria-live] elements, so toasts raised while a dialog is
-    // open stay visible to assistive tech; pointer-events-auto overrides the body's
-    // pointer-events:none so the close button stays clickable.
+    // Two live regions, always mounted and portalled to <body>: errors are announced
+    // assertively, everything else politely. Radix Dialog's aria-hidden pass (aria-hidden's
+    // hideOthers) skips [aria-live] elements, so toasts raised while a dialog is open stay
+    // visible to assistive tech; pointer-events-auto overrides the body's pointer-events:none so
+    // the close buttons stay clickable. Both regions sit inside one marked wrapper
+    // (isInToastViewport), so a click on either kind of toast never counts as an outside click.
+    const errors = toasts.filter((t) => t.type === "error");
+    const others = toasts.filter((t) => t.type !== "error");
     return createPortal(
         <div
-            {...{ [VIEWPORT_ATTR]: "" }}
-            aria-live="polite"
-            aria-relevant="additions text"
-            onPointerDownCapture={(e) => {
-                lastToastPointerTarget = e.target;
-            }}
-            className="pointer-events-auto fixed right-4 bottom-4 z-[100] flex flex-col gap-2"
+            {...{ [TOAST_VIEWPORT_ATTR]: "" }}
+            onPointerDownCapture={(e) => rememberToastPointerTarget(e.target)}
+            className="pointer-events-auto fixed right-4 bottom-4 z-[100] flex flex-col"
         >
-            {toasts.map((toast) => (
-                <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
-            ))}
+            <div role="status" aria-live="polite" aria-relevant="additions text" className="flex flex-col gap-2">
+                {others.map((toast) => (
+                    <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
+                ))}
+            </div>
+            <div role="alert" aria-live="assertive" aria-relevant="additions text" className="flex flex-col gap-2 not-empty:mt-2">
+                {errors.map((toast) => (
+                    <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
+                ))}
+            </div>
         </div>,
         document.body,
     );

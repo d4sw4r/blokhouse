@@ -4,7 +4,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./IconButton";
-import { isInToastViewport } from "@/components/ToastProvider";
+import { isInToastViewport } from "./toastViewport";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
