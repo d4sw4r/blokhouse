@@ -1,7 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Popover } from "radix-ui";
+import { Bell, X } from "lucide-react";
+import { notificationIconColor, notificationTypeMeta } from "@/lib/ui/notificationTypes";
+import { cn } from "@/lib/utils";
 
 interface Notification {
   id: string;
@@ -14,33 +18,10 @@ interface Notification {
   createdAt: string;
 }
 
-const notificationTypeColors: Record<string, string> = {
-  ASSET_STATUS_CHANGED: "bg-blue-500",
-  ASSET_CREATED: "bg-green-500",
-  ASSET_DELETED: "bg-red-500",
-  RELATION_CREATED: "bg-purple-500",
-  RELATION_DELETED: "bg-orange-500",
-  MAINTENANCE_DUE: "bg-yellow-500",
-  CUSTOM_FIELD_CHANGED: "bg-cyan-500",
-  SYSTEM: "bg-gray-500",
-};
-
-const notificationTypeIcons: Record<string, string> = {
-  ASSET_STATUS_CHANGED: "🔄",
-  ASSET_CREATED: "✨",
-  ASSET_DELETED: "🗑️",
-  RELATION_CREATED: "🔗",
-  RELATION_DELETED: "❌",
-  MAINTENANCE_DUE: "🔧",
-  CUSTOM_FIELD_CHANGED: "📝",
-  SYSTEM: "⚙️",
-};
-
 export default function NotificationBell({ navItem = false }: { navItem?: boolean } = {}) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -61,17 +42,6 @@ export default function NotificationBell({ navItem = false }: { navItem?: boolea
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    // Close dropdown when clicking outside
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const markAsRead = async (id: string) => {
@@ -145,155 +115,138 @@ export default function NotificationBell({ navItem = false }: { navItem?: boolea
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        {...(navItem ? { "data-nav-item": true } : {})}
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-brand-secondary hover:text-brand-text hover:bg-brand-primary/10 rounded-full transition-colors"
-        aria-label="Notifications"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          {...(navItem ? { "data-nav-item": true } : {})}
+          className="relative inline-flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text motion-reduce:transition-none max-sm:size-11"
+          aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-brand-accent rounded-full">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
+          <Bell className="size-5" aria-hidden="true" />
+          {unreadCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-0.5 -right-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] leading-4 font-semibold text-accent-fg"
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </Popover.Trigger>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border z-50 max-h-[80vh] flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-brand-text">Notifications</h3>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={6}
+          collisionPadding={8}
+          className="z-50 flex max-h-[min(34rem,80dvh)] w-96 max-w-[calc(100vw-1rem)] flex-col rounded-lg border border-border bg-surface text-text shadow-lg"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold">Notifications</h2>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={markAllAsRead}
-                className="text-sm text-brand-primary hover:text-brand-accent font-medium"
+                className="rounded-md text-sm font-medium text-accent hover:underline max-sm:min-h-11"
               >
                 Mark all as read
               </button>
             )}
           </div>
 
-          <div className="overflow-y-auto flex-1 max-h-[60vh]">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-brand-secondary">
-                <svg
-                  className="w-12 h-12 mx-auto mb-3 text-brand-secondary/50"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
+              <div className="flex flex-col items-center gap-2 p-8 text-center text-sm text-muted">
+                <Bell className="size-8" aria-hidden="true" />
                 <p>No notifications yet</p>
               </div>
             ) : (
-              notifications.map((notification) => {
-                const link = getNotificationLink(notification);
-                const content = (
-                  <div
-                    className={`p-4 border-b hover:bg-brand-primary/5 transition-colors cursor-pointer ${
-                      !notification.read ? "bg-brand-primary/10" : ""
-                    }`}
-                    onClick={() => {
-                      if (!notification.read) {
-                        markAsRead(notification.id);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ${
-                          notificationTypeColors[notification.type] || "bg-gray-500"
-                        }`}
+              <ul className="divide-y divide-border">
+                {notifications.map((notification) => {
+                  const link = getNotificationLink(notification);
+                  const meta = notificationTypeMeta(notification.type);
+                  const Icon = meta.icon;
+                  const body = (
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2"
+                        title={meta.label}
                       >
-                        <span className="text-white text-sm">
-                          {notificationTypeIcons[notification.type] || "🔔"}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <p className="text-sm font-semibold text-brand-text">
-                            {notification.title}
-                          </p>
-                          <button
-                            onClick={(e) => deleteNotification(notification.id, e)}
-                            className="text-brand-secondary/60 hover:text-brand-accent flex-shrink-0"
-                            title="Delete"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                        <p className="text-sm text-brand-secondary mt-1 line-clamp-2">
+                        <Icon className={cn("size-4", notificationIconColor[meta.tone])} aria-hidden="true" />
+                        <span className="sr-only">{meta.label}</span>
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold break-words">{notification.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-sm break-words text-muted">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-brand-secondary/60 mt-1">
-                          {formatTimeAgo(notification.createdAt)}
-                        </p>
+                        <p className="mt-1 text-xs text-muted">{formatTimeAgo(notification.createdAt)}</p>
                       </div>
                       {!notification.read && (
-                        <span className="w-2 h-2 bg-brand-primary rounded-full flex-shrink-0 mt-2"></span>
+                        <span className="mt-1.5 flex shrink-0 items-center gap-1 text-xs font-medium text-accent">
+                          <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+                          <span className="sr-only">Unread</span>
+                        </span>
                       )}
                     </div>
-                  </div>
-                );
+                  );
+                  const onActivate = () => {
+                    if (!notification.read) markAsRead(notification.id);
+                  };
 
-                return link ? (
-                  <Link
-                    key={notification.id}
-                    href={link}
-                    onClick={() => setIsOpen(false)}
-                    className="block"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <div key={notification.id}>{content}</div>
-                );
-              })
+                  return (
+                    <li
+                      key={notification.id}
+                      className={cn("relative flex items-start hover:bg-surface-2/60", !notification.read && "bg-accent/10")}
+                    >
+                      {link ? (
+                        <Link
+                          href={link}
+                          onClick={() => {
+                            onActivate();
+                            setIsOpen(false);
+                          }}
+                          className="block min-w-0 flex-1 py-3 pr-1 pl-4"
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={onActivate}
+                          className="block min-w-0 flex-1 py-3 pr-1 pl-4 text-left"
+                        >
+                          {body}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => deleteNotification(notification.id, e)}
+                        className="mt-1.5 mr-2 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text max-sm:size-11"
+                        title="Delete"
+                        aria-label={`Delete notification: ${notification.title}`}
+                      >
+                        <X className="size-4" aria-hidden="true" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
 
-          <div className="p-3 border-t bg-brand-background rounded-b-lg">
+          <div className="border-t border-border px-4 py-3">
             <Link
               href="/notifications"
               onClick={() => setIsOpen(false)}
-              className="block text-center text-sm text-brand-primary hover:text-brand-accent font-medium"
+              className="block text-center text-sm font-medium text-accent hover:underline max-sm:py-2"
             >
               View all notifications
             </Link>
           </div>
-        </div>
-      )}
-    </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
