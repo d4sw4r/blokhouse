@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/Skeleton";
 import CopyButton from "@/components/CopyButton";
 import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
+import ImpactPanel from "@/components/ImpactPanel";
 import FavoriteButton from "@/components/FavoriteButton";
 import { auditAction } from "@/lib/ui/auditActions";
 import { formatRelativeTime } from "@/lib/ui/relativeTime";
@@ -439,6 +440,10 @@ export default function AssetDetailPage() {
 
                 <Panel title="Relations">
                     <AssetRelations itemId={item.id} itemName={item.name} />
+                </Panel>
+
+                <Panel title="Impact if this fails">
+                    <ImpactPanel itemId={item.id} />
                 </Panel>
 
                 <Panel title={`Change history (${history.length})`}>

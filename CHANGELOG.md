@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Source and last seen columns on the items list, and Source and Last seen fields in the item details ("Never" for items no integration has reported).
 - `GET /api/configuration-items` accepts the optional query parameters `sort` (`name`, `ip`, `status`, `type`, `lastSeen`, `updated`, `created`), `order` (`asc`, `desc`) and `tagId`. Without them, results are ordered as before (newest first); with `sort` but no `order`, created, updated and last seen sort newest first and the others ascending.
 - `GET /api/configuration-items/export` accepts `search` and `tagId`, and Export on the items page applies the current search and tag filter as well as type and status.
+- "Impact if this fails" on the item page: the items that depend on, run on or are contained in this item, directly or through other items, with the path to each.
+- `GET /api/configuration-items/{id}/impact` returns the items affected if an item fails (read scope; follows depends on, runs on and contains relations up to 10 levels, at most 500 items).
 
 ### Changed
 - Labels, headings, buttons, table headers and empty states use sentence case, matching the navigation ("Create user", "Mark all as read", "Tag management").

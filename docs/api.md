@@ -237,3 +237,31 @@ releases. Use API v1 for new integrations. Their reference is the **Legacy API**
 
 Rate limiting is not built in yet; put a reverse proxy in front of Blokhouse if you need it
 (see [nginx guide](deployment/nginx.md)).
+
+### Impact analysis
+
+`GET /api/configuration-items/{id}/impact` (read scope) returns the items affected if item `{id}`
+fails. Item Y is affected when Y depends on X, Y runs on X, or X contains Y, where X is the failed
+item or an item already affected. Connected to, manages and part of relations are not followed.
+The item page shows the same result in "Impact if this fails".
+
+```json
+{
+  "item": { "id": "…", "name": "db-01" },
+  "affected": [
+    {
+      "id": "…", "name": "web-01", "ip": "10.0.0.11", "status": "ACTIVE",
+      "itemType": { "name": "Server" }, "depth": 1, "relationType": "DEPENDS_ON",
+      "path": [{ "id": "…", "name": "db-01" }, { "id": "…", "name": "web-01" }]
+    }
+  ],
+  "truncated": false
+}
+```
+
+- `depth` is the number of relations between the failed item and the affected one (1 = direct).
+- `relationType` is the relation that links the affected item to the previous item on `path`.
+- `path` runs from the failed item to the affected item, inclusive.
+- `affected` is sorted by depth, then name. Each item appears once, at its shortest depth; cycles end.
+- The traversal stops after 10 levels and at 500 items; `truncated` is `true` if anything was left out.
+- Unknown `{id}` returns 404.
