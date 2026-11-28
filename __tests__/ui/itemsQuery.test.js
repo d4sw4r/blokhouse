@@ -51,6 +51,31 @@ describe("itemsQuery", () => {
         expect(parseItemsQuery(new URLSearchParams(qs))[key]).toBe(DEFAULT_ITEMS_QUERY[key]);
     });
 
+    it.each([
+        ["sort=name", "asc"],
+        ["sort=ip", "asc"],
+        ["sort=lastSeen", "desc"],
+        ["sort=updated", "desc"],
+        ["sort=name&order=bogus", "asc"],
+        ["sort=bogus", "desc"],
+    ])("a missing or invalid order means the sort's default order (%s -> %s)", (qs, order) => {
+        expect(parseItemsQuery(new URLSearchParams(qs)).order).toBe(order);
+    });
+
+    it("omits order only when it is the sort's default order", () => {
+        expect(serializeItemsQuery({ ...DEFAULT_ITEMS_QUERY, sort: "name", order: "asc" })).toBe("sort=name");
+        expect(serializeItemsQuery({ ...DEFAULT_ITEMS_QUERY, sort: "name", order: "desc" })).toBe("sort=name&order=desc");
+        expect(serializeItemsQuery({ ...DEFAULT_ITEMS_QUERY, sort: "lastSeen", order: "desc" })).toBe("sort=lastSeen");
+        expect(serializeItemsQuery({ ...DEFAULT_ITEMS_QUERY, order: "asc" })).toBe("order=asc");
+    });
+
+    it("round-trips name descending with an explicit order=desc", () => {
+        const q = { ...DEFAULT_ITEMS_QUERY, sort: "name", order: "desc" };
+        const s = serializeItemsQuery(q);
+        expect(s).toBe("sort=name&order=desc");
+        expect(parseItemsQuery(new URLSearchParams(s))).toEqual(q);
+    });
+
     it("toApiParams always sends page and limit and omits status for ALL", () => {
         const p = toApiParams(DEFAULT_ITEMS_QUERY);
         expect(p.get("page")).toBe("1");

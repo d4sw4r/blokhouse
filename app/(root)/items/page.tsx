@@ -69,6 +69,7 @@ function ItemsPageContent() {
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+    const [tagsLoaded, setTagsLoaded] = useState(false);
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
         page: DEFAULT_ITEMS_QUERY.page,
@@ -78,11 +79,19 @@ function ItemsPageContent() {
 
     // The search box keeps its own state and is written to the URL after a 300 ms pause.
     const [searchInput, setSearchInput] = useState(query.search);
+    // The search value this page last wrote to the URL, while that navigation has not landed yet.
+    const [pendingSearch, setPendingSearch] = useState<string | null>(null);
     const [urlSearch, setUrlSearch] = useState(query.search);
     if (urlSearch !== query.search) {
-        // The URL changed (back button, clear filters, our own debounced write): follow it.
         setUrlSearch(query.search);
-        setSearchInput(query.search);
+        if (pendingSearch === null) {
+            // A change from outside the search box (back/forward button, a link): show it.
+            setSearchInput(query.search);
+        } else if (query.search === pendingSearch) {
+            // Our own write landed. Keep the box as it is: the user may have typed on meanwhile.
+            setPendingSearch(null);
+        }
+        // Otherwise an older write of ours landed while a newer one is in flight: ignore it.
     }
     // Only the latest list request may update the table.
     const latestRequest = useRef(0);
@@ -154,9 +163,13 @@ status: "ACTIVE" as AssetStatus,
      * (an out-of-range page) replace the current entry.
      */
     const setQuery = (patch: Partial<ItemsQuery>, mode: "push" | "replace" = "push") => {
-        // Read the live URL so changes made in quick succession build on each other.
+        // Build on the live URL. A debounced search write that has not landed yet is not in it,
+        // so add that (other in-flight changes are not tracked: a click right after another
+        // filter change may build on the URL before that change).
         const current = parseItemsQuery(new URLSearchParams(window.location.search));
+        if (pendingSearch !== null) current.search = pendingSearch;
         const next: ItemsQuery = { ...current, ...patch, page: patch.page ?? 1 };
+        if (patch.search !== undefined) setPendingSearch(next.search !== query.search ? next.search : null);
         const qs = serializeItemsQuery(next);
         const href = pathname + (qs ? "?" + qs : "");
         if (mode === "replace") router.replace(href, { scroll: false });
@@ -220,16 +233,18 @@ status: "ACTIVE" as AssetStatus,
             }
         } catch (err) {
             console.error("Fetch tags error:", err);
+        } finally {
+            setTagsLoaded(true);
         }
     };
 
-    // Debounce the search box into the URL (one history entry per pause in typing)
+    // Debounce the search box into the URL (one history entry per pause of 300 ms in typing)
     useEffect(() => {
-        if (searchInput === query.search) return;
+        if (searchInput === (pendingSearch ?? query.search)) return;
         const timer = setTimeout(() => setQuery({ search: searchInput }), 300);
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchInput, query.search]);
+    }, [searchInput, pendingSearch, query.search]);
 
     // Fetch items when the session or the list query in the URL changes
     useEffect(() => {
@@ -449,6 +464,8 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
     const clearFilters = () => {
         setSearchInput("");
+        // Mark the empty search as written so the debounce does not write it again.
+        setPendingSearch(query.search !== "" ? "" : null);
         router.push(pathname, { scroll: false });
     };
 
@@ -582,7 +599,8 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 onTypeChange={(typeId) => setQuery({ typeId })}
                 statusFilter={query.status}
                 onStatusChange={(value) => setQuery({ status: value })}
-                selectedTagId={query.tagId}
+                // A tag id that no longer exists shows "All tags" (the URL is left as it is)
+                selectedTagId={tagsLoaded && !availableTags.some((t) => t.id === query.tagId) ? "" : query.tagId}
                 onTagChange={(tagId) => setQuery({ tagId })}
                 availableTypes={availableTypes}
                 availableTags={availableTags}

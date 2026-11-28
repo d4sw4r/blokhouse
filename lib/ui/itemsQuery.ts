@@ -33,7 +33,10 @@ export function defaultOrder(sort: ItemSort): "asc" | "desc" {
     return sort === "created" || sort === "updated" || sort === "lastSeen" ? "desc" : "asc";
 }
 
-/** Parses URL params; any invalid value falls back to its default. */
+/**
+ * Parses URL params; any invalid value falls back to its default. A missing or invalid `order`
+ * means the sort's own default order (`defaultOrder(sort)`), so `?sort=name` is A to Z.
+ */
 export function parseItemsQuery(params: URLSearchParams): ItemsQuery {
     const d = DEFAULT_ITEMS_QUERY;
     const status = params.get("status") ?? "";
@@ -41,19 +44,23 @@ export function parseItemsQuery(params: URLSearchParams): ItemsQuery {
     const order = params.get("order") ?? "";
     const page = Number(params.get("page"));
     const limit = Number(params.get("limit"));
+    const parsedSort = (SORTS as readonly string[]).includes(sort) ? (sort as ItemSort) : d.sort;
     return {
         search: params.get("search") ?? d.search,
         typeId: params.get("typeId") ?? d.typeId,
         status: (STATUSES as readonly string[]).includes(status) ? (status as AssetStatus) : d.status,
         tagId: params.get("tagId") ?? d.tagId,
-        sort: (SORTS as readonly string[]).includes(sort) ? (sort as ItemSort) : d.sort,
-        order: order === "asc" || order === "desc" ? order : d.order,
+        sort: parsedSort,
+        order: order === "asc" || order === "desc" ? order : defaultOrder(parsedSort),
         page: Number.isInteger(page) && page >= 1 ? page : d.page,
         limit: (PAGE_SIZES as readonly number[]).includes(limit) ? (limit as ItemsQuery["limit"]) : d.limit,
     };
 }
 
-/** Serializes to a query string (no leading "?"), omitting default values. */
+/**
+ * Serializes to a query string (no leading "?"), omitting default values. `order` is omitted
+ * only when it is the sort's default order.
+ */
 export function serializeItemsQuery(q: ItemsQuery): string {
     const d = DEFAULT_ITEMS_QUERY;
     const p = new URLSearchParams();
@@ -62,7 +69,7 @@ export function serializeItemsQuery(q: ItemsQuery): string {
     if (q.status !== d.status) p.set("status", q.status);
     if (q.tagId !== d.tagId) p.set("tagId", q.tagId);
     if (q.sort !== d.sort) p.set("sort", q.sort);
-    if (q.order !== d.order) p.set("order", q.order);
+    if (q.order !== defaultOrder(q.sort)) p.set("order", q.order);
     if (q.page !== d.page) p.set("page", String(q.page));
     if (q.limit !== d.limit) p.set("limit", String(q.limit));
     return p.toString();
