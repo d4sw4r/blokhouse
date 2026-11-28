@@ -6,11 +6,17 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { IconButton } from "@/components/ui/IconButton";
+import { Select } from "@/components/ui/Select";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import CopyButton from "@/components/CopyButton";
 import { TagBadge } from "@/components/TagBadge";
+import { PAGE_SIZES, type ItemSort, type ItemsQuery } from "@/lib/ui/itemsQuery";
+import { formatRelativeTime } from "@/lib/ui/relativeTime";
 import type { ConfigItem, PaginationData } from "./types";
+
+/** Columns with a sort button. `sort=updated` and `sort=created` are reachable through the URL only. */
+type SortableColumn = Extract<ItemSort, "name" | "ip" | "type" | "status" | "lastSeen">;
 
 interface ItemsTableProps {
     items: ConfigItem[];
@@ -23,6 +29,11 @@ interface ItemsTableProps {
     pagination: PaginationData;
     paginationRange: (number | string)[];
     onGoToPage: (page: number) => void;
+    pageSize: ItemsQuery["limit"];
+    onPageSizeChange: (limit: ItemsQuery["limit"]) => void;
+    sort: ItemSort;
+    order: ItemsQuery["order"];
+    onSort: (sort: ItemSort) => void;
 }
 
 export function ItemsTable({
@@ -36,9 +47,19 @@ export function ItemsTable({
     pagination,
     paginationRange,
     onGoToPage,
+    pageSize,
+    onPageSizeChange,
+    sort,
+    order,
+    onSort,
 }: ItemsTableProps) {
     const allSelected = selectedIds.length === items.length && items.length > 0;
     const someSelected = selectedIds.length > 0 && !allSelected;
+    const sortProps = (column: SortableColumn) => ({
+        sortable: true,
+        sorted: sort === column ? order : (false as const),
+        onSort: () => onSort(column),
+    });
 
     return (
         <div className="space-y-3">
@@ -52,12 +73,14 @@ export function ItemsTable({
                                 onCheckedChange={onToggleAll}
                             />
                         </TH>
-                        <TH>Name</TH>
+                        <TH {...sortProps("name")}>Name</TH>
                         <TH>Description</TH>
-                        <TH>IP</TH>
+                        <TH {...sortProps("ip")}>IP</TH>
                         <TH>MAC</TH>
-                        <TH>Type</TH>
-                        <TH>Status</TH>
+                        <TH {...sortProps("type")}>Type</TH>
+                        <TH {...sortProps("status")}>Status</TH>
+                        <TH>Source</TH>
+                        <TH {...sortProps("lastSeen")}>Last seen</TH>
                         <TH>Tags</TH>
                         <TH className="relative">
                             <span className="sr-only">Actions</span>
@@ -67,7 +90,7 @@ export function ItemsTable({
                 <TBody>
                     {items.length === 0 && (
                         <TR>
-                            <TD colSpan={9} className="py-8 text-center text-muted">
+                            <TD colSpan={11} className="py-8 text-center text-muted">
                                 No items found. Try adjusting your search or filters.
                             </TD>
                         </TR>
@@ -125,6 +148,18 @@ export function ItemsTable({
                             <TD>
                                 <StatusDot status={item.status} />
                             </TD>
+                            <TD mono>
+                                <span className="text-muted">{item.source || "—"}</span>
+                            </TD>
+                            <TD className="whitespace-nowrap">
+                                {item.lastSeenAt ? (
+                                    <span title={new Date(item.lastSeenAt).toLocaleString()}>
+                                        {formatRelativeTime(item.lastSeenAt)}
+                                    </span>
+                                ) : (
+                                    <span className="text-muted">Never</span>
+                                )}
+                            </TD>
                             <TD>
                                 <div className="flex max-w-[15rem] min-w-32 flex-wrap gap-1">
                                     {item.tags?.map((tag) => (
@@ -154,10 +189,24 @@ export function ItemsTable({
             </Table>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted">
-                    Showing <span className="font-mono">{items.length}</span> of{" "}
-                    <span className="font-mono">{pagination.total}</span> items
-                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-muted">
+                        Showing <span className="font-mono">{items.length}</span> of{" "}
+                        <span className="font-mono">{pagination.total}</span> items
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm whitespace-nowrap text-muted" aria-hidden="true">
+                            Rows per page
+                        </span>
+                        <Select
+                            aria-label="Rows per page"
+                            value={String(pageSize)}
+                            onValueChange={(value) => onPageSizeChange(Number(value) as ItemsQuery["limit"])}
+                            className="w-20 font-mono"
+                            options={PAGE_SIZES.map((size) => ({ value: String(size), label: String(size) }))}
+                        />
+                    </div>
+                </div>
                 {pagination.totalPages > 1 && (
                     <nav aria-label="Pagination" className="flex flex-wrap items-center gap-1">
                         <span className="mr-2 text-sm text-muted">

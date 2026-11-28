@@ -13,6 +13,9 @@ export interface ConfigItem {
     itemType?: { id: string; name: string } | null;
     status: AssetStatus;
     tags: Tag[];
+    source?: string | null;
+    lastSeenAt?: string | null;
+    updatedAt?: string;
 }
 
 export interface Type {

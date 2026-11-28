@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The items list can be sorted by name, IP, type, status and last seen (click a column header; click again to reverse the order).
+- The items list has a tag filter and a page size choice (10, 25, 50 or 100 rows per page).
+- Search, filters, sort, page and page size are kept in the URL, so reloading, the back button and shared links restore the same view.
+- Source and last seen columns on the items list, and Source and Last seen fields in the item details ("Never" for items no integration has reported).
+- `GET /api/configuration-items` accepts the optional query parameters `sort` (`name`, `ip`, `status`, `type`, `lastSeen`, `updated`, `created`), `order` (`asc`, `desc`) and `tagId`. Without them, results are ordered as before (newest first).
+
 ### Changed
 - Labels, headings, buttons, table headers and empty states use sentence case, matching the navigation ("Create user", "Mark all as read", "Tag management").
 - The copy button is 32 px (44 px on phones) and shares its look and focus ring with the other icon buttons.

@@ -22,6 +22,7 @@ import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
 import FavoriteButton from "@/components/FavoriteButton";
 import { auditAction } from "@/lib/ui/auditActions";
+import { formatRelativeTime } from "@/lib/ui/relativeTime";
 
 interface Tag {
     id: string;
@@ -43,6 +44,8 @@ interface ConfigItem {
     tags: Tag[];
     createdAt: string;
     updatedAt: string;
+    source?: string | null;
+    lastSeenAt?: string | null;
     user?: { id: string; name: string | null; email: string | null } | null;
 }
 
@@ -315,6 +318,28 @@ export default function AssetDetailPage() {
                         <div className="min-w-0">
                             <dt className="text-xs font-medium text-muted">Updated</dt>
                             <dd className="mt-1 text-sm text-text">{formatTimeAgo(item.updatedAt)}</dd>
+                        </div>
+                        <div className="min-w-0">
+                            <dt className="text-xs font-medium text-muted">Source</dt>
+                            <dd className="mt-1 text-sm break-all">
+                                {item.source ? (
+                                    <span className="font-mono text-text">{item.source}</span>
+                                ) : (
+                                    <span className="text-muted">Not set</span>
+                                )}
+                            </dd>
+                        </div>
+                        <div className="min-w-0">
+                            <dt className="text-xs font-medium text-muted">Last seen</dt>
+                            <dd className="mt-1 text-sm">
+                                {item.lastSeenAt ? (
+                                    <span className="text-text" title={new Date(item.lastSeenAt).toLocaleString()}>
+                                        {formatRelativeTime(item.lastSeenAt)}
+                                    </span>
+                                ) : (
+                                    <span className="text-muted">Never</span>
+                                )}
+                            </dd>
                         </div>
                         {item.user && (
                             <div className="min-w-0">

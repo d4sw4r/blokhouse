@@ -1,7 +1,8 @@
 'use client';
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, Download, FileJson, FileSpreadsheet, Package, Plus, Tag as TagIcon, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -25,26 +26,66 @@ import { ItemFormDialog } from "./_components/ItemFormDialog";
 import { ItemsTable } from "./_components/ItemsTable";
 import { DEFAULT_TAG_COLOR } from "@/components/TagForm";
 import { TagsDialog } from "./_components/TagsDialog";
-import { statusOptions, type AssetStatus, type ConfigItem, ItemFormData, PaginationData, Tag, Type } from "./_components/types";
+import { statusOptions, type AssetStatus, type ConfigItem, PaginationData, Tag, Type } from "./_components/types";
+import {
+    DEFAULT_ITEMS_QUERY,
+    defaultOrder,
+    parseItemsQuery,
+    serializeItemsQuery,
+    toApiParams,
+    type ItemSort,
+    type ItemsQuery,
+} from "@/lib/ui/itemsQuery";
 
+function ItemsPageFallback() {
+    return (
+        <div>
+            <LoadingSpinner size="xl" />
+            <div className="mt-8">
+                <SkeletonTable rows={5} />
+            </div>
+        </div>
+    );
+}
+
+// useSearchParams needs a Suspense boundary so the rest of the route can be prerendered.
 export default function ItemsPage() {
+    return (
+        <Suspense fallback={<ItemsPageFallback />}>
+            <ItemsPageContent />
+        </Suspense>
+    );
+}
+
+function ItemsPageContent() {
     const { data: session, status } = useSession();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    // The URL is the source of truth for search, filters, sort, page and page size.
+    const query = parseItemsQuery(new URLSearchParams(searchParams.toString()));
+    const apiQueryString = toApiParams(query).toString();
     const { addToast } = useToast();
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
-        page: 1,
-        limit: 10,
+        page: DEFAULT_ITEMS_QUERY.page,
+        limit: DEFAULT_ITEMS_QUERY.limit,
         totalPages: 1,
     });
 
-    // Search and filter states
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedTypeId, setSelectedTypeId] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState<AssetStatus | "ALL">("ALL");
+    // The search box keeps its own state and is written to the URL after a 300 ms pause.
+    const [searchInput, setSearchInput] = useState(query.search);
+    const [urlSearch, setUrlSearch] = useState(query.search);
+    if (urlSearch !== query.search) {
+        // The URL changed (back button, clear filters, our own debounced write): follow it.
+        setUrlSearch(query.search);
+        setSearchInput(query.search);
+    }
+    // Only the latest list request may update the table.
+    const latestRequest = useRef(0);
 
     const [newItem, setNewItem] = useState({
         name: "",
@@ -107,32 +148,42 @@ status: "ACTIVE" as AssetStatus,
         setSelectedIds([]);
     };
 
-    const fetchItems = async () => {
-        try {
-            const params = new URLSearchParams({
-                page: pagination.page.toString(),
-                limit: pagination.limit.toString(),
-            });
-            if (debouncedSearch) params.append("search", debouncedSearch);
-            if (selectedTypeId) params.append("typeId", selectedTypeId);
-            if (statusFilter !== "ALL") params.append("status", statusFilter);
+    /**
+     * Writes a query change to the URL. Any change other than the page itself resets the page to 1.
+     * User actions push a history entry so the back button restores the previous view; corrections
+     * (an out-of-range page) replace the current entry.
+     */
+    const setQuery = (patch: Partial<ItemsQuery>, mode: "push" | "replace" = "push") => {
+        // Read the live URL so changes made in quick succession build on each other.
+        const current = parseItemsQuery(new URLSearchParams(window.location.search));
+        const next: ItemsQuery = { ...current, ...patch, page: patch.page ?? 1 };
+        const qs = serializeItemsQuery(next);
+        const href = pathname + (qs ? "?" + qs : "");
+        if (mode === "replace") router.replace(href, { scroll: false });
+        else router.push(href, { scroll: false });
+    };
 
-            const res = await fetch(`/api/configuration-items?${params.toString()}`);
+    const fetchItems = async () => {
+        const requestId = ++latestRequest.current;
+        try {
+            const res = await fetch(`/api/configuration-items?${apiQueryString}`);
+            if (requestId !== latestRequest.current) return;
             if (!res.ok) {
                 console.error("API Error:", await res.text());
                 return;
             }
             const data = await res.json();
+            if (requestId !== latestRequest.current) return;
             setItems(data.items || []);
-            setPagination(data.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 });
-            // The requested page no longer exists (e.g. its last item was deleted): go back to the last page
-            if ((data.items || []).length === 0 && pagination.page > 1) {
-                setPagination(prev => ({ ...prev, page: Math.max(1, data.pagination?.totalPages ?? 1) }));
+            setPagination(data.pagination || { total: 0, page: 1, limit: query.limit, totalPages: 1 });
+            // The requested page no longer exists (e.g. its last item was deleted): go to the last page
+            if ((data.items || []).length === 0 && query.page > 1) {
+                setQuery({ page: Math.max(1, data.pagination?.totalPages ?? 1) }, "replace");
             }
         } catch (err) {
             console.error("Fetch error:", err);
         } finally {
-            setLoaded(true);
+            if (requestId === latestRequest.current) setLoaded(true);
         }
     };
 
@@ -172,22 +223,21 @@ status: "ACTIVE" as AssetStatus,
         }
     };
 
-    // Debounce search input
+    // Debounce the search box into the URL (one history entry per pause in typing)
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(searchQuery);
-            setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page on search
-        }, 300);
+        if (searchInput === query.search) return;
+        const timer = setTimeout(() => setQuery({ search: searchInput }), 300);
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchInput, query.search]);
 
-    // Fetch items when session, page, filters change
+    // Fetch items when the session or the list query in the URL changes
     useEffect(() => {
         if (session) {
             fetchItems();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session, pagination.page, debouncedSearch, selectedTypeId, statusFilter]);
+    }, [session, apiQueryString]);
 
     // Fetch types and tags on mount
     useEffect(() => {
@@ -398,10 +448,16 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     };
 
     const clearFilters = () => {
-        setSearchQuery("");
-        setSelectedTypeId("");
-        setStatusFilter("ALL");
-        setPagination(prev => ({ ...prev, page: 1 }));
+        setSearchInput("");
+        router.push(pathname, { scroll: false });
+    };
+
+    const changeSort = (sort: ItemSort) => {
+        if (sort === query.sort) {
+            setQuery({ order: query.order === "asc" ? "desc" : "asc" });
+        } else {
+            setQuery({ sort, order: defaultOrder(sort) });
+        }
     };
 
     // Export handlers
@@ -411,8 +467,8 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 format,
                 includeTags: "true",
             });
-            if (selectedTypeId) params.append("typeId", selectedTypeId);
-            if (statusFilter !== "ALL") params.append("status", statusFilter);
+            if (query.typeId) params.append("typeId", query.typeId);
+            if (query.status !== "ALL") params.append("status", query.status);
 
             const res = await fetch(`/api/configuration-items/export?${params.toString()}`);
             if (!res.ok) {
@@ -437,7 +493,7 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
 
     const goToPage = (page: number) => {
         if (page >= 1 && page <= pagination.totalPages) {
-            setPagination(prev => ({ ...prev, page }));
+            setQuery({ page });
         }
     };
 
@@ -470,17 +526,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
     };
 
 
-    const filtersActive = searchQuery !== "" || selectedTypeId !== "" || statusFilter !== "ALL";
+    const filtersActive =
+        searchInput !== "" || query.search !== "" || query.typeId !== "" || query.status !== "ALL" || query.tagId !== "";
 
     if (status === "loading") {
-        return (
-            <div>
-                <LoadingSpinner size="xl" />
-                <div className="mt-8">
-                    <SkeletonTable rows={5} />
-                </div>
-            </div>
-        );
+        return <ItemsPageFallback />;
     }
 
     return (
@@ -526,19 +576,16 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             />
 
             <ItemFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedTypeId={selectedTypeId}
-                onTypeChange={(value) => {
-                    setSelectedTypeId(value);
-                    setPagination(prev => ({ ...prev, page: 1 }));
-                }}
-                statusFilter={statusFilter}
-                onStatusChange={(value) => {
-                    setStatusFilter(value);
-                    setPagination(prev => ({ ...prev, page: 1 }));
-                }}
+                searchQuery={searchInput}
+                onSearchChange={setSearchInput}
+                selectedTypeId={query.typeId}
+                onTypeChange={(typeId) => setQuery({ typeId })}
+                statusFilter={query.status}
+                onStatusChange={(value) => setQuery({ status: value })}
+                selectedTagId={query.tagId}
+                onTagChange={(tagId) => setQuery({ tagId })}
                 availableTypes={availableTypes}
+                availableTags={availableTags}
                 onClear={clearFilters}
             />
 
@@ -578,6 +625,11 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                     pagination={pagination}
                     paginationRange={getPaginationRange()}
                     onGoToPage={goToPage}
+                    pageSize={query.limit}
+                    onPageSizeChange={(limit) => setQuery({ limit })}
+                    sort={query.sort}
+                    order={query.order}
+                    onSort={changeSort}
                 />
             )}
 
