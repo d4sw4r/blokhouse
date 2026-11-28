@@ -68,6 +68,7 @@ function ItemsPageContent() {
     const { addToast } = useToast();
     const [items, setItems] = useState<ConfigItem[]>([]);
     const [availableTypes, setAvailableTypes] = useState<Type[]>([]);
+    const [typesLoaded, setTypesLoaded] = useState(false);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [tagsLoaded, setTagsLoaded] = useState(false);
     const [pagination, setPagination] = useState<PaginationData>({
@@ -123,6 +124,13 @@ status: "ACTIVE" as AssetStatus,
     
     // Bulk selection state
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    // A different list query shows other rows: drop the selection so no hidden item stays
+    // selected for bulk actions.
+    const [selectionQuery, setSelectionQuery] = useState(apiQueryString);
+    if (selectionQuery !== apiQueryString) {
+        setSelectionQuery(apiQueryString);
+        setSelectedIds([]);
+    }
     const [newTagDescription, setNewTagDescription] = useState("");
 
     // Dialog state (create/edit forms, import, tag deletion and item deletion confirmations)
@@ -215,6 +223,8 @@ status: "ACTIVE" as AssetStatus,
             }
         } catch (err) {
             console.error("Fetch types error:", err);
+        } finally {
+            setTypesLoaded(true);
         }
     };
 
@@ -484,8 +494,10 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
                 format,
                 includeTags: "true",
             });
+            if (query.search) params.append("search", query.search);
             if (query.typeId) params.append("typeId", query.typeId);
             if (query.status !== "ALL") params.append("status", query.status);
+            if (query.tagId) params.append("tagId", query.tagId);
 
             const res = await fetch(`/api/configuration-items/export?${params.toString()}`);
             if (!res.ok) {
@@ -595,7 +607,8 @@ setEditingItemData({ name: "", description: "", ip: "", mac: "", itemTypeId: "",
             <ItemFilters
                 searchQuery={searchInput}
                 onSearchChange={setSearchInput}
-                selectedTypeId={query.typeId}
+                // A type id that no longer exists shows "All types" (the URL is left as it is)
+                selectedTypeId={typesLoaded && !availableTypes.some((t) => t.id === query.typeId) ? "" : query.typeId}
                 onTypeChange={(typeId) => setQuery({ typeId })}
                 statusFilter={query.status}
                 onStatusChange={(value) => setQuery({ status: value })}

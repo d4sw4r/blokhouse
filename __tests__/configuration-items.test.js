@@ -440,9 +440,17 @@ describe("Configuration Items API", () => {
                 ]);
             });
 
-            it("defaults order to asc for non-created sorts", async () => {
-                const args = await run("?sort=updated");
-                expect(args.orderBy).toEqual([{ updatedAt: "asc" }, { id: "asc" }]);
+            it.each([
+                ["?sort=updated", { updatedAt: "desc" }],
+                ["?sort=lastSeen", { lastSeenAt: { sort: "desc", nulls: "last" } }],
+                ["?sort=created&order=bogus", { createdAt: "desc" }],
+                ["?sort=name", { name: "asc" }],
+                ["?sort=ip&order=sideways", { ip: "asc" }],
+                ["?sort=status", { status: "asc" }],
+                ["?sort=type", { itemType: { name: "asc" } }],
+            ])("defaults order per sort like the UI (%s)", async (qs, first) => {
+                const args = await run(qs);
+                expect(args.orderBy).toEqual([first, { id: "asc" }]);
             });
 
             it("falls back to created desc for invalid sort and order", async () => {
