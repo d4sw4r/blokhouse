@@ -1,8 +1,7 @@
 import type { Tag } from "@/lib/ui/types";
+import type { AssetStatus } from "@/lib/ui/itemsQuery";
 
-export type { Tag };
-
-export type AssetStatus = "ACTIVE" | "DEPRECATED" | "MAINTENANCE";
+export type { Tag, AssetStatus };
 
 export interface ConfigItem {
     id: string;
@@ -14,6 +13,9 @@ export interface ConfigItem {
     itemType?: { id: string; name: string } | null;
     status: AssetStatus;
     tags: Tag[];
+    source?: string | null;
+    lastSeenAt?: string | null;
+    updatedAt?: string;
 }
 
 export interface Type {

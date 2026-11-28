@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Toolbar } from "@/components/ui/Toolbar";
-import { statusOptions, type AssetStatus, type Type } from "./types";
+import { statusOptions, type AssetStatus, type Tag, type Type } from "./types";
 
 interface ItemFiltersProps {
     searchQuery: string;
@@ -14,7 +14,10 @@ interface ItemFiltersProps {
     onTypeChange: (value: string) => void;
     statusFilter: AssetStatus | "ALL";
     onStatusChange: (value: AssetStatus | "ALL") => void;
+    selectedTagId: string;
+    onTagChange: (value: string) => void;
     availableTypes: Type[];
+    availableTags: Tag[];
     onClear: () => void;
 }
 
@@ -25,7 +28,10 @@ export function ItemFilters({
     onTypeChange,
     statusFilter,
     onStatusChange,
+    selectedTagId,
+    onTagChange,
     availableTypes,
+    availableTags,
     onClear,
 }: ItemFiltersProps) {
     return (
@@ -60,6 +66,16 @@ export function ItemFilters({
                 onValueChange={(value) => onStatusChange(value as AssetStatus | "ALL")}
                 className="w-full sm:w-44"
                 options={[{ value: "ALL", label: "All statuses" }, ...statusOptions]}
+            />
+            <Select
+                aria-label="Filter by tag"
+                value={selectedTagId}
+                onValueChange={onTagChange}
+                className="w-full sm:w-44"
+                options={[
+                    { value: "", label: "All tags" },
+                    ...availableTags.map((tag) => ({ value: tag.id, label: tag.name })),
+                ]}
             />
             <Button variant="ghost" onClick={onClear} className="max-sm:w-full">
                 <X className="size-4" aria-hidden="true" />
