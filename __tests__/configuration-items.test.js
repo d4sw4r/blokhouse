@@ -404,9 +404,63 @@ describe("Configuration Items API", () => {
 
             expect(prisma.configurationItem.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    orderBy: { createdAt: "desc" },
+                    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
                 })
             );
+        });
+
+        describe("sorting and tag filter", () => {
+            const run = async (qs) => {
+                getServerSession.mockResolvedValue({
+                    user: { id: "user-1", role: "USER" },
+                });
+                prisma.configurationItem.count.mockResolvedValue(0);
+                prisma.configurationItem.findMany.mockResolvedValue([]);
+                await GET(
+                    createMockRequest(`http://localhost:3000/api/configuration-items${qs}`)
+                );
+                return prisma.configurationItem.findMany.mock.calls[0][0];
+            };
+
+            it("sorts by name ascending", async () => {
+                const args = await run("?sort=name&order=asc");
+                expect(args.orderBy).toEqual([{ name: "asc" }, { id: "asc" }]);
+            });
+
+            it("sorts by type name descending", async () => {
+                const args = await run("?sort=type&order=desc");
+                expect(args.orderBy).toEqual([{ itemType: { name: "desc" } }, { id: "asc" }]);
+            });
+
+            it("sorts by lastSeen with nulls last", async () => {
+                const args = await run("?sort=lastSeen&order=desc");
+                expect(args.orderBy).toEqual([
+                    { lastSeenAt: { sort: "desc", nulls: "last" } },
+                    { id: "asc" },
+                ]);
+            });
+
+            it("defaults order to asc for non-created sorts", async () => {
+                const args = await run("?sort=updated");
+                expect(args.orderBy).toEqual([{ updatedAt: "asc" }, { id: "asc" }]);
+            });
+
+            it("falls back to created desc for invalid sort and order", async () => {
+                expect((await run("")).orderBy).toEqual([{ createdAt: "desc" }, { id: "asc" }]);
+                prisma.configurationItem.findMany.mockClear();
+                expect((await run("?sort=bogus&order=sideways")).orderBy).toEqual([
+                    { createdAt: "desc" },
+                    { id: "asc" },
+                ]);
+            });
+
+            it("filters by tagId in findMany and count", async () => {
+                const args = await run("?tagId=t1");
+                expect(args.where.tags).toEqual({ some: { id: "t1" } });
+                expect(prisma.configurationItem.count).toHaveBeenCalledWith({
+                    where: args.where,
+                });
+            });
         });
     });
 

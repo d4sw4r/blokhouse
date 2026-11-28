@@ -42,6 +42,24 @@ import { emitItemEvent } from "@/lib/webhooks";
  *           type: integer
  *           default: 10
  *         description: Items per page
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [name, ip, status, type, lastSeen, updated, created]
+ *           default: created
+ *         description: Field to sort by. Invalid values fall back to created.
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort direction. Defaults to desc for created, otherwise asc. Invalid values fall back to the default.
+ *       - in: query
+ *         name: tagId
+ *         schema:
+ *           type: string
+ *         description: Only return items that have this tag
  *     responses:
  *       200:
  *         description: List of configuration items with pagination
@@ -107,6 +125,17 @@ import { emitItemEvent } from "@/lib/webhooks";
  *       403:
  *         description: Forbidden (read-only access)
  */
+// Whitelisted sort keys mapped to Prisma orderBy builders
+const SORT_ORDER_BY = {
+    name: (dir) => ({ name: dir }),
+    ip: (dir) => ({ ip: dir }),
+    status: (dir) => ({ status: dir }),
+    type: (dir) => ({ itemType: { name: dir } }),
+    lastSeen: (dir) => ({ lastSeenAt: { sort: dir, nulls: "last" } }),
+    updated: (dir) => ({ updatedAt: dir }),
+    created: (dir) => ({ createdAt: dir }),
+};
+
 export async function GET(request) {
     const { response } = await requireAuth(request, "read");
     if (response) return response;
@@ -116,6 +145,16 @@ export async function GET(request) {
     const search = searchParams.get("search") || "";
     const typeId = searchParams.get("typeId") || "";
     const status = searchParams.get("status") || "";
+    const tagId = searchParams.get("tagId") || "";
+    const sortParam = searchParams.get("sort");
+    const sort = Object.hasOwn(SORT_ORDER_BY, sortParam) ? sortParam : "created";
+    const orderParam = searchParams.get("order");
+    const order =
+        orderParam === "asc" || orderParam === "desc"
+            ? orderParam
+            : sort === "created"
+              ? "desc"
+              : "asc";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
 
@@ -142,6 +181,11 @@ export async function GET(request) {
         where.status = status;
     }
 
+    // Filter by tag
+    if (tagId) {
+        where.tags = { some: { id: tagId } };
+    }
+
     // Calculate pagination
     const skip = (page - 1) * limit;
 
@@ -160,7 +204,7 @@ export async function GET(request) {
         },
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: [SORT_ORDER_BY[sort](order), { id: "asc" }],
     });
 
     // Format items with custom fields
