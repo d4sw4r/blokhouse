@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/Skeleton";
 import CopyButton from "@/components/CopyButton";
 import { TagBadge } from "@/components/TagBadge";
 import AssetRelations from "@/components/AssetRelations";
+import ImpactPanel from "@/components/ImpactPanel";
 import FavoriteButton from "@/components/FavoriteButton";
 import { auditAction } from "@/lib/ui/auditActions";
 import { formatRelativeTime } from "@/lib/ui/relativeTime";
@@ -116,6 +117,8 @@ export default function AssetDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    // Bumped when a relation is added or removed, so the impact panel reloads
+    const [relationsVersion, setRelationsVersion] = useState(0);
 
     useEffect(() => {
         if (status === "authenticated" && itemId) {
@@ -438,7 +441,15 @@ export default function AssetDetailPage() {
                 </Panel>
 
                 <Panel title="Relations">
-                    <AssetRelations itemId={item.id} itemName={item.name} />
+                    <AssetRelations
+                        itemId={item.id}
+                        itemName={item.name}
+                        onChange={() => setRelationsVersion((v) => v + 1)}
+                    />
+                </Panel>
+
+                <Panel title="Impact if this fails">
+                    <ImpactPanel key={relationsVersion} itemId={item.id} />
                 </Panel>
 
                 <Panel title={`Change history (${history.length})`}>
