@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { buildConfigurationItemsWhere } from "@/lib/configurationItemsWhere";
 
 function escapeCSV(value: string | null | undefined): string {
     if (value === null || value === undefined) return "";
@@ -41,6 +42,16 @@ function escapeCSV(value: string | null | undefined): string {
  *           enum: [ACTIVE, DEPRECATED, MAINTENANCE]
  *         description: Filter by asset status
  *       - in: query
+ *         name: tagId
+ *         schema:
+ *           type: string
+ *         description: Only items that carry this tag
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search in name, description, IP and MAC (same as the list endpoint)
+ *       - in: query
  *         name: includeTags
  *         schema:
  *           type: boolean
@@ -69,16 +80,12 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get("format") || "json";
     const typeId = searchParams.get("typeId") || "";
     const status = searchParams.get("status") || "";
+    const tagId = searchParams.get("tagId") || "";
+    const search = searchParams.get("search") || "";
     const includeTags = searchParams.get("includeTags") !== "false";
 
-    // Build where clause for filtering
-    const where: Record<string, unknown> = {};
-    if (typeId) {
-        where.itemTypeId = typeId;
-    }
-    if (status) {
-        where.status = status;
-    }
+    // Same filters as GET /api/configuration-items
+    const where = buildConfigurationItemsWhere({ search, typeId, status, tagId });
 
     // Fetch all items with relations
     const items = await prisma.configurationItem.findMany({
