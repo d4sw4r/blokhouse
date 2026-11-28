@@ -174,4 +174,23 @@ describe("GET /api/configuration-items/[id]/impact", () => {
             ],
         });
     });
+
+    it("loads edges with both relation directions in a stable order", async () => {
+        getServerSession.mockResolvedValue({ user: { id: "u", role: "USER" } });
+        prisma.configurationItem.findUnique.mockResolvedValue({ id: "A", name: "Db" });
+        prisma.assetRelation.findMany.mockResolvedValue([]);
+        prisma.configurationItem.findMany.mockResolvedValue([]);
+        const res = await GET(req(), { params: params("A") });
+        expect(res.status).toBe(200);
+        expect(prisma.assetRelation.findMany).toHaveBeenCalledWith({
+            where: {
+                OR: [
+                    { targetId: { in: ["A"] }, type: { in: ["DEPENDS_ON", "RUNS_ON"] } },
+                    { sourceId: { in: ["A"] }, type: "CONTAINS" },
+                ],
+            },
+            select: { sourceId: true, targetId: true, type: true },
+            orderBy: [{ sourceId: "asc" }, { targetId: "asc" }, { type: "asc" }],
+        });
+    });
 });

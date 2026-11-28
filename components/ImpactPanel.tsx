@@ -8,7 +8,7 @@ import { Callout } from "@/components/ui/Callout";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusDot } from "@/components/ui/StatusDot";
 import { Skeleton } from "@/components/Skeleton";
-import { IMPACT_MAX_ITEMS } from "@/lib/impact";
+import { IMPACT_MAX_DEPTH, IMPACT_MAX_ITEMS } from "@/lib/impact";
 import { relationType } from "@/lib/ui/relationTypes";
 
 interface PathItem {
@@ -51,7 +51,8 @@ function relationPhrase(type: string): { tone: ReturnType<typeof relationType>["
 
 function AffectedRow({ item }: { item: AffectedItem }) {
     const previous = item.path[item.path.length - 2];
-    const via = item.path.slice(1, -1);
+    // Items between the failed one and the direct predecessor (named on the relation line)
+    const via = item.path.slice(1, -2);
     const relation = relationPhrase(item.relationType);
     return (
         <li className="min-w-0 rounded-lg border border-border bg-surface-2 p-3">
@@ -141,7 +142,7 @@ export default function ImpactPanel({ itemId }: { itemId: string }) {
         return (
             <EmptyState
                 icon={ShieldCheck}
-                title="Nothing depends on this item."
+                title="Nothing depends on this item"
                 description="Items that depend on it, run on it or are contained in it would be listed here."
             />
         );
@@ -152,10 +153,14 @@ export default function ImpactPanel({ itemId }: { itemId: string }) {
     return (
         <div className="min-w-0 space-y-4">
             <p className="text-sm text-muted">
+                {truncated && "At least "}
                 {affected.length} {affected.length === 1 ? "item" : "items"} affected
             </p>
             {truncated && (
-                <Callout tone="warning">Showing the first {IMPACT_MAX_ITEMS} affected items.</Callout>
+                <Callout tone="warning">
+                    Not all affected items are shown: the list stops after {IMPACT_MAX_DEPTH} levels or{" "}
+                    {IMPACT_MAX_ITEMS} items.
+                </Callout>
             )}
             <Group title="Direct" items={direct} />
             <Group title="Indirect" items={indirect} />

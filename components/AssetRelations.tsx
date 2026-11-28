@@ -61,9 +61,11 @@ const relationTypes = RELATION_TYPES.map((t) => ({ ...t, icon: relationIcons[t.v
 interface AssetRelationsProps {
   itemId: string;
   itemName: string;
+  /** Called after a relation was added or removed. */
+  onChange?: () => void;
 }
 
-export default function AssetRelations({ itemId, itemName }: AssetRelationsProps) {
+export default function AssetRelations({ itemId, itemName, onChange }: AssetRelationsProps) {
   const [relations, setRelations] = useState<RelationsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -140,6 +142,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
         setDescription("");
         setSearchQuery("");
         fetchRelations();
+        onChange?.();
       } else {
         const err = await res.json();
         addToast({ type: "error", title: "Error", message: err.error || "Failed to create relation" });
@@ -159,6 +162,7 @@ export default function AssetRelations({ itemId, itemName }: AssetRelationsProps
 
       if (res.ok) {
         fetchRelations();
+        onChange?.();
       } else {
         const err = await res.json();
         addToast({ type: "error", title: "Error", message: err.error || "Failed to delete relation" });

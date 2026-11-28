@@ -30,6 +30,8 @@ export async function GET(
           ],
         },
         select: { sourceId: true, targetId: true, type: true },
+        // Stable order, so which path wins for an item reached twice at the same depth never varies
+        orderBy: [{ sourceId: "asc" }, { targetId: "asc" }, { type: "asc" }],
       });
 
     const { nodes, truncated } = await computeImpact(id, loadEdges);
